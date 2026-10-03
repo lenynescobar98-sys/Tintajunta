@@ -67,6 +67,11 @@ let suppressSel = false;      // evita que los clics en la barra disparen selecc
 let pencilMode = localStorage.getItem('tj_pencil') !== 'off'; // lápiz: marcar directo, activado por defecto
 /* Borrar: mantén presionado tu propio subrayado ½ segundo (sin menús) */
 /* Tema: blanco (claro) por defecto; 'dark' es el cálido original */
+/* 2026-10-03: migración — forzar blanco al abrir (teléfonos con 'dark' guardado de pruebas) */
+if (!localStorage.getItem('tj_theme_v2')) {
+  localStorage.setItem('tj_theme', 'light');
+  localStorage.setItem('tj_theme_v2', '1');
+}
 function applyTheme() {
   const t = localStorage.getItem('tj_theme') || 'light';
   document.documentElement.dataset.theme = t === 'dark' ? 'dark' : '';
