@@ -18,6 +18,9 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const crypto = require('crypto');
+const session = require('express-session');
+const authGoogle = require('./server/auth-google');
 
 const PORT = process.env.PORT || 8787;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -275,6 +278,56 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, re
 });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '256kb' }));
+/* Sesiones (login con Google). La sesión identifica al usuario por req.session.user */
+app.set('trust proxy', 1);
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'tintajunta-dev-secret-cambiar-en-prod',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: 'auto', httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 3600 * 1000 },
+}));
+const requireLogin = authGoogle.requireLogin();
+/* ---------- Login con Google ---------- */
+app.get('/api/auth/google', (req, res) => {
+  if (!authGoogle.isConfigured()) return res.status(503).json({ ok: false, error: 'google-auth-no-configurado' });
+  const state = crypto.randomBytes(16).toString('hex');
+  req.session.oauthState = state;
+  res.redirect(authGoogle.getAuthUrl(state));
+});
+app.get('/api/auth/google/callback', async (req, res) => {
+  try {
+    if (!req.query.state || req.query.state !== req.session.oauthState)
+      return res.status(403).send('state inválido (CSRF)');
+    delete req.session.oauthState;
+    const { profile } = await authGoogle.handleCallback(req.query.code);
+    upsertUser(profile);
+    req.session.user = { sub: profile.sub, email: profile.email, name: profile.name, picture: profile.picture };
+    res.redirect('/?login=ok');
+  } catch (e) {
+    console.error('[tintajunta] error login Google:', e.message);
+    res.redirect('/?login=error');
+  }
+});
+app.get('/api/auth/me', (req, res) => {
+  res.json({ ok: true, user: (req.session && req.session.user) || null, googleEnabled: authGoogle.isConfigured() });
+});
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }));
+});
+/* Usuarios registrados (por sub de Google). Persistidos en data/users.json */
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+function loadUsers() {
+  try { return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); } catch (e) { return {}; }
+}
+function upsertUser(profile) {
+  const users = loadUsers();
+  const u = users[profile.sub] || { sub: profile.sub, createdAt: Date.now() };
+  u.email = profile.email; u.name = profile.name; u.picture = profile.picture;
+  u.lastLogin = Date.now();
+  users[profile.sub] = u;
+  try { fs.writeFileSync(USERS_FILE, JSON.stringify(users)); } catch (e) {}
+  return u;
+}
 /* Clave pública de Stripe para el cliente (la secreta jamás sale del servidor) */
 app.get('/api/stripe-key', (req, res) => {
   res.json({ ok: true, enabled: stripePay.isEnabled(), publishableKey: stripePay.publishableKey || null });
@@ -337,7 +390,7 @@ app.get('/api/state', (req, res) => {
     board: st.board || { text: '', name: '', ts: 0 } });
 });
 /* Genera un código de sala nuevo y único */
-app.get('/api/room/new', (req, res) => {
+app.get('/api/room/new', requireLogin, (req, res) => {
   const code = genRoomCode();
   getRoom(code);
   save();
@@ -379,7 +432,7 @@ app.get('/api/books', (req, res) => {
 });
 /* Publicar un libro (creador). El texto se separa en párrafos por líneas en blanco.
  * Pasa por revisión anti-plagio y queda "en revisión" hasta que el admin lo aprueba. */
-app.post('/api/books', (req, res) => {
+app.post('/api/books', requireLogin, (req, res) => {
   const title = String((req.body && req.body.title) || '').trim().slice(0, 120);
   const author = String((req.body && req.body.author) || '').trim().slice(0, 60) || 'Anónimo';
   const price = Math.max(0, Math.floor(Number((req.body && req.body.price)) || 0));
@@ -406,7 +459,7 @@ app.post('/api/books', (req, res) => {
   res.json({ ok: true, status: 'pending', book: { id, title, author, price } });
 });
 /* Destacar un libro en portada (creador). Con Stripe activo exige pago verificado. */
-app.post('/api/books/:id/feature', async (req, res) => {
+app.post('/api/books/:id/feature', requireLogin, async (req, res) => {
   const b = books.get(String(req.params.id || '').toUpperCase());
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
   const plan = String((req.body && req.body.plan) || '');
@@ -535,7 +588,7 @@ app.post('/api/books/:id/report', (req, res) => {
 });
 /* Registrar una compra. Con Stripe activo exige paymentIntentId verificado;
  * sin Stripe (o gratis) mantiene el flujo anterior. Suma 1 venta al libro. */
-app.post('/api/books/:id/buy', async (req, res) => {
+app.post('/api/books/:id/buy', requireLogin, async (req, res) => {
   const bid = String(req.params.id || '').toUpperCase();
   const b = books.get(bid);
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
@@ -704,7 +757,7 @@ app.get('/api/ad-prices', (req, res) => {
   res.json({ ok: true, prices: AD_PRICES, emojis: AD_EMOJIS });
 });
 /* Crear o renovar un anuncio. Con Stripe activo exige pago verificado. */
-app.post('/api/ads', async (req, res) => {
+app.post('/api/ads', requireLogin, async (req, res) => {
   const body = req.body || {};
   const advertiser = cleanName(body.advertiser);
   if (!advertiser) return res.status(400).json({ ok: false, error: 'bad-advertiser' });
@@ -811,7 +864,7 @@ app.get('/api/events', (req, res) => {
     .sort((a, b) => ((b.paid ? 1 : 0) - (a.paid ? 1 : 0)));
   res.json({ ok: true, events: list });
 });
-app.post('/api/writings', (req, res) => {
+app.post('/api/writings', requireLogin, (req, res) => {
   const body = req.body || {};
   const title = String(body.title || '').trim().slice(0, 120);
   const text = String(body.text || '').trim().slice(0, 20000);

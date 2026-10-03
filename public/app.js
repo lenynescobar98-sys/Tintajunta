@@ -2778,6 +2778,45 @@ function initLibrary() {
   showLibrary(false);
 }
 
+/* ---------- Login con Google ---------- */
+let tjUser = null, tjGoogleEnabled = false;
+function googleLogin() { location.href = '/api/auth/google'; }
+function googleLogout() {
+  fetch('/api/auth/logout', { method: 'POST' }).then(() => location.reload());
+}
+async function checkAuth() {
+  try {
+    const r = await fetch('/api/auth/me');
+    const d = await r.json();
+    tjUser = d.user || null;
+    tjGoogleEnabled = !!d.googleEnabled;
+    const btn = document.querySelector('#drawer button[data-go="google-login"]');
+    if (btn) {
+      btn.onclick = () => {
+        closeDrawer();
+        if (tjUser) { if (confirm('¿Cerrar sesión de ' + (tjUser.name || tjUser.email) + '?')) googleLogout(); }
+        else googleLogin();
+      };
+      if (tjUser) {
+        btn.innerHTML = '👤 ' + esc(tjUser.name || tjUser.email || 'Mi cuenta');
+      } else if (tjGoogleEnabled) {
+        btn.innerHTML = '🔐 Entrar con Google';
+      } else {
+        btn.style.display = 'none';
+      }
+    }
+    // Avisar si el login fue exitoso o falló (viene del callback)
+    const q = new URLSearchParams(location.search);
+    if (q.get('login') === 'ok') { toast('✅ Sesión iniciada con Google'); history.replaceState(null, '', '/'); }
+    else if (q.get('login') === 'error') { toast('❌ Error al entrar con Google'); history.replaceState(null, '', '/'); }
+  } catch (e) {}
+}
+/* Si el servidor pide login (401), redirige a Google */
+function needLogin(res) {
+  if (res && res.status === 401) { googleLogin(); return true; }
+  return false;
+}
+
 /* ---------- barra IMDb: drawer, búsqueda, vista ---------- */
 function openDrawer() {
   const d = $('drawer'), s = $('drawerScrim');
@@ -2948,7 +2987,7 @@ function initWelcome() {
  ['initBoard', initBoard], ['initFollow', initFollow], ['initWelcome', initWelcome],
  ['initReviews', initReviews], ['initProgress', initProgress], ['initReports', initReports],
  ['initChat', initChat], ['initReactions', initReactions], ['initHands', initHands],
- ['initSwitchBook', initSwitchBook]].forEach(([name, fn]) => {
+ ['initSwitchBook', initSwitchBook], ['checkAuth', checkAuth]].forEach(([name, fn]) => {
   try {
     const r = fn();
     if (r && r.catch) r.catch((e) => clog('INIT-FAIL ' + name + ': ' + (e && e.message)));
