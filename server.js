@@ -37,7 +37,27 @@ const DEFAULT_COLOR = 'azul';
 /* Precio mínimo de un libro de pago (en centavos). $0 = gratis. */
 const MIN_BOOK_PRICE = 199;
 const MAX_RANGE = 500;     // palabras máximas por subrayado / nota
-const MAX_NOTE_LEN = 600;  // caracteres máximos por nota
+const MAX_NOTE_LEN = 140;  // caracteres máximos por nota corta
+
+/* Códigos cortos de nota (ej: N-7X2): alfabeto sin ambigüedades (sin 0/O, 1/I/L) */
+const NOTE_CODE_ALPHA = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+function genNoteCode(used) {
+  for (let t = 0; t < 50; t++) {
+    let c = 'N-';
+    for (let i = 0; i < 3; i++) c += NOTE_CODE_ALPHA[Math.floor(Math.random() * NOTE_CODE_ALPHA.length)];
+    if (!used.has(c)) { used.add(c); return c; }
+  }
+  return 'N-' + Date.now().toString(36).toUpperCase().slice(-4); // respaldo
+}
+/* Migra notas viejas sin código: les asigna uno único por sala */
+function ensureNoteCodes(st) {
+  const used = new Set(st.notes.map((n) => n.code).filter(Boolean));
+  let changed = false;
+  for (const n of st.notes) {
+    if (!n.code) { n.code = genNoteCode(used); changed = true; }
+  }
+  return changed;
+}
 
 /* ------------------------------ salas ---------------------------------- */
 /* Texto de muestra ORIGINAL del prototipo (no es de ningún libro).
@@ -83,7 +103,9 @@ function getRoom(code) {
   if (!rooms.has(code)) rooms.set(code, { seq: 1, highlights: [], notes: [], board: { text: '', name: '', ts: 0 },
     follow: { active: false, pos: 0, ts: 0, name: '' },
     chat: [], reactions: [], hands: [], switchTo: null });
-  return rooms.get(code);
+  const st = rooms.get(code);
+  if (ensureNoteCodes(st)) save();
+  return st;
 }
 /* Las manos levantadas expiran solas tras 2 minutos */
 const HAND_MS = 2 * 60 * 1000;
@@ -111,6 +133,7 @@ function loadRooms() {
             chat: Array.isArray(st.chat) ? st.chat.slice(-50) : [],
             reactions: Array.isArray(st.reactions) ? st.reactions : [],
             hands: Array.isArray(st.hands) ? st.hands : [] });
+          if (ensureNoteCodes(rooms.get(code))) save();
         }
       }
       console.log(`[tintajunta] salas recuperadas: ${rooms.size}`);
@@ -236,8 +259,73 @@ function save() {
 
 /* --------------------------------- servidor ----------------------------- */
 const app = express();
+/* Webhook de Stripe: necesita el cuerpo CRUDO para verificar la firma.
+ * Se registra ANTES de express.json(). */
+const stripePay = require('./server/stripe-payments');
+app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, res) => {
+  const v = stripePay.verifyWebhook(req);
+  if (!v.ok) return res.status(400).json({ ok: false, error: v.error });
+  const event = v.event;
+  if (event.type === 'payment_intent.succeeded') {
+    const pi = event.data.object;
+    const done = completeStripePayment(pi.id, pi.metadata || {});
+    console.log('[tintajunta] webhook pago', pi.id, done ? 'completado' : 'sin acción pendiente');
+  }
+  res.json({ ok: true, received: true });
+});
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '256kb' }));
+/* Clave pública de Stripe para el cliente (la secreta jamás sale del servidor) */
+app.get('/api/stripe-key', (req, res) => {
+  res.json({ ok: true, enabled: stripePay.isEnabled(), publishableKey: stripePay.publishableKey || null });
+});
+/* Crea un PaymentIntent para una acción de pago. El cliente confirma con Stripe.js
+ * y luego llama al endpoint original con { paymentIntentId } para finalizar. */
+const pendingStripe = new Map(); // paymentIntentId -> { type, data, amount, ts }
+app.post('/api/payments/intent', async (req, res) => {
+  if (!stripePay.isEnabled()) return res.status(503).json({ ok: false, error: 'stripe-disabled' });
+  try {
+    const body = req.body || {};
+    const type = String(body.type || '');
+    let amount = 0, description = '', data = {};
+    if (type === 'buy') {
+      const b = books.get(String(body.bookId || '').toUpperCase());
+      if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+      amount = b.price; description = `Compra "${b.title}"`;
+      data = { type, bookId: b.id };
+    } else if (type === 'feature') {
+      const b = books.get(String(body.bookId || '').toUpperCase());
+      if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+      const plan = String(body.plan || '');
+      if (!FEATURE_PRICES[plan]) return res.status(400).json({ ok: false, error: 'bad-plan' });
+      const author = cleanName(body.author);
+      if (b.author !== author) return res.status(403).json({ ok: false, error: 'not-owner' });
+      amount = FEATURE_PRICES[plan]; description = `Destacar "${b.title}" (${plan})`;
+      data = { type, bookId: b.id, plan, author };
+    } else if (type === 'ad') {
+      const plan = String(body.plan || '');
+      if (!AD_PRICES[plan]) return res.status(400).json({ ok: false, error: 'bad-plan' });
+      const advertiser = cleanName(body.advertiser);
+      if (!advertiser) return res.status(400).json({ ok: false, error: 'bad-advertiser' });
+      amount = AD_PRICES[plan]; description = `Anuncio (${plan})`;
+      data = { type, plan, advertiser, name: String(body.name || '').slice(0, 60),
+        emoji: String(body.emoji || ''), badge: String(body.badge || ''),
+        url: String(body.url || '').slice(0, 300), id: String(body.id || '').toUpperCase() };
+    } else {
+      return res.status(400).json({ ok: false, error: 'bad-type' });
+    }
+    if (!(amount > 0)) return res.status(400).json({ ok: false, error: 'free' });
+    const pi = await stripePay.createPaymentIntent(amount, 'usd', description, { tj_type: type });
+    if (!pi.ok) return res.status(500).json({ ok: false, error: pi.error || 'stripe-error' });
+    pendingStripe.set(pi.id, { ...data, amount, ts: Date.now() });
+    // limpieza de pendientes viejos (1h)
+    for (const [k, v] of pendingStripe) if (Date.now() - v.ts > 3600e3) pendingStripe.delete(k);
+    res.json({ ok: true, clientSecret: pi.clientSecret, paymentIntentId: pi.id, amount });
+  } catch (e) {
+    console.error('[tintajunta] intent error:', e.message);
+    res.status(500).json({ ok: false, error: 'stripe-error' });
+  }
+});
 app.get('/api/text', (req, res) => res.json({
   chapterTitle: CHAPTER_TITLE, bookLine: BOOK_LINE, sampleNote: SAMPLE_NOTE,
   paragraphs: PARAGRAPHS, wordCount: WORDS.length,
@@ -317,8 +405,8 @@ app.post('/api/books', (req, res) => {
   saveBooks();
   res.json({ ok: true, status: 'pending', book: { id, title, author, price } });
 });
-/* Destacar un libro en portada (creador). Pago simulado en el prototipo. */
-app.post('/api/books/:id/feature', (req, res) => {
+/* Destacar un libro en portada (creador). Con Stripe activo exige pago verificado. */
+app.post('/api/books/:id/feature', async (req, res) => {
   const b = books.get(String(req.params.id || '').toUpperCase());
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
   const plan = String((req.body && req.body.plan) || '');
@@ -326,7 +414,12 @@ app.post('/api/books/:id/feature', (req, res) => {
   // Solo el creador puede destacar su propio libro
   const author = cleanName(req.body && req.body.author);
   if (b.author !== author) return res.status(403).json({ ok: false, error: 'not-owner' });
-  // En la versión real aquí va Stripe; en el prototipo la compra es simulada
+  // Pago real con Stripe (en TEST no se cobra dinero de verdad)
+  if (stripePay.isEnabled()) {
+    const pid = String((req.body && req.body.paymentIntentId) || '');
+    const ok = await verifyStripeFor(pid, FEATURE_PRICES[plan]);
+    if (!ok) return res.status(402).json({ ok: false, error: 'payment-required' });
+  }
   const now = Date.now();
   const base = isFeatured(b) ? b.featured.until : now; // extiende si ya está destacado
   b.featured = { until: base + FEATURE_MS[plan], plan };
@@ -440,15 +533,70 @@ app.post('/api/books/:id/report', (req, res) => {
   saveReports();
   res.json({ ok: true, report: r, count: list.length });
 });
-/* Registrar una compra (prototipo: pago simulado en el cliente). Suma 1 venta al libro. */
-app.post('/api/books/:id/buy', (req, res) => {
+/* Registrar una compra. Con Stripe activo exige paymentIntentId verificado;
+ * sin Stripe (o gratis) mantiene el flujo anterior. Suma 1 venta al libro. */
+app.post('/api/books/:id/buy', async (req, res) => {
   const bid = String(req.params.id || '').toUpperCase();
   const b = books.get(bid);
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+  if (stripePay.isEnabled() && b.price > 0) {
+    const pid = String((req.body && req.body.paymentIntentId) || '');
+    const ok = await verifyStripeFor(pid, b.price);
+    if (!ok) return res.status(402).json({ ok: false, error: 'payment-required' });
+  }
   b.sales = (typeof b.sales === 'number' ? b.sales : 0) + 1;
   saveBooks();
   res.json({ ok: true, sales: b.sales });
 });
+/* Verifica un PaymentIntent contra Stripe: debe existir, estar succeeded y
+ * el monto debe coincidir con el esperado. */
+async function verifyStripeFor(paymentIntentId, expectedCents) {
+  if (!paymentIntentId) return false;
+  const v = await stripePay.verifyPaymentIntent(paymentIntentId);
+  return v.ok && v.status === 'succeeded' && v.amount === Math.round(expectedCents);
+}
+/* Completa una acción de pago pendiente (llamado por el webhook de Stripe).
+ * Devuelve true si había una acción pendiente y se ejecutó. */
+function completeStripePayment(paymentIntentId, metadata) {
+  const p = pendingStripe.get(paymentIntentId);
+  if (!p) return false;
+  pendingStripe.delete(paymentIntentId);
+  try {
+    if (p.type === 'buy') {
+      const b = books.get(p.bookId);
+      if (b) { b.sales = (b.sales || 0) + 1; saveBooks(); }
+    } else if (p.type === 'feature') {
+      const b = books.get(p.bookId);
+      if (b && b.author === p.author) {
+        const now = Date.now();
+        const base = isFeatured(b) ? b.featured.until : now;
+        b.featured = { until: base + FEATURE_MS[p.plan], plan: p.plan };
+        saveBooks();
+      }
+    } else if (p.type === 'ad') {
+      const now = Date.now();
+      if (p.id) {
+        const a = ads.get(p.id);
+        if (a && a.advertiser === p.advertiser) {
+          const base = isAdActive(a) ? a.until : now;
+          a.until = base + AD_MS[p.plan]; a.plan = p.plan;
+          if (p.url) a.url = p.url;
+          saveAds();
+        }
+      } else if (p.name) {
+        const nid = genAdId();
+        ads.set(nid, { id: nid, name: p.name, emoji: p.emoji, badge: p.badge,
+          plan: p.plan, advertiser: p.advertiser, url: p.url,
+          until: now + AD_MS[p.plan], createdAt: now });
+        saveAds();
+      }
+    }
+    return true;
+  } catch (e) {
+    console.error('[tintajunta] completeStripePayment:', e.message);
+    return false;
+  }
+}
 /* ------------------- 🏆 niveles y logros de creador ------------------- */
 const LEVELS = [
   { min: 100, emoji: '💎', name: 'Diamante' },
@@ -555,8 +703,8 @@ app.get('/api/ads', (req, res) => {
 app.get('/api/ad-prices', (req, res) => {
   res.json({ ok: true, prices: AD_PRICES, emojis: AD_EMOJIS });
 });
-/* Crear o renovar un anuncio. Pago simulado en el prototipo. */
-app.post('/api/ads', (req, res) => {
+/* Crear o renovar un anuncio. Con Stripe activo exige pago verificado. */
+app.post('/api/ads', async (req, res) => {
   const body = req.body || {};
   const advertiser = cleanName(body.advertiser);
   if (!advertiser) return res.status(400).json({ ok: false, error: 'bad-advertiser' });
@@ -566,6 +714,12 @@ app.post('/api/ads', (req, res) => {
   if (!AD_BADGES.includes(badge)) return res.status(400).json({ ok: false, error: 'bad-badge' });
   const emoji = String(body.emoji || '');
   if (!AD_EMOJIS.includes(emoji)) return res.status(400).json({ ok: false, error: 'bad-emoji' });
+  // Pago real con Stripe (en TEST no se cobra dinero de verdad)
+  if (stripePay.isEnabled()) {
+    const pid = String(body.paymentIntentId || '');
+    const ok = await verifyStripeFor(pid, AD_PRICES[plan]);
+    if (!ok) return res.status(402).json({ ok: false, error: 'payment-required' });
+  }
   const now = Date.now();
   // ¿renovación? solo el anunciante dueño puede extender su anuncio
   const id = String(body.id || '').toUpperCase();
@@ -1043,7 +1197,8 @@ app.post('/api/rooms/:room/note', (req, res) => {
   if (!r || !text) return res.status(400).json({ ok: false, error: 'bad-note' });
   const rec = { id: 'n' + (st.seq++), name: u.name, color: u.color,
     start: r.start, end: r.end, quote: passageText(code, r.start, r.end).slice(0, 140),
-    text, ts: Date.now() };
+    text, ts: Date.now(),
+    code: genNoteCode(new Set(st.notes.map((n) => n.code).filter(Boolean))) };
   st.notes.push(rec);
   save();
   res.json({ ok: true, note: rec });

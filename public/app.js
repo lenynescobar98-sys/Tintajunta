@@ -269,8 +269,24 @@ function paintHighlight(h) {
 }
 function repaintAll() {
   cover.clear();
-  spanByIdx.forEach((s) => { s.style.background = ''; s.title = ''; });
+  spanByIdx.forEach((s) => { s.style.background = ''; s.title = ''; s.classList.remove('has-note'); s.style.setProperty('--note-c', ''); });
   highlights.forEach(paintHighlight);
+  paintNoteMarks();
+}
+/* Marca visual en palabras con nota: subrayado punteado del color del autor */
+function paintNoteMarks() {
+  const seen = new Set();
+  for (const n of notes) {
+    const c = COLORS[n.color] || COLORS.azul;
+    for (let i = n.start; i <= n.end; i++) {
+      if (seen.has(i)) continue;
+      seen.add(i);
+      const s = spanByIdx[i];
+      if (!s) continue;
+      s.classList.add('has-note');
+      s.style.setProperty('--note-c', c);
+    }
+  }
 }
 
 /* ------------------------------- notas -------------------------------- */
@@ -288,7 +304,7 @@ function renderNotes() {
     card.style.borderLeftColor = COLORS[n.color] || COLORS.azul;
     card.innerHTML =
       `<div class="note-head">
-         <span class="note-author"><span class="dot" style="background:${COLORS[n.color] || COLORS.azul}"></span>${esc(n.name)}</span>
+         <span class="note-author"><span class="dot" style="background:${COLORS[n.color] || COLORS.azul}"></span>${esc(n.name)}${n.code ? `<span class="note-code">${esc(n.code)}</span>` : ''}</span>
          ${n.name === displayName() ? `<button class="note-del" data-id="${n.id}" title="Borrar mi nota">✕</button>` : ''}
        </div>
        <p class="note-quote" data-start="${n.start}" data-end="${n.end}">“${esc(n.quote)}”</p>
@@ -298,7 +314,7 @@ function renderNotes() {
   box.querySelectorAll('.note-del').forEach((b) => {
     b.onclick = () => {
       apiPost(roomBase() + '/del', { kind: 'note', id: b.dataset.id })
-        .then(() => { notes = notes.filter((n) => n.id !== b.dataset.id); renderNotes(); })
+        .then(() => { notes = notes.filter((n) => n.id !== b.dataset.id); renderNotes(); paintNoteMarks(); })
         .catch(() => toast('No se pudo borrar la nota'));
     };
   });
@@ -390,7 +406,23 @@ function showToolbar(range, anchorRect, mode) {
   tb.style.top = y + 'px';
 }
 function hideToolbar() { $('toolbar').classList.add('hidden'); pendingRange = null; }
-function hideNotepop() { $('notepop').classList.add('hidden'); $('noteText').value = ''; }
+function hideNotepop() { $('notepop').classList.add('hidden'); $('noteText').value = ''; $('noteCount').textContent = '0'; }
+function hideViewNote() { $('viewNotePop').classList.add('hidden'); }
+/* Muestra una nota al tocar una palabra marcada: autor, color, código y fecha */
+function showViewNote(n, anchorRect) {
+  $('vnoteDot').style.background = COLORS[n.color] || COLORS.azul;
+  $('vnoteName').textContent = n.name || 'Lector';
+  $('vnoteCode').textContent = n.code || '';
+  $('vnoteCode').style.display = n.code ? '' : 'none';
+  $('vnoteQuote').textContent = '“' + (n.quote || '') + '”';
+  $('vnoteText').textContent = n.text || '';
+  const d = n.ts ? new Date(n.ts) : null;
+  $('vnoteDate').textContent = d ? d.toLocaleDateString('es', { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '';
+  const p = $('viewNotePop');
+  p.style.left = Math.min(Math.max(8, anchorRect.left + anchorRect.width / 2 - 170), window.innerWidth - 360) + 'px';
+  p.style.top = Math.min(anchorRect.bottom + 8, window.innerHeight - 300) + 'px'; // .notepop es position:fixed
+  p.classList.remove('hidden');
+}
 
 function initSelection() {
   let maybeTimer = null;
@@ -559,10 +591,10 @@ function initSelection() {
     if (!pencilMode) return;
     if (Date.now() - justMarkedAt < 600) return; // recién marcado con arrastre
     if (Date.now() - justLongPressedAt < 800) return; // recién abierto con mantener
-    if (e.target.closest('#toolbar') || e.target.closest('#notepop')) return;
+    if (e.target.closest('#toolbar') || e.target.closest('#notepop') || e.target.closest('#viewNotePop')) return;
     // Si hay un popup abierto, el toque solo lo cierra
-    if (!$('toolbar').classList.contains('hidden') || !$('notepop').classList.contains('hidden')) {
-      hideToolbar(); $('notepop').classList.add('hidden');
+    if (!$('toolbar').classList.contains('hidden') || !$('notepop').classList.contains('hidden') || !$('viewNotePop').classList.contains('hidden')) {
+      hideToolbar(); hideNotepop(); hideViewNote();
       return;
     }
     const w = e.target.closest && e.target.closest('.w');
@@ -581,10 +613,23 @@ function initSelection() {
       toast('Párrafo limpiado');
       return;
     }
-    if (h) { // subrayado ajeno: ver notas
+    if (h) { // subrayado ajeno: ver sus notas si las hay
       const rect = w.getBoundingClientRect();
+      const rangeNotes = notes.filter((n) => n.start <= h.end && n.end >= h.start);
+      if (rangeNotes.length) {
+        showViewNote(rangeNotes[rangeNotes.length - 1], rect); // la más reciente
+        return;
+      }
       showToolbar({ start: h.start, end: h.end }, rect, 'highlight');
       return;
+    }
+    // Tocar palabra con nota (sin subrayado): ver la nota más reciente
+    {
+      const wordNotes = notes.filter((n) => i >= n.start && i <= n.end);
+      if (wordNotes.length) {
+        showViewNote(wordNotes[wordNotes.length - 1], w.getBoundingClientRect());
+        return;
+      }
     }
     // Tocar palabra suelta: marcarla al instante
     postHighlight({ start: i, end: i });
@@ -628,7 +673,9 @@ function initSelection() {
     window.getSelection().removeAllRanges();
     hideToolbar();
   };
+  $('noteText').addEventListener('input', () => { $('noteCount').textContent = String($('noteText').value.length); });
   $('noteCancel').onclick = () => { hideNotepop(); window.getSelection().removeAllRanges(); };
+  $('vnoteClose').onclick = () => { hideViewNote(); };
   $('noteSave').onclick = async () => {
     const text = $('noteText').value.trim();
     if (!text || !pendingRange) { hideNotepop(); return; }
@@ -641,7 +688,8 @@ function initSelection() {
       if (s && s.ok && s.note && !notes.some((n) => n.id === s.note.id)) {
         notes.push(s.note);
         renderNotes();
-        toast('Nota guardada al margen');
+        paintNoteMarks();
+        toast(s.note.code ? 'Nota ' + s.note.code + ' guardada' : 'Nota guardada al margen');
       }
       setOnline(true);
     } catch (e) {
@@ -1480,12 +1528,19 @@ async function initAds() {
     if (!adv || adv === 'Lector') { toast('Escribe tu nombre primero'); return; }
     $('adConfirm').disabled = true;
     $('adConfirm').textContent = 'Procesando…';
-    await new Promise((r) => setTimeout(r, 1200)); // pago simulado
     try {
+      // 1. Cobrar con Stripe
+      const pid = await payWithStripe({
+        type: 'ad',
+        intentParams: { name, emoji: adEmoji, badge, plan: adPlan, advertiser: adv, url: adUrl,
+          ...(adPending ? { id: adPending.id } : {}) },
+        description: `Anunciar "${name || 'producto'}"`, amountCents: null,
+      });
+      // 2. Crear/renovar el anuncio (el servidor verifica el pago con Stripe)
       const r = await fetch('/api/ads', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, emoji: adEmoji, badge, plan: adPlan, advertiser: adv, url: adUrl,
-          ...(adPending ? { id: adPending.id } : {}) }),
+          paymentIntentId: pid, ...(adPending ? { id: adPending.id } : {}) }),
       });
       const d = await r.json();
       if (!d.ok) throw 0;
@@ -1510,7 +1565,9 @@ async function initAds() {
       toast(adPending ? '🔄 ¡Anuncio renovado!' : '📢 ¡Tu anuncio está en portada!');
       adPending = null;
       renderAds();
-    } catch (e) { toast('No se pudo publicar el anuncio'); }
+    } catch (e) {
+      if (String((e && e.message) || e) !== 'cancelado') toast('No se pudo completar el pago');
+    }
     $('adConfirm').disabled = false;
     $('adConfirm').textContent = 'Pagar y publicar';
   };
@@ -2448,9 +2505,71 @@ async function openBook(id, push) {
   bootBook(book, push);
 }
 
-/* Compra simulada (prototipo): en la versión real aquí va Stripe */
+/* Pagos reales con Stripe (modo TEST). En la versión real aquí va Stripe */
 let buyBookPending = null;
 let featurePending = null, featurePlan = 'week';
+
+/* ---------- Stripe: helper de pago con tarjeta ---------- */
+let stripeJs = null, stripeCard = null, stripeKeyCache = null;
+async function getStripeJs() {
+  if (stripeJs) return stripeJs;
+  if (typeof Stripe === 'undefined') throw new Error('stripe-js-missing');
+  if (!stripeKeyCache) {
+    const r = await fetch('/api/stripe-key');
+    const d = await r.json().catch(() => ({}));
+    if (!d.ok || !d.enabled || !d.publishableKey) throw new Error('stripe-disabled');
+    stripeKeyCache = d.publishableKey;
+  }
+  stripeJs = Stripe(stripeKeyCache);
+  return stripeJs;
+}
+/* Flujo de pago: crea el PaymentIntent en el servidor, cobra con la tarjeta,
+ * devuelve el paymentIntentId verificado. Lanza Error si falla o se cancela. */
+function payWithStripe({ type, intentParams, description, amountCents }) {
+  return new Promise(async (resolve, reject) => {
+    let stripe;
+    try { stripe = await getStripeJs(); }
+    catch (e) { reject(new Error('stripe-no-disponible')); return; }
+    // 1. Crear el PaymentIntent en el servidor
+    let intent;
+    try {
+      const r = await fetch('/api/payments/intent', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, ...intentParams }),
+      });
+      intent = await r.json();
+      if (!intent.ok || !intent.clientSecret) throw new Error(intent.error || 'intent-failed');
+    } catch (e) { reject(e); return; }
+    // 2. Mostrar el modal de tarjeta
+    $('payDesc').textContent = description;
+    $('payAmount').textContent = fmtPrice(intent.amount != null ? intent.amount : amountCents);
+    $('payPop').classList.remove('hidden');
+    const elements = stripe.elements();
+    if (stripeCard) { try { stripeCard.unmount(); } catch (e) {} }
+    stripeCard = elements.create('card', { style: { base: { fontSize: '16px' } } });
+    stripeCard.mount('#payCard');
+    const done = (ok, val) => {
+      $('payPop').classList.add('hidden');
+      try { stripeCard.unmount(); } catch (e) {}
+      stripeCard = null;
+      ok ? resolve(val) : reject(val instanceof Error ? val : new Error(String(val || 'cancelado')));
+    };
+    $('payCancel').onclick = () => done(false, 'cancelado');
+    $('payConfirm').onclick = async () => {
+      $('payConfirm').disabled = true;
+      $('payConfirm').textContent = 'Procesando…';
+      try {
+        const cr = await stripe.confirmCardPayment(intent.clientSecret, {
+          payment_method: { card: stripeCard },
+        });
+        if (cr.error) throw new Error(cr.error.message || 'pago-rechazado');
+        done(true, intent.paymentIntentId);
+      } catch (e) { done(false, e); }
+      $('payConfirm').disabled = false;
+      $('payConfirm').textContent = 'Pagar';
+    };
+  });
+}
 /* Modal para destacar un libro propio en portada */
 async function showFeature(b) {
   syncNameFromLib();
@@ -2589,11 +2708,18 @@ function initLibrary() {
   $('featureCancel').onclick = () => { $('featurePop').classList.add('hidden'); featurePending = null; };
   $('featureConfirm').onclick = async () => {
     if (!featurePending || !featurePlan) return;
+    const b = featurePending, plan = featurePlan;
     $('featureConfirm').disabled = true;
     try {
-      const r = await fetch('/api/books/' + encodeURIComponent(featurePending.id) + '/feature', {
+      // 1. Cobrar con Stripe
+      const pid = await payWithStripe({
+        type: 'feature', intentParams: { bookId: b.id, plan, author: myName },
+        description: `Destacar "${b.title}"`, amountCents: null,
+      });
+      // 2. Activar el destacado (el servidor verifica el pago con Stripe)
+      const r = await fetch('/api/books/' + encodeURIComponent(b.id) + '/feature', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: featurePlan, author: myName }),
+        body: JSON.stringify({ plan, author: myName, paymentIntentId: pid }),
       });
       const d = await r.json();
       if (!d.ok) throw 0;
@@ -2601,24 +2727,50 @@ function initLibrary() {
       toast('⭐ ¡Tu libro está destacado en portada!');
       featurePending = null;
       showLibrary(false);
-    } catch (e) { toast('No se pudo destacar el libro'); }
+    } catch (e) {
+      if (String((e && e.message) || e) !== 'cancelado') toast('No se pudo completar el pago');
+    }
     $('featureConfirm').disabled = false;
   };
   $('buyConfirm').onclick = async () => {
     if (!buyBookPending) return;
+    const b = buyBookPending;
+    // Libro gratis: sin pago
+    if (!b.price) {
+      markOwned(b.id);
+      buyBookPending = null;
+      $('buyPop').classList.add('hidden');
+      toast('¡Libro adquirido!');
+      showLibrary(false);
+      bootBook(b);
+      return;
+    }
     $('buyConfirm').disabled = true;
     $('buyConfirm').textContent = 'Procesando…';
-    await new Promise((r) => setTimeout(r, 1200)); // simulación de pago
-    markOwned(buyBookPending.id);
-    const b = buyBookPending;
-    // registrar la venta en el servidor (para niveles/logros del creador)
-    fetch('/api/books/' + encodeURIComponent(b.id) + '/buy', { method: 'POST' }).catch(() => {});
-    buyBookPending = null;
-    $('buyPop').classList.add('hidden');
+    try {
+      // 1. Cobrar con Stripe
+      const pid = await payWithStripe({
+        type: 'buy', intentParams: { bookId: b.id },
+        description: `Comprar "${b.title}"`, amountCents: b.price,
+      });
+      // 2. Registrar la compra (el servidor verifica el pago con Stripe)
+      const r = await fetch('/api/books/' + encodeURIComponent(b.id) + '/buy', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentIntentId: pid }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!d.ok) throw new Error(d.error || 'buy-failed');
+      markOwned(b.id);
+      buyBookPending = null;
+      $('buyPop').classList.add('hidden');
+      toast('¡Libro adquirido!');
+      showLibrary(false);
+      bootBook(b);
+    } catch (e) {
+      if (String(e.message || e) !== 'cancelado') toast('No se pudo completar el pago');
+    }
     $('buyConfirm').disabled = false;
-    toast('¡Libro adquirido!');
-    showLibrary(false);
-    bootBook(b);
+    $('buyConfirm').textContent = 'Comprar por ' + fmtPrice(b.price);
   };
   // arranque: la biblioteca es el estado inicial del historial (no se pushea)
   try { history.replaceState({ tjview: 'library' }, ''); } catch (e) {}

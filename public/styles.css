@@ -520,6 +520,18 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 .notepop textarea:focus { outline: 2px solid var(--accent); }
 .notepop-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
 .notepop-actions .btn-primary { width: auto; padding: 10px 18px; }
+.notepop-count { text-align: right; font-size: 12px; color: var(--bar-soft); margin: 2px 4px 0; }
+/* ---------- ver nota ---------- */
+.vnote-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.vnote-author { display: flex; align-items: center; gap: 7px; font-size: 14px; }
+.vnote-author .dot { width: 12px; height: 12px; border-radius: 50%; }
+.vnote-code { font-size: 12px; font-weight: 700; color: var(--accent); background: rgba(245,197,24,.12);
+  border: 1px solid rgba(245,197,24,.35); border-radius: 999px; padding: 3px 10px; letter-spacing: .5px; }
+.vnote-text { font-size: 16px; line-height: 1.55; margin: 6px 0; color: var(--pop-ink); }
+.vnote-date { font-size: 12px; color: var(--bar-soft); margin: 0 0 4px; }
+.note-code { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .4px; margin-left: 6px; }
+/* Palabra con nota: subrayado punteado del color del autor */
+.w.has-note { border-bottom: 2px dotted var(--note-c, var(--accent)); cursor: pointer; }
 
 /* ---------- avisos ---------- */
 .toasts { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }

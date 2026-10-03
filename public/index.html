@@ -194,7 +194,7 @@
   <p class="join-sub" id="featureBookTitle" style="margin:0 0 12px"></p>
   <p style="font-size:15px;margin:0 0 12px">Tu libro aparece primero en la portada, en la sección Destacados.</p>
   <div id="featurePlans" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
-  <p class="join-note">Prototipo: el pago es simulado. En la versión real aquí se conecta Stripe.</p>
+  <p class="join-note">Pago seguro con tarjeta (Stripe).</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
     <button id="featureCancel" class="btn">Cancelar</button>
     <button id="featureConfirm" class="btn btn-primary">Confirmar</button>
@@ -214,7 +214,7 @@
     <label class="plan-row"><input type="radio" name="abadge" value="famoso"><span><b>⭐ Famoso</b></span></label>
   </div>
   <div class="field"><span>Plan</span><div id="adPlans" style="display:flex;flex-direction:column;gap:8px"></div></div>
-  <p class="join-note">Prototipo: el pago es simulado. En la versión real aquí se conecta Stripe.</p>
+  <p class="join-note">Pago seguro con tarjeta (Stripe).</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
     <button id="adCancel" class="btn">Cancelar</button>
     <button id="adConfirm" class="btn btn-primary">Pagar y publicar</button>
@@ -241,10 +241,23 @@
   <h3 style="margin:0 0 6px" id="buyTitle"></h3>
   <p class="join-sub" id="buyAuthor" style="margin:0 0 12px"></p>
   <p style="font-size:28px;margin:0 0 12px" id="buyPrice"></p>
-  <p class="join-note">Prototipo: la compra es simulada. En la versión real aquí se conecta el pago (Stripe) y el creador recibe su parte.</p>
+  <p class="join-note">Pago seguro con tarjeta (Stripe). El creador recibe su parte.</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
     <button id="buyCancel" class="btn">Cancelar</button>
     <button id="buyConfirm" class="btn btn-primary">Comprar</button>
+  </div>
+</div>
+
+<!-- Pagar con tarjeta (Stripe) -->
+<div id="payPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 6px">💳 Pagar con tarjeta</h3>
+  <p class="join-sub" id="payDesc" style="margin:0 0 12px"></p>
+  <p style="font-size:22px;margin:0 0 12px" id="payAmount"></p>
+  <div id="payCard" style="padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;background:#fff"></div>
+  <p class="join-note" id="payNote">Pago seguro con Stripe. Modo de prueba: usa la tarjeta 4242 4242 4242 4242.</p>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+    <button id="payCancel" class="btn">Cancelar</button>
+    <button id="payConfirm" class="btn btn-primary">Pagar</button>
   </div>
 </div>
 
@@ -402,7 +415,8 @@
 <!-- Editor de nota -->
 <div id="notepop" class="notepop hidden">
   <p class="notepop-quote" id="noteQuote"></p>
-  <textarea id="noteText" rows="3" maxlength="600" placeholder="Escribe tu nota al margen…"></textarea>
+  <textarea id="noteText" rows="3" maxlength="140" placeholder="Nota corta (máx 140)…"></textarea>
+  <p class="notepop-count"><span id="noteCount">0</span>/140</p>
   <div class="rx-row" id="rxRow">
     <span class="rx-label">Reacciona:</span>
     <button class="rx-btn" data-emoji="❤️" title="Me encanta">❤️</button>
@@ -417,8 +431,23 @@
   </div>
 </div>
 
+<!-- 📝 Ver nota: al tocar una palabra con nota se muestra aquí -->
+<div id="viewNotePop" class="notepop hidden">
+  <div class="vnote-head">
+    <span class="vnote-author"><span class="dot" id="vnoteDot"></span><b id="vnoteName"></b></span>
+    <span class="vnote-code" id="vnoteCode"></span>
+  </div>
+  <p class="notepop-quote" id="vnoteQuote"></p>
+  <p class="vnote-text" id="vnoteText"></p>
+  <p class="vnote-date" id="vnoteDate"></p>
+  <div class="notepop-actions">
+    <button id="vnoteClose" class="btn-primary">Cerrar</button>
+  </div>
+</div>
+
 <div id="toasts" class="toasts"></div>
 
-<script src="app.js?v=62"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="app.js?v=64"></script>
 </body>
 </html>

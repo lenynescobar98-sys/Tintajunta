@@ -5,6 +5,7 @@
     "https-proxy-agent": "^9.1.0",
     "multer": "^2.4.0",
     "socket.io": "^4.7.5",
+    "stripe": "^23.0.0",
     "ws": "^8.22.0"
   },
   "description": "Prototipo de la sala de lectura en vivo de TintaJunta (Node.js + WebSockets)",
