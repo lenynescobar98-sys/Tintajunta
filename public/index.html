@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TintaJunta · Sala de lectura en vivo</title>
+<style>
+/* CSS crítico: funciona aunque styles.css falle al cargar */
+.hidden, [hidden] { display: none !important; }
+#immersive { position: fixed; inset: 0; z-index: 100; }
+#immClose { position: absolute; top: 14px; right: 16px; z-index: 101; width: 44px; height: 44px; font-size: 22px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; }
+</style>
+<link rel="stylesheet" href="styles.css" id="mainCss"
+  onerror="(function(l){var n=0;var t=setInterval(function(){n++;l.href='styles.css?retry='+n+'&t='+Date.now();if(n>=3)clearInterval(t);},1500);})(this)"></head>
+<body>
+
+<!-- Biblioteca -->
+<div id="library" class="join">
+  <!-- Barra superior estilo IMDb -->
+  <header id="imdbBar" class="imdb-bar">
+    <button id="menuBtn" class="imdb-icon" title="Menú">☰</button>
+    <div class="imdb-logo">📚 TintaJunta</div>
+    <div class="imdb-spacer"></div>
+    <button id="searchToggle" class="imdb-icon" title="Buscar">🔍</button>
+    <button id="enterBtn" class="imdb-enter">Entrar</button>
+  </header>
+  <div id="searchBar" class="search-bar hidden">
+    <input id="searchInput" type="search" placeholder="Buscar por título o autor…" autocomplete="off">
+  </div>
+  <nav id="drawer" class="drawer hidden" hidden aria-label="Menú">
+    <div class="drawer-head">📚 TintaJunta</div>
+    <button data-go="library">📚 Biblioteca</button>
+    <button data-go="write">✍️ Escribir</button>
+    <button data-go="live">⚡ Sala en vivo</button>
+    <button data-go="publish">＋ Publicar libro</button>
+    <button data-go="ad">📢 Anunciar</button>
+    <button data-go="achievements">🏆 Mis logros</button>
+    <button data-go="verify">✅ Verificaciones</button>
+    <button data-go="admin" id="adminBtn" class="hidden">🛡️ Revisión</button>
+    <button data-go="theme">🌙 Tema</button>
+  </nav>
+  <div id="drawerScrim" class="drawer-scrim hidden" hidden></div>
+  <div class="join-card lib-card lib-stream">
+    <div id="heroCarousel" class="hero-carousel hero-big hidden">
+      <div id="heroTrack" class="hero-track"></div>
+      <div id="heroDots" class="hero-dots"></div>
+    </div>
+    <div id="pillsRow" class="pills-row">
+      <button class="pill on" data-pill="todos">Todos</button>
+      <button class="pill" data-pill="gratis">Gratis</button>
+      <button class="pill" data-pill="destacados">Destacados</button>
+      <button class="pill" data-pill="nuevos">Nuevos</button>
+      <button class="pill" data-pill="populares">Populares</button>
+    </div>
+    <section class="row-sec" id="secDestacados">
+      <h2 class="row-h2">⭐ Destacados <span class="row-more">›</span></h2>
+      <p class="row-sub">Los libros más visibles de la portada.</p>
+      <div id="rowDestacados" class="hrow"></div>
+    </section>
+    <section class="row-sec">
+      <h2 class="row-h2">📚 Recomendados <span class="row-more">›</span></h2>
+      <div id="rowRecomendados" class="hrow"></div>
+    </section>
+    <section class="row-sec" id="secClassics">
+      <h2 class="row-h2">📜 Clásicos gratis <span class="row-more">›</span></h2>
+      <p class="row-sub">Obras de dominio público — gratis para todos, sin creador.</p>
+      <div id="rowClassics" class="hrow"></div>
+    </section>
+    <section class="marquee-sec" id="secMarquee">
+      <div class="marquee-head">
+        <h2 class="row-h2">La biblioteca en movimiento</h2>
+        <button id="marqueePause" class="chip-btn" title="Pausar / seguir">⏸</button>
+      </div>
+      <div class="marquee"><div id="marqueeTrack" class="marquee-track"></div></div>
+    </section>
+    <section class="row-sec" id="secAds">
+      <h2 class="row-h2">🛍️ Para leer mejor <span class="ads-tag">Anuncios</span> <span class="row-more">›</span></h2>
+      <p class="row-sub">Anuncios pagados: solo aparecen en este espacio, nunca interrumpen tu lectura.</p>
+      <div id="rowAds" class="hrow"></div>
+    </section>
+    <section class="row-sec" id="secAff">
+      <h2 class="row-h2">🔗 Recomendados <span class="ads-tag">Afiliados</span> <span class="row-more">›</span></h2>
+      <p class="row-sub">Lo que usamos y recomendamos para leer mejor. Si compras, nos apoyas sin pagar de más.</p>
+      <div id="rowAff" class="hrow"></div>
+    </section>
+    <section class="row-sec" id="secEvents">
+      <h2 class="row-h2">📅 Eventos <span class="row-more">›</span></h2>
+      <p class="row-sub">Ferias, clubes y presentaciones. Toca para ver la fuente oficial.</p>
+      <div id="rowEvents" class="hrow"></div>
+    </section>
+    <div class="stream-join">
+    <h2 class="row-h2">⚡ Sala en vivo</h2>
+    <p class="row-sub">Entra con tu nombre, sin cuenta. Lee y marca junto a otros en tiempo real.</p>
+    <label class="field">
+      <span>Tu nombre</span>
+      <input id="libNameInput" type="text" maxlength="24" placeholder="¿Cómo te llamas?" autocomplete="off">
+    </label>
+    <div class="field" id="colorField">
+      <span>Tu color de tinta</span>
+      <div id="libSwatches" class="swatches"><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span></div>
+    </div>
+    <label class="teacher-check">
+      <input type="checkbox" id="teacherCheck">
+      <span>🎓 Soy el profesor — mi tinta siempre es <b>negra</b></span>
+    </label>
+    <button id="liveRoomBtn" class="btn-primary">⚡ Entrar a la sala en vivo</button>
+    </div>
+    <div class="cta-row">
+      <button id="publishBtn" class="btn-cta" type="button">＋ Publicar un libro</button>
+      <button id="advertiseBtn" class="btn-cta btn-cta-alt" type="button">📢 Anunciar producto</button>
+    </div>
+    <p class="join-note">Prototipo: no necesitas cuenta. Los libros que publiques los verá todo el que entre.</p>
+    <footer class="credits">
+      <div class="credits-brand">📚 TintaJunta</div>
+      <p>Lee juntos, marca con tu tinta.</p>
+      <p class="credits-small">Creado por <b>Lenyn Escobar</b> · CEO de TintaJunta</p>
+      <p class="credits-small">© 2026 TintaJunta · Prototipo</p>
+    </footer>
+  </div>
+</div>
+
+<!-- Escribir -->
+<div id="writing" class="join hidden">
+  <div class="join-card lib-card">
+    <div class="kicker">TINTAJUNTA · ESCRIBE</div>
+    <h1 class="write-h1">✍️ Escribir</h1>
+    <p class="join-sub">Tu página en blanco. Guarda tus textos y léelos cuando quieras.</p>
+    <label class="field"><span>Título</span><input id="wrTitle" type="text" maxlength="120" placeholder="Título de tu escrito"></label>
+    <label class="field"><span>Tu texto</span><textarea id="wrText" rows="10" placeholder="Escribe aquí…"></textarea></label>
+    <button id="wrSave" class="btn-primary">Guardar escrito</button>
+    <h2 class="lib-h2" style="margin-top:28px">Mis escritos</h2>
+    <div id="wrList" class="book-list"><p class="join-sub">Aún no tienes escritos.</p></div>
+  </div>
+</div>
+
+<!-- Leer escrito -->
+<div id="readPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 4px" id="readTitle"></h3>
+  <p class="join-sub" style="margin:0 0 12px" id="readAuthor"></p>
+  <div id="readText" class="read-text"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button id="readClose" class="btn">Cerrar</button>
+  </div>
+</div>
+
+<!-- Vista inmersiva: anuncio o destacado a pantalla completa -->
+<div id="immersive" class="immersive hidden" hidden>
+  <button id="immClose" class="imm-close" title="Cerrar" aria-label="Cerrar">✕</button>
+  <div class="imm-brand">📚 TintaJunta</div>
+  <div id="immVisual" class="imm-visual"></div>
+  <div id="immBadge" class="imm-badge"></div>
+  <div id="immTitle" class="imm-title"></div>
+  <div id="immSub" class="imm-sub"></div>
+  <button id="immCta" class="imm-cta">Ver</button>
+</div>
+
+<!-- Publicar libro -->
+<div id="publishPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 10px">Publicar un libro</h3>
+  <label class="field"><span>Título</span><input id="pubTitle" type="text" maxlength="120" placeholder="El título de tu libro"></label>
+  <label class="field"><span>Precio (USD, 0 = gratis · mínimo $1.99)</span><input id="pubPrice" type="number" min="0" step="0.01" placeholder="0.00"></label>
+  <label class="field"><span>Clasificación de edad</span><select id="pubAge">
+    <option value="all">Todos los públicos</option>
+    <option value="13">+13 años</option>
+    <option value="18">+18 años (contenido adulto)</option>
+  </select></label>
+  <label class="field"><span>Texto del libro</span><textarea id="pubText" rows="8" placeholder="Pega aquí el texto. Separa los párrafos con una línea en blanco."></textarea></label>
+  <label class="field"><span>Portada * (obligatoria, imagen máx 2MB)</span><input id="pubCover" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+  <label class="field"><span>Fotos del libro (opcional, JPG/PNG/WebP máx 2MB c/u)</span><input id="pubImages" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
+  <div class="rules-box">
+    <b>⚠️ Antes de publicar, recuerda lo que NO puedes hacer:</b>
+    <ul>
+      <li>❌ Publicar libros que no sean tuyos</li>
+      <li>❌ Subir libros comerciales o con derechos de autor</li>
+      <li>❌ Subir libros de dominio público como si fueran tuyos</li>
+      <li>❌ Publicar sin portada (es obligatoria)</li>
+      <li>❌ Copiar el contenido de otro creador</li>
+    </ul>
+    <p>Solo puedes publicar tus propios libros originales. Si rompes estas reglas, tu libro será eliminado.</p>
+  </div>
+  <label class="contract-check">
+    <input type="checkbox" id="pubContract">
+    <span><b>📝 Contrato de publicación:</b> Declaro que este libro es de mi autoría original y estoy consciente de todas las prohibiciones anteriores. Acepto que si cometo alguna falta, <b>pierdo mi cuenta</b> y mis libros serán eliminados sin reembolso.</span>
+  </label>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+    <button id="pubCancel" class="btn">Cancelar</button>
+    <button id="pubSave" class="btn btn-primary">Publicar</button>
+  </div>
+</div>
+
+<!-- Destacar libro (anuncio pagado) -->
+<div id="featurePop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 6px">⭐ Destacar en portada</h3>
+  <p class="join-sub" id="featureBookTitle" style="margin:0 0 12px"></p>
+  <p style="font-size:15px;margin:0 0 12px">Tu libro aparece primero en la portada, en la sección Destacados.</p>
+  <div id="featurePlans" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+  <p class="join-note">Prototipo: el pago es simulado. En la versión real aquí se conecta Stripe.</p>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+    <button id="featureCancel" class="btn">Cancelar</button>
+    <button id="featureConfirm" class="btn btn-primary">Confirmar</button>
+  </div>
+</div>
+
+<!-- Anunciar producto -->
+<div id="adPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 6px">📢 Anunciar producto</h3>
+  <p style="font-size:15px;margin:0 0 12px">Tu producto aparece en la fila "🛍️ Para leer mejor" de la portada.</p>
+  <label class="field"><span>Nombre del producto</span><input id="adName" type="text" maxlength="60" placeholder="Ej. Lentes filtro luz azul"></label>
+  <label class="field"><span>Link de tu tienda (donde compran)</span><input id="adUrl" type="url" maxlength="300" placeholder="https://tutienda.com/producto"></label>
+  <label class="field"><span>Foto del producto (JPG/PNG/WebP, máx 2MB)</span><input id="adPhoto" type="file" accept="image/jpeg,image/png,image/webp"></label>
+  <div class="field"><span>Emoji</span><div id="adEmojis" class="swatches" style="max-height:none"></div></div>
+  <div class="field"><span>Insignia</span>
+    <label class="plan-row"><input type="radio" name="abadge" value="mas-vendido" checked><span><b>🔥 Más vendido</b></span></label>
+    <label class="plan-row"><input type="radio" name="abadge" value="famoso"><span><b>⭐ Famoso</b></span></label>
+  </div>
+  <div class="field"><span>Plan</span><div id="adPlans" style="display:flex;flex-direction:column;gap:8px"></div></div>
+  <p class="join-note">Prototipo: el pago es simulado. En la versión real aquí se conecta Stripe.</p>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+    <button id="adCancel" class="btn">Cancelar</button>
+    <button id="adConfirm" class="btn btn-primary">Pagar y publicar</button>
+  </div>
+</div>
+
+<!-- Bienvenida (solo primera visita) -->
+<div id="welcomePop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 10px">👋 Bienvenido a TintaJunta</h3>
+  <p style="font-size:15px;margin:0 0 8px">Lee libros <b>junto a otros, en vivo</b>.</p>
+  <div class="welcome-list">
+    <p>📚 <b>Lee</b> — abre un libro y léelo a tu ritmo.</p>
+    <p>🎨 <b>Marca</b> — subraya con tu tinta y deja notas que todos ven.</p>
+    <p>✍️ <b>Escribe</b> — guarda tus propios textos.</p>
+    <p>⚡ <b>Sala en vivo</b> — escribe tu nombre abajo y toca "Entrar a la sala en vivo". Sin cuenta.</p>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-top:14px">
+    <button id="welcomeOk" class="btn btn-primary">Entendido</button>
+  </div>
+</div>
+
+<!-- Comprar libro -->
+<div id="buyPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 6px" id="buyTitle"></h3>
+  <p class="join-sub" id="buyAuthor" style="margin:0 0 12px"></p>
+  <p style="font-size:28px;margin:0 0 12px" id="buyPrice"></p>
+  <p class="join-note">Prototipo: la compra es simulada. En la versión real aquí se conecta el pago (Stripe) y el creador recibe su parte.</p>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+    <button id="buyCancel" class="btn">Cancelar</button>
+    <button id="buyConfirm" class="btn btn-primary">Comprar</button>
+  </div>
+</div>
+
+<!-- 🏆 Mis logros -->
+<div id="achPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 4px">🏆 Mis logros</h3>
+  <p class="join-sub" id="achSub" style="margin:0 0 12px">Tu nivel sube con cada libro vendido.</p>
+  <div id="achBody"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button id="achClose" class="btn btn-primary">Cerrar</button>
+  </div>
+</div>
+
+<!-- ✅ Verificaciones del creador -->
+<div id="verifPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 4px">✅ Mis verificaciones</h3>
+  <p class="join-sub" style="margin:0 0 12px">Completa tus verificaciones para generar confianza con tus lectores.</p>
+  <div id="verifBody"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button id="verifClose" class="btn btn-primary">Cerrar</button>
+  </div>
+</div>
+
+<!-- 🛡️ Panel de revisión (admin) -->
+<div id="adminPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 4px">🛡️ Revisión</h3>
+  <p class="join-sub" style="margin:0 0 12px">Pendientes de aprobación.</p>
+  <div id="adminBody"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button id="adminClose" class="btn btn-primary">Cerrar</button>
+  </div>
+</div>
+
+<!-- 🔞 Advertencia de contenido adulto -->
+<div id="agePop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 8px">🔞 Contenido para adultos</h3>
+  <p class="join-sub" id="ageText" style="margin:0 0 12px">Este libro está clasificado +18.</p>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+    <button id="ageCancel" class="btn">Volver</button>
+    <button id="ageConfirm" class="btn btn-primary">Soy mayor de edad — continuar</button>
+  </div>
+</div>
+
+<!-- 📚 Cambiar libro en la sala (solo profesor) -->
+<div id="switchBookPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 4px">📚 Cambiar libro</h3>
+  <p class="join-sub" style="margin:0 0 12px">Elige el texto que leerán todos en la sala.</p>
+  <div id="switchBookList" class="switchbook-list"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button id="switchBookClose" class="btn">Cancelar</button>
+  </div>
+</div>
+
+<!-- Dejar reseña -->
+<div id="reviewPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 6px">⭐ Dejar reseña</h3>
+  <p class="join-sub" id="reviewBookTitle" style="margin:0 0 12px"></p>
+  <div id="reviewStars" class="review-stars"></div>
+  <textarea id="reviewComment" rows="3" maxlength="300" placeholder="Tu opinión (opcional)…" style="width:100%;margin:10px 0"></textarea>
+  <div id="reviewList" class="review-list"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+    <button id="reviewCancel" class="btn">Cancelar</button>
+    <button id="reviewSave" class="btn btn-primary">Publicar reseña</button>
+  </div>
+</div>
+
+<div id="reportPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 6px">🚩 Reportar libro</h3>
+  <p class="join-sub" id="reportBookTitle" style="margin:0 0 12px"></p>
+  <p class="join-note" style="margin:0 0 8px">¿Por qué rompe las reglas?</p>
+  <div id="reportReasons"></div>
+  <div id="reportOtherWrap" class="hidden" style="margin-top:10px">
+    <textarea id="reportOther" rows="2" maxlength="200" placeholder="Describe el motivo…" style="width:100%"></textarea>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+    <button id="reportCancel" class="btn">Cancelar</button>
+    <button id="reportSave" class="btn btn-primary">Enviar reporte</button>
+  </div>
+</div>
+
+<!-- Pantalla de entrada (sala en vivo) -->
+<div id="join" class="join hidden">
+  <div class="join-card">
+    <div class="brand">TintaJunta</div>
+    <h1>Entrar a la sala</h1>
+    <p class="join-sub">Leemos juntos, en vivo. Elige cómo firmarás tus marcas.</p>
+    <label class="field">
+      <span>Tu nombre</span>
+      <input id="nameInput" type="text" maxlength="24" placeholder="¿Cómo te llamas?" autocomplete="off">
+    </label>
+    <div class="field">
+      <span>Tu color de tinta</span>
+      <div id="swatches" class="swatches"></div>
+    </div>
+    <label class="field">
+      <span>Código de sala (opcional)</span>
+      <input id="roomInput" type="text" maxlength="12" placeholder="Vacío = sala principal" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    </label>
+    <button id="joinBtn" class="btn-primary">Entrar a la sala</button>
+    <button id="createRoomBtn" class="linklike" type="button">+ Crear una sala nueva con código</button>
+    <p class="join-note">Prototipo: no necesitas cuenta ni contraseña. Comparte el código con quien quieras que lea contigo.</p>
+  </div>
+</div>
+
+<!-- Sala -->
+<header class="topbar">
+  <div class="topbar-brand"><button id="backBtn" class="btn-chip hidden" title="Volver a la biblioteca">←</button>TintaJunta <span class="topbar-room">· <span id="roomLabel">Sala <b id="roomCode">SALA</b></span></span><button id="copyRoom" class="btn-chip" title="Copiar el código de esta sala">⧉ copiar código</button><button id="pencilBtn" class="pencil-btn" title="Lápiz: marcar directo con tu tinta">✏️</button><button id="themeBtn" class="pencil-btn" title="Cambiar tema: claro / oscuro">🌙</button><button id="followBtn" class="pencil-btn hidden" title="👀 Sígueme: la pantalla de todos sigue tu lectura">👀</button><button id="handBtn" class="pencil-btn hidden" title="✋ Levantar la mano">✋</button><button id="switchBookBtn" class="pencil-btn hidden" title="📚 Cambiar libro: todos pasan a otro texto">📚</button></div>
+  <div id="presence" class="presence"></div>
+  <span id="netdot" class="netdot" title="Conectando…"></span>
+</header>
+<div id="followPill" class="follow-pill hidden">👀 Siguiendo al profesor</div>
+
+<main class="layout">
+  <article class="chapter">
+    <div id="creatorStats" class="creator-stats hidden"></div>
+    <section id="boardWrap" class="board-wrap">
+      <div class="board-head">
+        <span class="board-title">📝 Pizarra</span>
+        <span id="boardMeta" class="board-meta"></span>
+        <span class="board-spacer"></span>
+        <button id="boardClear" class="btn-chip hidden" title="Limpiar la pizarra">🧹 Limpiar</button>
+      </div>
+      <textarea id="boardEdit" class="board-edit hidden" rows="8" maxlength="2000" placeholder="Escribe aquí lo que quieres mostrar a todos en la sala…"></textarea>
+      <div id="boardView" class="board-view"></div>
+    </section>
+    <h2 id="chapterTitle">Texto de muestra</h2>
+    <p id="bookLine" class="bookline"></p>
+    <p id="sampleNote" class="samplenote"></p>
+    <div id="paras" class="paras"></div>
+    <p class="hint">✏️ <b>Lápiz activado:</b> <b>toca</b> una palabra para marcarla, o desliza para marcar varias. <b>Toca tu subrayado</b> para borrar todo el párrafo. Manténlo presionado para agregarle una nota.</p>
+  </article>
+  <aside class="margin">
+    <div class="margin-tabs">
+      <button id="tabNotes" class="margin-tab on">Notas <span id="notesCount" class="count"></span></button>
+      <button id="tabChat" class="margin-tab">💬 Chat <span id="chatCount" class="count"></span></button>
+    </div>
+    <div id="notes" class="notes"></div>
+    <div id="chatPanel" class="chat-panel hidden">
+      <div id="chatBox" class="chat-box"></div>
+      <div class="chat-input-row">
+        <input id="chatInput" type="text" maxlength="300" placeholder="Escribe un mensaje…" autocomplete="off">
+        <button id="chatSend" class="btn-primary chat-send" title="Enviar">➤</button>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<!-- Barra flotante al seleccionar texto -->
+<div id="toolbar" class="toolbar hidden">
+  <button id="btnHighlight" class="btn">Subrayar</button>
+  <button id="btnNote" class="btn">Nota</button>
+  <button id="btnRemove" class="btn btn-danger hidden">Quitar subrayado</button>
+</div>
+
+<!-- Editor de nota -->
+<div id="notepop" class="notepop hidden">
+  <p class="notepop-quote" id="noteQuote"></p>
+  <textarea id="noteText" rows="3" maxlength="600" placeholder="Escribe tu nota al margen…"></textarea>
+  <div class="rx-row" id="rxRow">
+    <span class="rx-label">Reacciona:</span>
+    <button class="rx-btn" data-emoji="❤️" title="Me encanta">❤️</button>
+    <button class="rx-btn" data-emoji="😮" title="Me sorprende">😮</button>
+    <button class="rx-btn" data-emoji="👏" title="Aplaudo">👏</button>
+    <button class="rx-btn" data-emoji="🤔" title="Me hace pensar">🤔</button>
+    <button class="rx-btn" data-emoji="⭐" title="Favorito">⭐</button>
+  </div>
+  <div class="notepop-actions">
+    <button id="noteCancel" class="btn btn-ghost">Cancelar</button>
+    <button id="noteSave" class="btn-primary">Guardar nota</button>
+  </div>
+</div>
+
+<div id="toasts" class="toasts"></div>
+
+<script src="app.js?v=61"></script>
+</body>
+</html>
