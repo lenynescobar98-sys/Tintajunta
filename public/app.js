@@ -3724,6 +3724,7 @@ function initImdbBar() {
       else if (go === 'verify') { closeDrawer(); syncNameFromLib(); showVerifications(); }
       else if (go === 'admin') { closeDrawer(); showAdminPanel(); }
       else if (go === 'feedback') { closeDrawer(); showFeedbackModal(); }
+      else if (go === 'google-login') { closeDrawer(); googleLogin(); }
       else if (go === 'theme') { closeDrawer(); toggleTheme(); }
     };
   });

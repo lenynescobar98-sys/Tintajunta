@@ -876,9 +876,9 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 .creator-stats { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(138,90,30,.08); border: 1px solid rgba(138,90,30,.35); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 14px; }
 .creator-stats.hidden { display: none; }
 .cs-title { font-weight: 800; color: #8a5a1e; }
-.cs-num { color: rgba(255,255,255,.9); }
-.cs-num b { color: #fff; }
-.cs-loading { color: rgba(255,255,255,.5); font-size: 13px; }
+.cs-num { color: #5c5347; }
+.cs-num b { color: #1a1a1a; }
+.cs-loading { color: #8a7d68; font-size: 13px; }
 
 /* ---------- 💬 Chat + tabs del margen ---------- */
 .margin-tabs { display: flex; gap: 8px; margin: 6px 0 14px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
