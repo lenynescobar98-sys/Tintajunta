@@ -1001,27 +1001,7 @@ app.get('/api/writings/:id', (req, res) => {
   if (!w) return res.status(404).json({ ok: false, error: 'not-found' });
   res.json({ ok: true, writing: w });
 });
-/* Eventos: información pública de eventos literarios.
-   Semilla en data/events.json (ejemplos marcados con example:true).
-   Estructura lista para promoción pagada: paid:true → van primero con insignia "⭐ Patrocinado".
-   Reglas: sin logos de terceros, sin claims de aval, siempre link a la fuente oficial (campo url). */
-const EVENTS_FILE = path.join(DATA_DIR, 'events.json');
-function loadEvents() {
-  try {
-    if (fs.existsSync(EVENTS_FILE)) {
-      const arr = JSON.parse(fs.readFileSync(EVENTS_FILE, 'utf8'));
-      if (Array.isArray(arr)) return arr;
-    }
-  } catch (e) { console.error('[tintajunta] error leyendo eventos:', e.message); }
-  return [];
-}
-app.get('/api/events', (req, res) => {
-  const list = loadEvents()
-    .map((e) => ({ id: e.id, name: e.name, date: e.date, place: e.place, desc: e.desc,
-      url: e.url, emoji: e.emoji, hue: e.hue, img: e.img, paid: e.paid === true }))
-    .sort((a, b) => ((b.paid ? 1 : 0) - (a.paid ? 1 : 0)));
-  res.json({ ok: true, events: list });
-});
+
 app.post('/api/writings', requireLogin, (req, res) => {
   const body = req.body || {};
   const title = String(body.title || '').trim().slice(0, 120);

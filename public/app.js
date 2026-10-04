@@ -1682,38 +1682,6 @@ function renderAffiliates() {
     row.appendChild(card);
   });
 }
-/* 📅 Eventos: información pública de eventos literarios (GET /api/events).
-   Los pagados (paid:true) van primero con insignia "⭐ Patrocinado".
-   Sin logos de terceros, sin claims de aval; el link siempre va a la fuente oficial. */
-async function renderEvents() {
-  const row = document.getElementById('rowEvents');
-  if (!row) return;
-  let events = [];
-  try {
-    const r = await fetch('/api/events', { cache: 'no-store' });
-    const d = await r.json();
-    if (d && d.ok && Array.isArray(d.events)) events = d.events;
-  } catch (e) { /* sin conexión: la fila queda vacía */ }
-  row.innerHTML = '';
-  events.forEach((ev) => {
-    const card = document.createElement('div');
-    card.className = 'ad-card' + (ev.paid ? ' ad-paid' : '');
-    card.innerHTML =
-      adCardVisual(ev.emoji || '📅', typeof ev.hue === 'number' ? ev.hue : 200, ev.img) +
-      (ev.paid ? '<div class="ad-badge">⭐ Patrocinado</div>' : '') +
-      `<div class="ad-name">${esc(ev.name || 'Evento')}</div>` +
-      `<div class="ev-date">${esc(ev.date || '')} · ${esc(ev.place || '')}</div>` +
-      `<div class="ad-note">${esc(ev.desc || '')}</div>` +
-      `<div class="ev-link">Ver más ↗</div>`;
-    card.onclick = () => {
-      const url = String(ev.url || '');
-      if (ev.example) { toast('Evento de ejemplo — pronto habrá eventos reales aquí'); return; }
-      if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener');
-      else toast('Este evento aún no tiene link oficial');
-    };
-    row.appendChild(card);
-  });
-}
 let paidAds = [];
 let lastFeat = [];
 function adCardVisual(emoji, hue, img) {
@@ -3873,7 +3841,6 @@ function initWelcome() {
 /* Cada init aislado: si uno falla, los demás siguen funcionando */
 [['initJoin', initJoin], ['initLibrary', initLibrary], ['initAds', initAds],
  ['renderAds', renderAds], ['renderAffiliates', renderAffiliates],
- ['renderEvents', renderEvents],
  ['initImdbBar', initImdbBar], ['initWriting', initWriting],
  ['initPills', initPills], ['initMarquee', initMarquee],
  ['initBoard', initBoard], ['initFollow', initFollow], ['initWelcome', initWelcome],
