@@ -605,6 +605,58 @@ app.post('/api/books/:id/report', (req, res) => {
   saveReports();
   res.json({ ok: true, report: r, count: list.length });
 });
+/* ---------------------- 🐛 reportes de fallos (feedback) -------------------
+   Los usuarios reportan lo que no funciona; Alejandro los revisa en el panel. */
+const FEEDBACK_FILE = path.join(DATA_DIR, 'feedback.json');
+let feedback = []; // [{ id, name, page, message, userAgent, ts, status }]
+const FEEDBACK_STATUS = ['nuevo', 'leido', 'resuelto'];
+function loadFeedback() {
+  try {
+    const raw = fs.readFileSync(FEEDBACK_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) feedback = parsed.filter((f) => f && f.message);
+    console.log(`[tintajunta] feedback cargado: ${feedback.length}`);
+  } catch { /* sin archivo: empezar vacío */ }
+}
+let feedbackTimer = null;
+function saveFeedback() {
+  clearTimeout(feedbackTimer);
+  feedbackTimer = setTimeout(() => {
+    try {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(feedback));
+    } catch (e) { console.error('[tintajunta] error guardando feedback:', e.message); }
+  }, 250);
+}
+loadFeedback();
+app.post('/api/feedback', (req, res) => {
+  const message = String((req.body && req.body.message) || '').trim().slice(0, 1000);
+  if (!message) return res.status(400).json({ ok: false, error: 'empty' });
+  const page = String((req.body && req.body.page) || '').trim().slice(0, 60) || 'desconocida';
+  const name = String((req.body && req.body.name) || '').trim().slice(0, 40) || 'Anónimo';
+  const userAgent = String(req.get('user-agent') || '').slice(0, 200);
+  const f = { id: 'FB' + Date.now().toString(36) + Math.floor(Math.random() * 999),
+    name, page, message, userAgent, ts: Date.now(), status: 'nuevo' };
+  feedback.push(f);
+  saveFeedback();
+  res.json({ ok: true, id: f.id });
+});
+app.get('/api/admin/feedback', (req, res) => {
+  const admin = String(req.query.admin || '');
+  if (!isAdmin(admin)) return res.status(403).json({ ok: false, error: 'not-admin' });
+  res.json({ ok: true, feedback: [...feedback].reverse() });
+});
+app.post('/api/admin/feedback/:id/status', (req, res) => {
+  const admin = String((req.body && req.body.admin) || '');
+  if (!isAdmin(admin)) return res.status(403).json({ ok: false, error: 'not-admin' });
+  const status = String((req.body && req.body.status) || '');
+  if (!FEEDBACK_STATUS.includes(status)) return res.status(400).json({ ok: false, error: 'bad-status' });
+  const f = feedback.find((x) => x.id === req.params.id);
+  if (!f) return res.status(404).json({ ok: false, error: 'not-found' });
+  f.status = status;
+  saveFeedback();
+  res.json({ ok: true, feedback: f });
+});
 /* Registrar una compra. Con Stripe activo exige paymentIntentId verificado;
  * sin Stripe (o gratis) mantiene el flujo anterior. Suma 1 venta al libro. */
 app.post('/api/books/:id/buy', requireLogin, async (req, res) => {
@@ -1605,7 +1657,8 @@ app.get('/api/admin/pending', (req, res) => {
     .map((c) => ({ name: c.name, fullName: c.identity.fullName, docId: c.identity.docId }));
   const pendingBank = [...creators.values()].filter((c) => c.bank && !c.bankVerified)
     .map((c) => ({ name: c.name, bank: c.bank.bank, routing: c.bank.routing, last4: c.bank.last4 }));
-  res.json({ ok: true, pendingBooks, pendingIdentity, pendingBank });
+  const pendingFeedback = feedback.filter((f) => f.status === 'nuevo').length;
+  res.json({ ok: true, pendingBooks, pendingIdentity, pendingBank, pendingFeedback });
 });
 /* Admin: aprobar/rechazar libro */
 app.post('/api/admin/books/:id/review', (req, res) => {

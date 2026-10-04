@@ -10,7 +10,7 @@
 #immersive { position: fixed; inset: 0; z-index: 100; }
 #immClose { position: absolute; top: 14px; right: 16px; z-index: 101; width: 44px; height: 44px; font-size: 22px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; }
 </style>
-<link rel="stylesheet" href="styles.css?v=79" id="mainCss"
+<link rel="stylesheet" href="styles.css?v=80" id="mainCss"
   onerror="(function(l){var n=0;var t=setInterval(function(){n++;l.href='styles.css?retry='+n+'&t='+Date.now();if(n>=3)clearInterval(t);},1500);})(this)"></head>
 <body>
 
@@ -48,6 +48,7 @@
     <button id="googleLoginBtn" data-go="google-login">🔐 Entrar con Google</button>
     <button data-go="verify">✅ Verificaciones</button>
     <button data-go="admin" id="adminBtn" class="hidden">🛡️ Revisión</button>
+    <button data-go="feedback">🐛 Reportar problema</button>
     <button data-go="theme">🌙 Tema</button>
   </nav>
   <div id="drawerScrim" class="drawer-scrim hidden" hidden></div>
@@ -138,7 +139,7 @@
       <div class="credits-brand">📚 TintaJunta</div>
       <p>Lee juntos, marca con tu tinta.</p>
       <p class="credits-small">Creado por <b>Lenyn Escobar</b> · CEO de TintaJunta</p>
-      <p class="credits-small">© 2026 TintaJunta</p>
+      <p class="credits-small">© 2026 TintaJunta · <a href="#" id="footerFeedback" class="credits-link">🐛 Reportar problema</a></p>
     </footer>
   </div>
 </div>
@@ -372,6 +373,25 @@
     <button id="adminClose" class="btn btn-primary">Cerrar</button>
   </div>
 </div>
+<div id="feedbackPop" class="notepop modal-pop hidden">
+  <h3 style="margin:0 0 4px">🐛 Reportar problema</h3>
+  <p class="join-sub" style="margin:0 0 12px">Cuéntanos qué no funciona bien y lo arreglamos.</p>
+  <div class="fb-form">
+    <label class="fb-label">¿Qué no funciona?
+      <textarea id="fbMessage" rows="4" maxlength="1000" placeholder="Describe el problema…"></textarea>
+    </label>
+    <label class="fb-label">¿En qué página estabas?
+      <input id="fbPage" maxlength="60" readonly>
+    </label>
+    <label class="fb-label">Tu nombre (opcional)
+      <input id="fbName" maxlength="40" placeholder="Anónimo">
+    </label>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button id="fbCancel" class="btn">Cancelar</button>
+    <button id="fbSend" class="btn btn-primary">Enviar reporte</button>
+  </div>
+</div>
 
 <!-- 🔞 Advertencia de contenido adulto -->
 <div id="agePop" class="notepop modal-pop hidden">
@@ -540,6 +560,6 @@
 <div id="toasts" class="toasts"></div>
 
 <script src="https://js.stripe.com/v3/"></script>
-<script src="app.js?v=79"></script>
+<script src="app.js?v=80"></script>
 </body>
 </html>

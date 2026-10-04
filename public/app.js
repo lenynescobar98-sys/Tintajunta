@@ -2070,6 +2070,34 @@ async function showVerifications() {
     if (d.ok) showVerifications();
   });
 }
+/* ------------------------- 🐛 Reporte de fallos --------------------------
+   El usuario reporta lo que no funciona; se guarda en el servidor para
+   que Alejandro lo revise en el panel admin. */
+const VIEW_LABELS = { library: 'Biblioteca', room: 'Sala en vivo', join: 'Entrar a sala', writing: 'Escribir', immersive: 'Vista inmersiva' };
+function showFeedbackModal() {
+  const viewName = VIEW_LABELS[currentView] || currentView || 'Biblioteca';
+  $('fbPage').value = viewName;
+  $('fbMessage').value = '';
+  $('fbName').value = (displayName() && displayName() !== 'Lector') ? displayName() : '';
+  $('feedbackPop').classList.remove('hidden');
+  $('fbCancel').onclick = () => $('feedbackPop').classList.add('hidden');
+  $('fbSend').onclick = async () => {
+    const message = $('fbMessage').value.trim();
+    if (!message) { toast('Escribe qué no funciona.'); return; }
+    $('fbSend').disabled = true;
+    try {
+      const r = await fetch('/api/feedback', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, page: $('fbPage').value, name: $('fbName').value.trim() }) });
+      const d = await r.json().catch(() => ({}));
+      if (d && d.ok) {
+        $('feedbackPop').classList.add('hidden');
+        toast('✅ Reporte enviado. ¡Gracias!');
+      } else toast('No se pudo enviar. Intenta de nuevo.');
+    } catch (e) { toast('Sin conexión. Intenta de nuevo.'); }
+    $('fbSend').disabled = false;
+  };
+}
 /* ------------------------- 🛡️ Panel admin ------------------------- */
 async function showAdminPanel() {
   const body = $('adminBody');
@@ -2105,9 +2133,12 @@ async function showAdminPanel() {
     `<div class="adm-row"><span><b>${esc(c.name)}</b> · ${esc(c.bank)} ···· ${esc(c.last4)}</span>` +
     `<span><button class="btn btn-primary" data-adm="bank-ok" data-id="${esc(c.name)}">Verificar</button></span></div>`
   ).join('') : '<p class="join-note">Nada pendiente.</p>';
+  /* 🐛 Reportes de fallos */
+  html += `<h4>🐛 Reportes de fallos <span id="fbPendingBadge"></span></h4><div id="fbList"><p class="join-note">Cargando…</p></div>`;
   html += `<h4>✔️ Creador verificado</h4><div class="vrf-form"><input id="admVName" placeholder="Nombre del creador" maxlength="60">` +
     `<button class="btn btn-primary" id="admVTog">Otorgar / quitar insignia</button></div>`;
   body.innerHTML = html;
+  loadAdminFeedback();
   body.querySelectorAll('button[data-adm]').forEach((btn) => {
     btn.onclick = async () => {
       const kind = btn.dataset.adm, id = btn.dataset.id;
@@ -2129,6 +2160,41 @@ async function showAdminPanel() {
     const r2 = await post('/api/admin/creator/verify', { admin, name: nm, verified: true });
     toast(r2.ok ? `✔️ ${nm} verificado` : 'No se pudo');
   };
+}
+/* 🐛 Carga los reportes de fallos en el panel admin */
+async function loadAdminFeedback() {
+  const box = $('fbList');
+  const badge = $('fbPendingBadge');
+  if (!box) return;
+  let d = null;
+  try {
+    const r = await fetch('/api/admin/feedback?admin=' + encodeURIComponent(displayName()));
+    d = await r.json();
+  } catch (e) {}
+  if (!d || !d.ok) { box.innerHTML = '<p class="join-note">No se pudo cargar.</p>'; return; }
+  const list = d.feedback || [];
+  const nuevos = list.filter((f) => f.status === 'nuevo').length;
+  if (badge) badge.textContent = nuevos > 0 ? `(${nuevos} nuevos)` : '';
+  if (!list.length) { box.innerHTML = '<p class="join-note">Sin reportes. 🎉</p>'; return; }
+  const stLabel = { nuevo: '🆕 Nuevo', leido: '👁️ Leído', resuelto: '✅ Resuelto' };
+  box.innerHTML = list.map((f) =>
+    `<div class="fb-card fb-${f.status}">` +
+    `<div class="fb-head"><span class="fb-st">${stLabel[f.status] || f.status}</span>` +
+    `<span class="fb-meta">${esc(f.page || '')} · ${esc(f.name || 'Anónimo')} · ${relTime(f.ts)}</span></div>` +
+    `<p class="fb-msg">${esc(f.message)}</p>` +
+    `<div class="fb-actions">` +
+    (f.status !== 'leido' ? `<button class="btn btn-sm" data-fb="leido" data-id="${f.id}">Marcar leído</button>` : '') +
+    (f.status !== 'resuelto' ? `<button class="btn btn-sm btn-primary" data-fb="resuelto" data-id="${f.id}">Resuelto</button>` : '') +
+    `</div></div>`
+  ).join('');
+  box.querySelectorAll('button[data-fb]').forEach((btn) => {
+    btn.onclick = async () => {
+      const r2 = await post('/api/admin/feedback/' + encodeURIComponent(btn.dataset.id) + '/status',
+        { admin: displayName(), status: btn.dataset.fb });
+      toast(r2.ok ? 'Hecho' : 'No se pudo');
+      if (r2.ok) loadAdminFeedback();
+    };
+  });
 }
 function ratingHtml(b) {
   return `<span class="tile-rating" data-book="${esc(b.id)}" title="Ver / dejar reseña">${ratingText(b)}</span>`;
@@ -3462,7 +3528,21 @@ function openDrawer() {
     const show = displayName() === 'Lenyn Escobar';
     ab.classList.toggle('hidden', !show);
     if (!show) ab.setAttribute('hidden', ''); else ab.removeAttribute('hidden');
+    if (show) refreshAdminBadge();
   }
+}
+/* 🐛 Contador de reportes nuevos en el botón admin */
+async function refreshAdminBadge() {
+  const ab = $('adminBtn');
+  if (!ab) return;
+  try {
+    const r = await fetch('/api/admin/pending?admin=' + encodeURIComponent(displayName()));
+    const d = await r.json();
+    if (d && d.ok) {
+      const n = (d.pendingFeedback || 0) + d.pendingBooks.length + d.pendingIdentity.length + d.pendingBank.length;
+      ab.textContent = n > 0 ? `🛡️ Revisión (${n})` : '🛡️ Revisión';
+    }
+  } catch (e) {}
 }
 function closeDrawer() {
   const d = $('drawer'), s = $('drawerScrim');
@@ -3500,6 +3580,7 @@ function initImdbBar() {
       else if (go === 'profile') { closeDrawer(); showCreatorProfile(displayName()); }
       else if (go === 'verify') { closeDrawer(); syncNameFromLib(); showVerifications(); }
       else if (go === 'admin') { closeDrawer(); showAdminPanel(); }
+      else if (go === 'feedback') { closeDrawer(); showFeedbackModal(); }
       else if (go === 'theme') { closeDrawer(); toggleTheme(); }
     };
   });
@@ -3515,6 +3596,8 @@ function initImdbBar() {
     renderRows();
   });
   $('enterBtn').onclick = goLiveRoom;
+  const ff = $('footerFeedback');
+  if (ff) ff.onclick = (e) => { e.preventDefault(); showFeedbackModal(); };
   /* v77 — Login Google visible en header */
   initHeaderAuth();
   // vista inmersiva
