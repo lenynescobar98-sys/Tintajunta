@@ -1302,13 +1302,16 @@ function initNet() {
       try { apiPost(roomBase() + '/ping', { para: currentParaIdx() }).catch(() => {}); } catch (e) {}
     }, 8000);
     $('copyRoom').onclick = async () => {
+      // v72: comparte el enlace completo (?sala=CODIGO) en vez de solo el código:
+      // quien lo toca entra directo a la sala (patrón de compartido tipo Wattpad).
+      const link = location.origin + '/?sala=' + encodeURIComponent(myRoom);
       try {
-        await navigator.clipboard.writeText(myRoom);
-        toast('Código copiado: ' + myRoom);
+        await navigator.clipboard.writeText(link);
+        toast('Enlace de la sala copiado');
       } catch (e) {
-        toast('Código de la sala: ' + myRoom); // el lector lo puede dictar o escribir
+        toast('Enlace de la sala: ' + link); // el lector lo puede dictar o escribir
       }
-      clog('código copiado/mostrado: ' + myRoom);
+      clog('enlace copiado/mostrado: ' + link);
     };
   }
   joinRoom();
@@ -3404,10 +3407,25 @@ function initWriting() {
   $('readClose').onclick = () => $('readPop').classList.add('hidden');
 }
 
-/* v71 — Deep link ?libro=ID: abrir un libro directo desde un link compartido. */
+/* v71 — Deep link ?libro=ID: abrir un libro directo desde un link compartido.
+   v72 — Deep link ?sala=CODIGO: entrar directo a la sala en vivo desde un link
+   compartido (lo deja en la pantalla de entrada con el código ya puesto;
+   el visitante solo escribe su nombre y entra — sin login, sin fricción). */
 async function initDeepLink() {
   try {
     const q = new URLSearchParams(location.search);
+    // v72: enlace a sala en vivo
+    const sala = normalizeRoomClient(q.get('sala') || '');
+    if (sala) {
+      try { localStorage.setItem('tj_room', sala); } catch (e) {}
+      myRoom = sala;
+      const ri = $('roomInput'); if (ri) ri.value = sala;
+      history.replaceState(null, '', '/');
+      goLiveRoom();
+      myRoom = sala;
+      if (ri) ri.value = sala;
+      return;
+    }
     const id = (q.get('libro') || '').toUpperCase().trim();
     if (!id) return;
     // Espera a que la biblioteca cargue los libros
