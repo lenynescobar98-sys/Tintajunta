@@ -662,8 +662,11 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 
 /* Formulario de entrada en la portada oscura */
 .stream-join { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 18px; margin: 6px 0 4px; }
-/* Drawer ya es oscuro; asegurar contraste */
-.drawer { background: #14141c; }
+/* Drawer — tema premium claro */
+.drawer { background: #ffffff; color: #1a1a1a; box-shadow: 8px 0 32px rgba(0,0,0,.12); }
+.drawer .drawer-head { color: #1a1a1a; }
+.drawer button { color: #1a1a1a; }
+.drawer button:active { background: rgba(138,90,30,.12); }
 
 @media (max-width: 920px) {
   .layout { grid-template-columns: 1fr; }
