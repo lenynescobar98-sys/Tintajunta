@@ -694,6 +694,71 @@ function creatorLevel(name) {
 app.get('/api/creators/:name/level', (req, res) => {
   res.json({ ok: true, ...creatorLevel(req.params.name) });
 });
+/* ---------------- 👤 Perfil público de creador (v69, estilo knowledge panel) ----
+ * GET  /api/creators/:name/profile  -> perfil público + libros + stats + canEdit
+ * POST /api/creators/:name/profile  -> actualizar perfil propio (login requerido)
+ * POST /api/creators/:name/photo    -> subir foto de perfil (login requerido)   */
+function creatorCanEdit(req, c) {
+  const u = req.session && req.session.user;
+  if (!u || !u.sub) return { ok: false, error: 'login' };
+  const uname = String(u.name || '').trim().toLowerCase();
+  if (uname === 'lenyn escobar') return { ok: true, admin: true }; // admin
+  if (c.googleSub) return c.googleSub === u.sub
+    ? { ok: true } : { ok: false, error: 'not-owner' };
+  // Perfil sin reclamar: solo si el nombre de Google coincide con el del creador
+  if (uname && uname === String(c.name).trim().toLowerCase()) return { ok: true, claim: true };
+  return { ok: false, error: 'not-owner' };
+}
+app.get('/api/creators/:name/profile', (req, res) => {
+  const c = getCreator(req.params.name);
+  if (!c) return res.status(400).json({ ok: false, error: 'bad-name' });
+  const lvl = creatorLevel(c.name);
+  const myBooks = [...books.values()]
+    .filter((b) => b.author === c.name && b.status !== 'pending')
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    .map((b) => ({ id: b.id, title: b.title, coverUrl: b.coverUrl || null,
+      price: b.price || 0, sales: b.sales || 0 }));
+  let since = c.since || 0;
+  if (!since) {
+    const all = [...books.values()].filter((b) => b.author === c.name);
+    if (all.length) since = Math.min(...all.map((b) => b.createdAt || Date.now()));
+  }
+  const can = creatorCanEdit(req, c);
+  res.json({ ok: true, profile: {
+    name: c.name, verified: !!c.verified,
+    level: lvl.level, books: lvl.books, sales: lvl.sales, notes: lvl.notes,
+    bio: c.bio || '', photo: c.photo || '', location: c.location || '',
+    website: c.website || '', socials: Object.assign(
+      { instagram: '', x: '', youtube: '', tiktok: '', facebook: '' }, c.socials || {}),
+    about: c.about || '', since: since || 0,
+    booksList: myBooks, canEdit: !!can.ok,
+  }});
+});
+app.post('/api/creators/:name/profile', requireLogin, (req, res) => {
+  const c = getCreator(req.params.name);
+  if (!c) return res.status(400).json({ ok: false, error: 'bad-name' });
+  const can = creatorCanEdit(req, c);
+  if (!can.ok) return res.status(403).json({ ok: false, error: can.error || 'not-owner' });
+  if (can.claim) c.googleSub = req.session.user.sub; // reclama su perfil
+  const b = req.body || {};
+  const cleanUrl = (v, max) => {
+    let s = String(v || '').trim().slice(0, max || 120);
+    if (s && !/^https?:\/\//i.test(s)) s = 'https://' + s;
+    return s;
+  };
+  c.bio = String(b.bio || '').trim().slice(0, 160);
+  c.location = String(b.location || '').trim().slice(0, 60);
+  c.website = cleanUrl(b.website, 120);
+  c.about = String(b.about || '').trim().slice(0, 1000);
+  const soc = (b.socials && typeof b.socials === 'object') ? b.socials : {};
+  const cleanSoc = {};
+  for (const k of ['instagram', 'x', 'youtube', 'tiktok', 'facebook']) cleanSoc[k] = cleanUrl(soc[k], 120);
+  c.socials = cleanSoc;
+  if (!c.since) c.since = Date.now();
+  saveCreators();
+  res.json({ ok: true });
+});
+/* La subida de foto (multer) se define junto a las demás subidas, tras COVER_MIME. */
 /* Estadísticas para el creador: marcas + notas + reseñas */
 app.get('/api/books/:id/stats', (req, res) => {
   const bid = String(req.params.id || '').toUpperCase();
@@ -926,6 +991,43 @@ app.post('/api/books/:id/cover', (req, res) => {
     b.coverUrl = '/covers/' + path.basename(req.file.path);
     saveBooks();
     res.json({ ok: true, coverUrl: b.coverUrl });
+  });
+});
+/* --------------------- foto de perfil del creador (v69) --------------------- */
+const CREATORIMG_DIR = path.join(__dirname, 'public', 'img', 'creators');
+try { fs.mkdirSync(CREATORIMG_DIR, { recursive: true }); } catch { /* noop */ }
+const creatorPhotoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, CREATORIMG_DIR),
+    filename: (req, file, cb) => {
+      const safe = String(req.params.name || '').toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'creador';
+      const ext = COVER_MIME[file.mimetype] || '.jpg';
+      cb(null, 'creator-' + safe + ext);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    if (COVER_MIME[file.mimetype]) cb(null, true);
+    else cb(new Error('bad-type'));
+  },
+});
+app.post('/api/creators/:name/photo', requireLogin, (req, res) => {
+  const c = getCreator(req.params.name);
+  if (!c) return res.status(400).json({ ok: false, error: 'bad-name' });
+  const can = creatorCanEdit(req, c);
+  if (!can.ok) return res.status(403).json({ ok: false, error: can.error || 'not-owner' });
+  creatorPhotoUpload.single('photo')(req, res, (err) => {
+    if (err || !req.file) {
+      const code = err && err.message === 'bad-type' ? 'bad-type'
+        : (err && err.code === 'LIMIT_FILE_SIZE' ? 'too-big' : 'upload-error');
+      return res.status(400).json({ ok: false, error: code });
+    }
+    if (can.claim) c.googleSub = req.session.user.sub; // reclama su perfil
+    c.photo = '/img/creators/' + path.basename(req.file.path);
+    if (!c.since) c.since = Date.now();
+    saveCreators();
+    res.json({ ok: true, photo: c.photo });
   });
 });
 /* --------------------- fotos por página del libro --------------------- */
@@ -1299,7 +1401,16 @@ function getCreator(name) {
       email: '', emailVerified: false, emailCode: '',
       phone: '', phoneVerified: false, phoneCode: '',
       bank: null, bankVerified: false,        // { bank, routing, last4 }
-      tax: null, taxDone: false });           // { legalName, address, ssn4 }
+      tax: null, taxDone: false,              // { legalName, address, ssn4 }
+      /* v69 — perfil público estilo knowledge panel */
+      bio: '',                                // bio corta (160)
+      photo: '',                              // URL de la foto (/img/creators/…)
+      location: '',                           // ubicación
+      website: '',                            // sitio web oficial
+      socials: { instagram: '', x: '', youtube: '', tiktok: '', facebook: '' },
+      about: '',                              // bio extendida (1000)
+      since: 0,                               // timestamp de primera publicación
+      googleSub: '' });                       // cuenta Google vinculada (dueño del perfil)
   }
   return creators.get(n);
 }

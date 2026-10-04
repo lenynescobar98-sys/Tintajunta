@@ -1227,3 +1227,67 @@ main.layout article.chapter.read-w-wide #chapterTitle { max-width: none; }
   background: linear-gradient(90deg, var(--paper-deep) 25%, rgba(0,0,0,.06) 50%, var(--paper-deep) 75%);
   background-size: 400px 100%; animation: skel-shimmer 1.4s infinite linear;
 }
+
+/* ============ 👤 Perfil de creador — knowledge panel (v69) ============ */
+/* Layout inspirado en el knowledge panel; paleta premium TintaJunta:
+   blanco, negro #1a1a1a, dorado apagado #8a5a1e, azul tinta #1e3a5f. */
+.kp { text-align: left; }
+.kp-head { display: flex; gap: 16px; align-items: center; margin-bottom: 10px; }
+.kp-avatar {
+  width: 88px; height: 88px; border-radius: 50%; flex: 0 0 auto;
+  background: var(--brand); color: #fff; font-size: 36px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  border: 3px solid var(--line); box-shadow: 0 2px 10px rgba(0,0,0,.12);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.kp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.kp-name {
+  font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 700;
+  color: var(--ink); line-height: 1.15; margin: 0;
+}
+.kp-verified {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--brand);
+  color: #fff; font-size: 13px; font-weight: 700; vertical-align: 2px; margin-left: 6px;
+}
+.kp-level { font-size: 20px; vertical-align: 1px; margin-left: 4px; }
+.kp-role { color: var(--ink-soft); font-size: 14px; margin-top: 4px; }
+.kp-bio { font-size: 15px; color: var(--ink); line-height: 1.5; margin: 10px 0; }
+.kp-facts { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 10px 0; margin: 10px 0; display: grid; gap: 7px; }
+.kp-fact { font-size: 14px; color: var(--ink); display: flex; gap: 8px; align-items: baseline; }
+.kp-fact b { color: var(--ink-soft); font-weight: 600; min-width: 118px; }
+.kp-fact a { color: var(--accent); text-decoration: none; font-weight: 600; overflow-wrap: anywhere; }
+.kp-links { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+.kp-link {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: 999px; font-size: 13px; font-weight: 600;
+  color: var(--ink); text-decoration: none; background: var(--paper);
+  transition: transform .15s ease, border-color .15s ease;
+}
+.kp-link:active { transform: scale(.94); }
+.kp-link:hover { border-color: var(--accent); }
+.kp-sec { margin: 14px 0 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+.kp-about { font-size: 15px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; }
+.kp-books { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+.kp-book { cursor: pointer; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--paper-deep); transition: transform .15s ease; }
+.kp-book:active { transform: scale(.95); }
+.kp-book img { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
+.kp-book .kp-book-t { font-size: 12px; font-weight: 600; padding: 6px 8px; color: var(--ink); }
+.kp-book .kp-book-p { font-size: 11px; color: var(--accent); font-weight: 700; padding: 0 8px 8px; }
+.kp-stats { display: flex; gap: 8px; margin: 14px 0 4px; flex-wrap: wrap; }
+.kp-stat { flex: 1 1 0; min-width: 80px; text-align: center; padding: 10px 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-deep); }
+.kp-stat b { display: block; font-size: 18px; color: var(--ink); font-family: Georgia, serif; }
+.kp-stat span { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+.kp-edit { margin-top: 14px; width: 100%; }
+.kp-form { display: grid; gap: 10px; text-align: left; }
+.kp-form label { font-size: 12px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+.kp-form input, .kp-form textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  font-size: 15px; background: var(--paper); color: var(--ink); box-sizing: border-box;
+}
+.kp-form textarea { min-height: 70px; resize: vertical; font-family: inherit; }
+.kp-soc { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kp-photo-row { display: flex; gap: 10px; align-items: center; }
+/* Nombre de creador tocable (abre su perfil) */
+.creator-link { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.creator-link:hover { color: var(--accent); }

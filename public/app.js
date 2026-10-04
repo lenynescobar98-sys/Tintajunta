@@ -1030,7 +1030,7 @@ function openSwitchBookModal() {
     const isCur = currentBook && currentBook.id === b.id;
     const item = document.createElement('button');
     item.className = 'switchbook-item' + (isCur ? ' current' : '');
-    item.innerHTML = `<span class="swb-emoji">📖</span><span><span class="swb-title">${esc(b.title)}</span><br><span class="swb-author">${esc(b.author)}</span></span>` +
+    item.innerHTML = `<span class="swb-emoji">📖</span><span><span class="swb-title">${esc(b.title)}</span><br><span class="swb-author creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span></span>` +
       (isCur ? '<span style="margin-left:auto">✓</span>' : '');
     item.onclick = () => switchToBook(b);
     list.appendChild(item);
@@ -1373,6 +1373,8 @@ async function bootBook(book, push) {
     ? '📜 Clásico de dominio público — gratis para todos. Tus marcas son visibles para todos los lectores.'
     : book.price > 0 ? 'Libro adquirido. Tus marcas son visibles para todos los lectores.' : 'Libro gratuito. Tus marcas son visibles para todos los lectores.';
   renderText(ch.paragraphs, ch.title, book.title + ' — ' + book.author, kindNote, ch.images || []);
+  // v69: el nombre del creador es tocable (abre su perfil knowledge panel)
+  $('bookLine').innerHTML = `${esc(book.title)} — <span class="creator-link" data-creator="${esc(book.author)}">${esc(book.author)}</span>`;
   clog('libro cargado: ' + book.title + ', palabras=' + wordCount);
   if (!selInitDone) { selInitDone = true; initSelection(); }
   $('library').classList.add('hidden');
@@ -1739,6 +1741,157 @@ async function showAchievements() {
       `<div class="ach-item${a.unlocked ? '' : ' locked'}"><span>${a.unlocked ? a.emoji : '🔒'}</span><span>${esc(a.name)}</span></div>`
     ).join('') + `</div>`;
 }
+/* ---------------- 👤 Perfil de creador — knowledge panel (v69) ----------------
+ * Tocar el nombre/avatar de un creador abre su perfil estilo knowledge panel:
+ * foto, nombre + ✓, rol, bio, datos, links oficiales, acerca de, libros, stats.
+ * El creador edita su perfil desde aquí (solo el dueño, con login de Google). */
+const SOCIAL_DEFS = [
+  { key: 'instagram', label: 'Instagram', emoji: '📸' },
+  { key: 'x', label: 'X', emoji: '𝕏' },
+  { key: 'youtube', label: 'YouTube', emoji: '▶️' },
+  { key: 'tiktok', label: 'TikTok', emoji: '🎵' },
+  { key: 'facebook', label: 'Facebook', emoji: '👍' },
+];
+function kpInitial(name) {
+  const s = String(name || '?').trim();
+  return esc(s.charAt(0).toUpperCase() || '?');
+}
+function creatorPanelHtml(p) {
+  const vBadge = p.verified ? '<span class="kp-verified" title="Creador verificado">✓</span>' : '';
+  const lvl = p.level ? `<span class="kp-level" title="Nivel ${esc(p.level.name)}">${p.level.emoji}</span>` : '';
+  const avatar = p.photo
+    ? `<div class="kp-avatar"><img src="${esc(p.photo)}" alt="Foto de ${esc(p.name)}"></div>`
+    : `<div class="kp-avatar">${kpInitial(p.name)}</div>`;
+  const role = `Autor · ${p.books} libro${p.books === 1 ? '' : 's'}`;
+  const since = p.since ? new Date(p.since).toLocaleDateString('es', { month: 'long', year: 'numeric' }) : '';
+  const facts =
+    (p.location ? `<div class="kp-fact"><b>Ubicación</b><span>📍 ${esc(p.location)}</span></div>` : '') +
+    (p.website ? `<div class="kp-fact"><b>Sitio web</b><a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website.replace(/^https?:\/\//i, ''))}</a></div>` : '') +
+    (since ? `<div class="kp-fact"><b>Publicando desde</b><span>📅 ${esc(since)}</span></div>` : '');
+  const links = [];
+  if (p.website) links.push(`<a class="kp-link" href="${esc(p.website)}" target="_blank" rel="noopener">🌐 Sitio oficial</a>`);
+  (SOCIAL_DEFS || []).forEach((s) => {
+    const url = p.socials && p.socials[s.key];
+    if (url) links.push(`<a class="kp-link" href="${esc(url)}" target="_blank" rel="noopener">${s.emoji} ${s.label}</a>`);
+  });
+  const booksHtml = (p.booksList && p.booksList.length)
+    ? `<div class="kp-books">` + p.booksList.map((b) =>
+        `<div class="kp-book" data-book="${esc(b.id)}">` +
+        (b.coverUrl ? `<img src="${esc(b.coverUrl)}" alt="Portada de ${esc(b.title)}" loading="lazy">`
+          : `<div style="aspect-ratio:2/3;${coverStyle(b.id)};position:relative"><div class="cover-title" style="font-size:13px">${esc(b.title)}</div></div>`) +
+        `<div class="kp-book-t">${esc(b.title)}</div>` +
+        `<div class="kp-book-p">${b.price === 0 ? 'Gratis' : fmtPrice(b.price)}</div></div>`
+      ).join('') + `</div>`
+    : `<p class="join-note" style="margin:6px 0">Aún no tiene libros publicados.</p>`;
+  return `<div class="kp">` +
+    `<div class="kp-head">${avatar}<div><h3 class="kp-name">${esc(p.name)}${vBadge}${lvl}</h3><div class="kp-role">${esc(role)}</div></div></div>` +
+    (p.bio ? `<p class="kp-bio">${esc(p.bio)}</p>` : '') +
+    (facts ? `<div class="kp-facts">${facts}</div>` : '') +
+    (links.length ? `<div class="kp-links">${links.join('')}</div>` : '') +
+    (p.about ? `<div class="kp-sec">Acerca de</div><p class="kp-about">${esc(p.about)}</p>` : '') +
+    `<div class="kp-stats">` +
+    `<div class="kp-stat"><b>${p.books}</b><span>Libros</span></div>` +
+    `<div class="kp-stat"><b>${p.sales}</b><span>Lectores</span></div>` +
+    `<div class="kp-stat"><b>${p.notes}</b><span>Notas</span></div>` +
+    (p.level ? `<div class="kp-stat"><b>${p.level.emoji}</b><span>${esc(p.level.name)}</span></div>` : '') +
+    `</div>` +
+    `<div class="kp-sec">Libros de ${esc(p.name)}</div>${booksHtml}` +
+    (p.canEdit ? `<button class="btn btn-primary kp-edit" id="kpEditBtn">✏️ Editar mi perfil</button>` : '') +
+    `</div>`;
+}
+async function showCreatorProfile(name) {
+  name = String(name || '').trim();
+  if (!name) return;
+  const body = $('creatorBody');
+  body.innerHTML = '<p class="join-note">Cargando perfil…</p>';
+  $('creatorPop').classList.remove('hidden');
+  $('creatorClose').onclick = () => $('creatorPop').classList.add('hidden');
+  let p = null;
+  try {
+    const r = await fetch('/api/creators/' + encodeURIComponent(name) + '/profile', { cache: 'no-store' });
+    const d = await r.json();
+    if (d && d.ok) p = d.profile;
+  } catch (e) { /* sin conexión */ }
+  if (!p) { body.innerHTML = '<p class="join-note">No se pudo cargar el perfil. Revisa tu conexión.</p>'; return; }
+  body.innerHTML = creatorPanelHtml(p);
+  // Libros tocables -> abrir el libro
+  body.querySelectorAll('[data-book]').forEach((el) => {
+    el.onclick = () => { $('creatorPop').classList.add('hidden'); openBook(el.getAttribute('data-book')); };
+  });
+  const eb = $('kpEditBtn');
+  if (eb) eb.onclick = () => showCreatorEdit(p);
+}
+function showCreatorEdit(p) {
+  const body = $('creatorBody');
+  const s = p.socials || {};
+  body.innerHTML = `<div class="kp"><div class="kp-sec" style="margin-top:0">Editar perfil — ${esc(p.name)}</div>
+  <div class="kp-form">
+    <div><label>Foto de perfil</label>
+      <div class="kp-photo-row">
+        <div class="kp-avatar" style="width:56px;height:56px;font-size:24px">${p.photo ? `<img src="${esc(p.photo)}" alt="">` : kpInitial(p.name)}</div>
+        <input type="file" id="kpPhoto" accept="image/jpeg,image/png,image/webp,image/gif" style="font-size:13px">
+      </div></div>
+    <div><label>Bio corta (160)</label><input id="kpBio" maxlength="160" value="${esc(p.bio || '')}" placeholder="Una línea sobre ti"></div>
+    <div><label>Ubicación</label><input id="kpLoc" maxlength="60" value="${esc(p.location || '')}" placeholder="Ciudad, País"></div>
+    <div><label>Sitio web</label><input id="kpWeb" maxlength="120" value="${esc(p.website || '')}" placeholder="https://tusitio.com"></div>
+    <div><label>Redes oficiales</label><div class="kp-soc">` +
+    SOCIAL_DEFS.map((d) =>
+      `<input id="kpSoc_${d.key}" maxlength="120" value="${esc(s[d.key] || '')}" placeholder="${d.emoji} ${d.label}">`
+    ).join('') + `</div></div>
+    <div><label>Acerca de (1000)</label><textarea id="kpAbout" maxlength="1000" placeholder="Cuéntales a tus lectores quién eres…">${esc(p.about || '')}</textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="kpCancel" style="flex:1">Cancelar</button>
+      <button class="btn btn-primary" id="kpSave" style="flex:2">💾 Guardar</button>
+    </div>
+  </div></div>`;
+  $('kpCancel').onclick = () => showCreatorProfile(p.name);
+  $('kpSave').onclick = () => saveCreatorProfile(p.name);
+}
+async function saveCreatorProfile(name) {
+  const btn = $('kpSave');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  const socials = {};
+  SOCIAL_DEFS.forEach((d) => { socials[d.key] = ($('kpSoc_' + d.key) || {}).value || ''; });
+  try {
+    // 1. Foto (si eligió una)
+    const fi = $('kpPhoto');
+    if (fi && fi.files && fi.files[0]) {
+      const fd = new FormData();
+      fd.append('photo', fi.files[0]);
+      const rp = await fetch('/api/creators/' + encodeURIComponent(name) + '/photo', { method: 'POST', body: fd });
+      const dp = await rp.json().catch(() => ({}));
+      if (!dp.ok) throw new Error(dp.error || 'photo-failed');
+    }
+    // 2. Datos del perfil
+    const r = await fetch('/api/creators/' + encodeURIComponent(name) + '/profile', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bio: $('kpBio').value, location: $('kpLoc').value,
+        website: $('kpWeb').value, about: $('kpAbout').value, socials,
+      }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (!d.ok) throw new Error(d.error || 'save-failed');
+    toast('Perfil actualizado ✅');
+    showCreatorProfile(name); // recargar
+  } catch (e) {
+    const msg = e.message === 'not-owner' ? 'Solo el dueño puede editar este perfil (entra con Google).'
+      : e.message === 'login' ? 'Entra con Google para editar tu perfil.'
+      : e.message === 'too-big' ? 'La foto es muy pesada (máx 2MB).'
+      : e.message === 'bad-type' ? 'La foto debe ser JPG, PNG, WebP o GIF.'
+      : 'No se pudo guardar. Revisa tu conexión.';
+    toast(msg);
+    btn.disabled = false; btn.textContent = '💾 Guardar';
+  }
+}
+/* Tocar el nombre/avatar de un creador abre su perfil (delegado global,
+ * fase de captura para ganarle a los onclick de las tarjetas). */
+document.addEventListener('click', (e) => {
+  const t = e.target && e.target.closest ? e.target.closest('[data-creator]') : null;
+  if (!t) return;
+  e.preventDefault(); e.stopPropagation();
+  showCreatorProfile(t.getAttribute('data-creator'));
+}, true);
 /* ------------------------- ✅ Verificaciones ------------------------- */
 function vRow(emoji, title, desc, statusHtml, formHtml) {
   return `<div class="vrf-row"><div class="vrf-head"><span>${emoji} <b>${title}</b></span>${statusHtml}</div>` +
@@ -2205,7 +2358,7 @@ function coverTile(b, opts) {
     pendBadge + classicBadge + ageBadge +
     (getProgress(b.id) > 120 ? `<div class="prog-badge">📖 Continuar</div>` : '') +
     reportBadge(b) +
-    (b.coverUrl ? '' : `<div class="cover-title">${esc(b.title)}</div><div class="cover-author">${esc(b.author)}</div>`) +
+    (b.coverUrl ? '' : `<div class="cover-title">${esc(b.title)}</div><div class="cover-author creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</div>`) +
     `</div>` +
     `<div class="tile-title">${esc(b.title)} ${vBadge}</div>` +
     `<div class="tile-sub">${b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price)} · 🎨 ${b.marks || 0} · ${ratingHtml(b)}` +
@@ -2452,7 +2605,7 @@ function showImmersiveBook(b) {
     badge: '⭐ Destacado',
     title: b.title,
     sub: `${b.author} · ${b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price)}`,
-    subHtml: `${esc(b.author)} ${levelSpan(b.author)} · ${b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price)} · <span class="tile-rating" id="immRating">${ratingText(b)}</span>`,
+    subHtml: `<span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> ${levelSpan(b.author)} · ${b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price)} · <span class="tile-rating" id="immRating">${ratingText(b)}</span>`,
     cta: owned ? 'Leer ahora' : 'Ver libro',
     tag: 'TINTAJUNTA',
     onCta: () => { closeImmersive(); openBook(b.id); },
@@ -2484,7 +2637,7 @@ function heroSlideBook(b) {
   const bg = b.coverUrl ? '' : coverStyle(b.id);
   const tags = `<div class="hero-tags"><span class="hero-tag">⭐ DESTACADO</span>` +
     (isNewBook(b) ? `<span class="hero-tag">🆕 NUEVO</span>` : '') + `</div>`;
-  const meta = `${esc(b.author)} ${levelSpan(b.author)} · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0} · ` +
+  const meta = `<span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> ${levelSpan(b.author)} · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0} · ` +
     (b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price));
   const desc = (b.marks || b.notes)
     ? `La comunidad ya dejó ${b.marks || 0} marcas y ${b.notes || 0} notas en este libro.`
@@ -2640,7 +2793,7 @@ function bookRow(b, rank) {
     `<div class="row-cover" style="${b.coverUrl ? '' : coverStyle(b.id)}">${coverInner(b, true)}</div>` +
     `<div class="row-main">` +
       `<div class="row-title">${esc(b.title)}</div>` +
-      `<div class="row-meta">${esc(b.author)} ${levelSpan(b.author)} · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0}` +
+      `<div class="row-meta"><span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> ${levelSpan(b.author)} · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0}` +
       (b.price === 0 ? ' · <span class="free">Gratis</span>' : owned ? ' · Adquirido' : ` · ${fmtPrice(b.price)}`) +
       `</div>` +
     `</div>` +
@@ -2821,7 +2974,7 @@ async function showFeature(b) {
 function showBuy(book) {
   buyBookPending = book;
   $('buyTitle').textContent = book.title;
-  $('buyAuthor').textContent = book.author;
+  $('buyAuthor').innerHTML = `<span class="creator-link" data-creator="${esc(book.author)}">${esc(book.author)}</span>`;
   $('buyPrice').textContent = fmtPrice(book.price);
   $('buyConfirm').textContent = 'Comprar por ' + fmtPrice(book.price);
   $('buyPop').classList.remove('hidden');
@@ -3082,6 +3235,7 @@ function initImdbBar() {
       else if (go === 'publish') { closeDrawer(); syncNameFromLib(); $('publishPop').classList.remove('hidden'); }
       else if (go === 'ad') { closeDrawer(); showAdModal(null); }
       else if (go === 'achievements') { closeDrawer(); showAchievements(); }
+      else if (go === 'profile') { closeDrawer(); showCreatorProfile(displayName()); }
       else if (go === 'verify') { closeDrawer(); syncNameFromLib(); showVerifications(); }
       else if (go === 'admin') { closeDrawer(); showAdminPanel(); }
       else if (go === 'theme') { closeDrawer(); toggleTheme(); }
