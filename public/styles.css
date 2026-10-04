@@ -1686,3 +1686,84 @@ body.board-mode-on #typoPop,
 body.board-mode-on #toolbar,
 body.board-mode-on .imdb-bar { display: none !important; }
 #pencilBtn.on, #boardModeBtn.on { background: #8a5a1e; color: #fff; }
+
+/* ============ v90: pantallas anchas — aprovechar el ancho ============
+   Móvil (<481px): carrusel horizontal actual (estilos base, sin cambios).
+   Tablet (481-900px): grid de 2 columnas.
+   Desktop (>900px): contenedor más ancho, hero más grande, grid de 3 columnas. */
+
+/* --- Tablet: 2 columnas --- */
+@media (min-width: 481px) and (max-width: 900px) {
+  #library #rowDestacados.hrow,
+  #library #rowRecomendados.hrow,
+  #library #rowClassics.hrow {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px;
+    overflow: visible; padding: 6px 2px 20px; scroll-snap-type: none;
+  }
+  #library #rowDestacados.hrow .tile,
+  #library #rowRecomendados.hrow .tile,
+  #library #rowClassics.hrow .tile { flex: none; min-width: 0; }
+  #library #rowDestacados.hrow .tile-cover,
+  #library #rowRecomendados.hrow .tile-cover,
+  #library #rowClassics.hrow .tile-cover { width: 100%; }
+  #library .continue-row {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+    overflow: visible; padding: 4px 2px 14px;
+  }
+  #library .continue-card { min-width: 0; max-width: none; flex-shrink: 1; }
+}
+
+/* --- Desktop: contenedor ancho, hero grande, 3 columnas --- */
+@media (min-width: 901px) {
+  #library .join-card.lib-stream, #writing .join-card.lib-card {
+    max-width: 1200px; padding: 8px 28px 44px;
+  }
+  /* Hero a ancho completo y más impactante */
+  #library .hero-big { border-radius: 32px; margin: 12px 0 40px; }
+  #library .hero-big .hero-slide { min-height: 480px; padding: 44px 52px; }
+  #library .hero-big .hero-title { font-size: clamp(40px, 4.6vw, 62px); }
+  #library .hero-desc { font-size: 17px; max-width: 62%; -webkit-line-clamp: 3; }
+  #library .hero-cta-round { padding: 17px 44px; font-size: 18px; }
+  /* Grid de libros en lugar de carrusel */
+  #library #rowDestacados.hrow,
+  #library #rowRecomendados.hrow,
+  #library #rowClassics.hrow {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    overflow: visible; padding: 6px 2px 24px; scroll-snap-type: none;
+  }
+  #library #rowDestacados.hrow .tile,
+  #library #rowRecomendados.hrow .tile,
+  #library #rowClassics.hrow .tile { flex: none; min-width: 0; }
+  #library #rowDestacados.hrow .tile-cover,
+  #library #rowRecomendados.hrow .tile-cover,
+  #library #rowClassics.hrow .tile-cover { width: 100%; }
+  #library #rowDestacados.hrow .tile-title,
+  #library #rowRecomendados.hrow .tile-title,
+  #library #rowClassics.hrow .tile-title { font-size: 16px; }
+  #library #rowDestacados.hrow .tile-sub,
+  #library #rowRecomendados.hrow .tile-sub,
+  #library #rowClassics.hrow .tile-sub { font-size: 13px; }
+  /* En grid ya no hay desplazamiento: ocultar el indicador › */
+  #secDestacados .row-more, #secClassics .row-more,
+  #library .row-sec:has(#rowRecomendados) .row-more { display: none; }
+  /* Seguir leyendo: ancho completo, tarjetas más grandes */
+  #library .continue-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+    overflow: visible; padding: 4px 2px 18px;
+  }
+  #library .continue-card { min-width: 0; max-width: none; flex-shrink: 1; padding: 14px 18px 14px 14px; }
+  #library .continue-cover { width: 68px; height: 100px; }
+  #library .continue-info b { font-size: 16px; }
+  #library .continue-info i { font-size: 13px; }
+  #library .continue-cta { font-size: 14px; }
+  /* Anuncios y afiliados también en grid para llenar el ancho */
+  #library #rowAds.hrow, #library #rowAff.hrow {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    overflow: visible; padding: 6px 2px 24px; scroll-snap-type: none;
+  }
+  #library #rowAds.hrow .ad-card, #library #rowAff.hrow .ad-card { flex: none; min-width: 0; }
+  #library #rowAds.hrow .ad-visual, #library #rowAff.hrow .ad-visual { width: 100%; height: auto; aspect-ratio: 16/10; }
+  #library #rowAds.hrow .ad-visual span, #library #rowAff.hrow .ad-visual span { font-size: 64px; }
+  #library #rowAds.hrow .ad-name, #library #rowAff.hrow .ad-name { font-size: 15px; }
+  #secAds .row-more, #secAff .row-more { display: none; }
+}
