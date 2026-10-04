@@ -1890,7 +1890,7 @@ async function initAds() {
 let libSort = 'popularidad';
 let libPill = localStorage.getItem('tj_pill') || 'todos'; // todos|gratis|destacados|nuevos|populares
 let libLang = localStorage.getItem('tj_lang') || ''; // '' = todos los idiomas
-const LANG_FLAGS = { es: '🇪🇸', en: '🇬🇧', fr: '🇫🇷', pt: '🇵🇹', ar: '🇸🇦' };
+const LANG_FLAGS = { es: '🇪🇸', en: '🇬🇧', fr: '🇫🇷', pt: '🇵🇹', ar: '🇸🇦', it: '🇮🇹' };
 function langBadge(b) {
   const l = b.language || 'es';
   if (l === 'es') return ''; // español es el default, no necesita insignia

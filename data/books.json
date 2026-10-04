@@ -828,5 +828,189 @@
     ]
    }
   ]
+ },
+ {
+  "id": "LAZARI",
+  "title": "Lazarillo de Tormes (fragmento)",
+  "author": "Anónimo",
+  "price": 0,
+  "createdAt": 1791130000000,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "classic": true,
+  "language": "es",
+  "chapters": [
+   {
+    "title": "Tratado primero — fragmento",
+    "paragraphs": [
+     "Pues sepa Vuestra Merced, ante todas cosas, que a mí llaman Lázaro de Tormes, hijo de Tomé González y de Antona Pérez, naturales de Tejares, aldea de Salamanca. Mi nacimiento fue dentro del río Tormes, por la cual causa me pusieron sobrenombre, y fue de esta manera.",
+     "Mi padre, que Dios perdone, tenía cargo de proveer una molienda de una aceña que está ribera de aquel río, en la cual fue molinero más de quince años; y, estando mi madre una noche en la aceña, preñada de mí, tomóle el parto y parióme allí.",
+     "De manera que con verdad me puedo decir nacido en el río. Pues siendo yo niño de ocho años, achacaron a mi padre ciertas sangrías mal hechas en los costales de los que allí a moler venían, por lo cual fue preso, y confesó y no negó, y padeció persecución por justicia.",
+     "Quedamos mi madre y un hermanico que de muchacho servía de guía a un ciego, y como el oficio del ciego era pregonar y pedir limosna por las aldeas, mi madre me entregó a él para que le sirviese de guía y le acompañase. Y así comencé a servir a mi primer amo, el ciego, que me enseñó más malicias que años tenía."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "FUENTE",
+  "title": "Fuenteovejuna (fragmento)",
+  "author": "Lope de Vega",
+  "price": 0,
+  "createdAt": 1791130000001,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "classic": true,
+  "language": "es",
+  "chapters": [
+   {
+    "title": "Acto tercero — fragmento",
+    "paragraphs": [
+     "Todo el pueblo de Fuenteovejuna, harto de los abusos del Comendador Fernán Gómez, se levanta contra él. Los labradores, hombres y mujeres, toman las armas y van a su casa dispuestos a hacer justicia por sus propias manos.",
+     "El Comendador, soberbio hasta el final, se niega a huir y desprecia a los villanos. Pero la multitud entra en su casa y, entre todos, le dan muerte. Nadie sabe quién dio el golpe fatal, porque fueron todos a una.",
+     "Llega el juez pesquisidor enviado por los Reyes Católicos para averiguar quién mató al Comendador. Manda torturar a los vecinos uno por uno, viejos y mozos, hombres y mujeres, para arrancarles el nombre del culpable.",
+     "Y a cada pregunta del tormento, todos responden lo mismo: «¿Quién mató al Comendador? ¡Fuenteovejuna, señor! ¿Y quién es Fuenteovejuna? ¡Todo el pueblo, a una!» Y así, no pudiendo hallar culpable, el pueblo queda libre y perdonado."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "VIDASU",
+  "title": "La vida es sueño (fragmento)",
+  "author": "Calderón de la Barca",
+  "price": 0,
+  "createdAt": 1791130000002,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "classic": true,
+  "language": "es",
+  "chapters": [
+   {
+    "title": "Jornada segunda — monólogo de Segismundo",
+    "paragraphs": [
+     "Segismundo, príncipe de Polonia, ha vivido encadenado en una torre desde su nacimiento por un funesto pronóstico. Por una noche, su padre el rey Basilio le lleva dormido a palacio para probar si es digno del trono. Al despertar entre lujos, Segismundo se muestra soberbio y cruel.",
+     "De vuelta en su prisión, cree que todo fue un sueño. Y entonces pronuncia su famoso monólogo, una de las reflexiones más profundas del teatro universal sobre la vida y la muerte.",
+     "«¿Qué es la vida? Una ilusión, una sombra, una ficción, y el mayor bien es pequeño: que toda la vida es sueño, y los sueños, sueños son.»",
+     "Así comprende Segismundo que la vida pasa como un sueño, y que lo único que queda es obrar bien, porque «el vivir sólo es soñar». Con esta lección, el príncipe se transforma y al final alcanza la libertad y el trono con sabiduría."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "FRANKN",
+  "title": "Frankenstein (excerpt)",
+  "author": "Mary Shelley",
+  "price": 0,
+  "createdAt": 1791130000003,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "classic": true,
+  "language": "en",
+  "chapters": [
+   {
+    "title": "Chapter 5 — excerpt",
+    "paragraphs": [
+     "It was on a dreary night of November that I beheld the accomplishment of my toils. With an anxiety that almost amounted to agony, I collected the instruments of life around me, that I might infuse a spark of being into the lifeless thing that lay at my feet.",
+     "It was already one in the morning; the rain pattered dismally against the panes, and my candle was nearly burnt out, when, by the glimmer of the half-extinguished light, I saw the dull yellow eye of the creature open; it breathed hard, and a convulsive motion agitated its limbs.",
+     "How can I describe my emotions at this catastrophe, or how delineate the wretch whom with such infinite pains and care I had endeavoured to form? His limbs were in proportion, and I had selected his features as beautiful.",
+     "But these luxuriances only formed a more horrid contrast with his watery eyes, that seemed almost of the same colour as the dun-white sockets in which they were set, his shrivelled complexion and straight black lips. Unable to endure the aspect of the being I had created, I rushed out of the room."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "MOBYDK",
+  "title": "Moby Dick (excerpt)",
+  "author": "Herman Melville",
+  "price": 0,
+  "createdAt": 1791130000004,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "classic": true,
+  "language": "en",
+  "chapters": [
+   {
+    "title": "Chapter 1: Loomings — excerpt",
+    "paragraphs": [
+     "Call me Ishmael. Some years ago — never mind how long precisely — having little or no money in my purse, and nothing particular to interest me on shore, I thought I would sail about a little and see the watery part of the world.",
+     "It is a way I have of driving off the spleen and regulating the circulation. Whenever I find myself growing grim about the mouth; whenever it is a damp, drizzly November in my soul; whenever I find myself involuntarily pausing before coffin warehouses, and bringing up the rear of every funeral I meet — then, I account it high time to get to sea as soon as I can.",
+     "This is my substitute for pistol and ball. With a philosophical flourish Cato throws himself upon his sword; I quietly take to the ship. There is nothing surprising in this. If they but knew it, almost all men in their degree, some time or other, cherish very nearly the same feelings towards the ocean with me.",
+     "There now is your insular city of the Manhattoes, belted round by wharves as Indian isles by coral reefs — commerce surrounds it with her surf. Right and left, the streets take you waterward. Its extreme downtown is the battery, where that noble mole is washed by waves, and cooled by breezes, which a few hours previous were out of sight of land."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "MISERA",
+  "title": "Les Misérables (fragment)",
+  "author": "Victor Hugo",
+  "price": 0,
+  "createdAt": 1791130000005,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "classic": true,
+  "language": "fr",
+  "chapters": [
+   {
+    "title": "Tome I — fragment",
+    "paragraphs": [
+     "Jean Valjean, condamné à dix-neuf ans de bagne pour avoir volé un pain, sort enfin de prison. Partout on le repousse : son passeport jaune fait peur à tous les aubergistes. Un soir d'octobre 1815, épuisé, il frappe à la porte de Monseigneur Bienvenu, l'évêque de Digne.",
+     "L'évêque l'accueille sans question, lui offre le souper et un lit. Pendant la nuit, Valjean se réveille, vole l'argenterie de la maison et s'enfuit. Mais les gendarmes l'arrêtent et le ramènent chez l'évêque.",
+     "Alors se produit le miracle : au lieu de l'accuser, Monseigneur Bienvenu déclare que l'argenterie était un cadeau. Et il ajoute deux chandeliers d'argent : « N'oubliez pas, n'oubliez jamais que vous m'avez promis d'employer cet argent à devenir honnête homme. »",
+     "Bouleversé par cette bonté inattendue, Jean Valjean pleure pour la première fois depuis dix-neuf ans. Cette nuit-là, le forçat meurt et un homme nouveau naît : désormais, il consacrera sa vie à faire le bien."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "PRIMOB",
+  "title": "O Primo Basílio (fragmento)",
+  "author": "Eça de Queirós",
+  "price": 0,
+  "createdAt": 1791130000006,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "classic": true,
+  "language": "pt",
+  "chapters": [
+   {
+    "title": "Capítulo I — fragmento",
+    "paragraphs": [
+     "Luísa, jovem senhora da burguesia lisboeta, vive um casamento tranquilo com Jorge, engenheiro respeitável. A sua vida corre mansa entre bordados, visitas e romances franceses, até ao dia em que reaparece Basílio, seu primo e antigo namorado, agora homem do mundo.",
+     "Basílio, elegante e cínico, começa a visitar a casa com frequência. Aproveita a ausência de Jorge, que partiu para o Alentejo, e envolve Luísa numa teia de sedução feita de memórias antigas e promessas novas.",
+     "Luísa, fraca e sonhadora, cede ao adultério. Escreve a Basílio cartas apaixonadas que ele guarda com descuido. A criada Juliana, amarga e invejosa, descobre as cartas e começa a chantagear a patroa.",
+     "Eça de Queirós pinta assim, com ironia implacável, a hipocrisia da sociedade lisboeta do século XIX: por detrás das aparências respeitáveis, escondem-se a fraqueza, a vaidade e a mentira."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "DIVCOM",
+  "title": "La Divina Commedia — Inferno (frammento)",
+  "author": "Dante Alighieri",
+  "price": 0,
+  "createdAt": 1791130000007,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "classic": true,
+  "language": "it",
+  "chapters": [
+   {
+    "title": "Inferno, Canto I — frammento",
+    "paragraphs": [
+     "Nel mezzo del cammin di nostra vita mi ritrovai per una selva oscura, ché la diritta via era smarrita. Ahi quanto a dir qual era è cosa dura esta selva selvaggia e aspra e forte che nel pensier rinova la paura!",
+     "Io non so ben ridir com'i' v'intrai, tant'era pien di sonno a quel punto che la verace via abbandonai. Ma poi ch'i' fui al piè d'un colle giunto, là dove terminava quella valle che m'avea di paura il cor compunto,",
+     "guardai in alto e vidi le sue spalle vestite già de' raggi del pianeta che mena dritto altrui per ogne calle. Allor fu la paura un poco queta, che nel lago del cor m'era durata la notte ch'i' passai con tanta pieta.",
+     "Ed ecco, quasi al cominciar de l'erta, una lonza leggiera e presta molto, che di pel macolato era coverta. Questi i versi immortali con cui Dante inizia il suo viaggio ultraterreno, guidato prima da Virgilio e poi da Beatrice, attraverso Inferno, Purgatorio e Paradiso."
+    ]
+   }
+  ]
  }
 ]
