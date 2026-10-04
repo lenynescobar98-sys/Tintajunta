@@ -1152,10 +1152,11 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   border-right: 1px solid rgba(255,255,255,.09);
   border-radius: 0 24px 24px 0; width: 284px; padding: 22px 0;
 }
-#drawer .drawer-head { font-size: 20px; letter-spacing: -.3px; padding: 4px 24px 18px; }
+#drawer .drawer-head { font-size: 20px; letter-spacing: -.3px; padding: 4px 24px 18px; color: #f4ecdc; }
 #drawer.drawer button {
   border-radius: 14px; margin: 3px 14px; padding: 14px 18px; font-size: 16px;
   transition: background .2s ease, transform .15s ease;
+  color: #f4ecdc;
 }
 #drawer.drawer button:active { background: rgba(138,90,30,.16); transform: scale(.98); }
 
