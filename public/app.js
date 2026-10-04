@@ -884,7 +884,7 @@ function applyState(s) {
   if (!s || s.ok === false) return;
   // Optimización: si nada cambió desde el último poll, no re-renderizar
   try {
-    const sig = JSON.stringify([s.highlights, s.notes, s.board, s.follow, s.chat, s.reactions, s.hands, s.roster, s.switchTo]);
+    const sig = JSON.stringify([s.highlights, s.notes, s.board, s.follow, s.para, s.chat, s.reactions, s.hands, s.roster, s.switchTo]);
     if (sig === lastStateSig) return;
     lastStateSig = sig;
   } catch (e) { /* si falla el diff, renderizar normal */ }
@@ -892,6 +892,7 @@ function applyState(s) {
   notes = s.notes || [];
   board = s.board || { text: '', name: '', ts: 0 };
   follow = s.follow || { active: false, pos: 0, ts: 0, name: '' };
+  if (s.para) roomPara = s.para;
   chat = s.chat || [];
   reactions = s.reactions || [];
   const prevHands = new Set(hands.map((h) => h.name));
@@ -905,6 +906,8 @@ function applyState(s) {
   renderReactions();
   renderHands();
   renderSwitchBookBtn();
+  renderParaBar();
+  checkPara(s);
   checkSwitchTo(s);
   // Avisar al profesor de manos nuevas
   if (isTeacher) {
@@ -1057,6 +1060,118 @@ function initFollow() {
     }, { passive: true });
   }
   renderFollow();
+}
+
+/* ------------------------- 📖 Párrafo de clase (v81) ------------------------- */
+/* El profesor (tinta negra 🎓) mueve el párrafo; todos lo ven sincronizado.
+   Regla permanente: cada quien escribe con SU color; el profesor SIEMPRE negro. */
+let roomPara = { idx: 0, ts: 0 };
+let lastParaTs = 0;
+
+function paraCount() {
+  return document.querySelectorAll('#paras p[data-para]').length;
+}
+function paraLabel() {
+  const n = paraCount();
+  const i = Math.min(roomPara.idx, Math.max(0, n - 1));
+  return n > 0 ? `Párrafo ${i + 1} de ${n}` : 'Párrafo —';
+}
+function renderParaBar() {
+  const bar = $('paraBar');
+  if (!bar) return;
+  const show = currentView === 'room' && (isTeacher || roomPara.ts > 0);
+  bar.classList.toggle('hidden', !show);
+  if (!show) return;
+  const n = paraCount();
+  const i = Math.min(roomPara.idx, Math.max(0, n - 1));
+  $('paraLabel').textContent = paraLabel();
+  const prev = $('paraPrev'), next = $('paraNext');
+  if (isTeacher) {
+    prev.classList.remove('hidden'); next.classList.remove('hidden');
+    prev.disabled = i <= 0; next.disabled = n > 0 && i >= n - 1;
+  } else {
+    prev.classList.add('hidden'); next.classList.add('hidden');
+  }
+}
+function setRoomPara(idx) {
+  if (!isTeacher) return;
+  const n = paraCount();
+  idx = Math.max(0, Math.min(n - 1, idx));
+  if (idx === roomPara.idx && roomPara.ts > 0) return;
+  apiPost(roomBase() + '/para', { idx })
+    .then((s) => {
+      if (s && s.ok && s.para) { roomPara = s.para; lastParaTs = s.para.ts; focusPara(roomPara.idx, true); renderParaBar(); renderBoardMode(); }
+    })
+    .catch(() => toast('No se pudo cambiar el párrafo — revisa tu conexión'));
+}
+/* Resalta el párrafo actual para todos y lo muestra en modo pizarra */
+function focusPara(idx, smooth) {
+  document.querySelectorAll('#paras p[data-para]').forEach((p) => {
+    p.classList.toggle('para-focus', Number(p.dataset.para) === idx);
+  });
+  const pEl = document.querySelector('#paras p[data-para="' + idx + '"]');
+  if (pEl && !document.body.classList.contains('board-mode-on')) {
+    try { pEl.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' }); }
+    catch (e) { pEl.scrollIntoView(); }
+  }
+  renderBoardMode();
+}
+function checkPara(s) {
+  const pa = s && s.para;
+  if (!pa || !pa.ts) return;
+  if (pa.ts <= lastParaTs) return;
+  lastParaTs = pa.ts;
+  roomPara = pa;
+  renderParaBar();
+  focusPara(pa.idx, true);
+  if (!isTeacher) toast('📖 El profesor pasó al ' + paraLabel().toLowerCase());
+}
+function initParaBar() {
+  const prev = $('paraPrev'), next = $('paraNext');
+  if (prev) prev.onclick = () => setRoomPara(roomPara.idx - 1);
+  if (next) next.onclick = () => setRoomPara(roomPara.idx + 1);
+  renderParaBar();
+}
+
+/* ------------------------- 🖥️ Modo pizarra (v81) ------------------------- */
+/* Vista limpia: SOLO la pizarra blanca, con el párrafo actual grande y claro. */
+function renderBoardMode() {
+  const panel = $('boardMode');
+  if (!panel || !document.body.classList.contains('board-mode-on')) return;
+  const n = paraCount();
+  const idx = Math.min(roomPara.idx, Math.max(0, n - 1));
+  const src = document.querySelector('#paras p[data-para="' + idx + '"]');
+  const body = $('boardModeText');
+  if (src && body) {
+    // Clona el párrafo real: conserva los colores de tinta de cada persona
+    body.innerHTML = '';
+    const clone = src.cloneNode(true);
+    clone.removeAttribute('id');
+    body.appendChild(clone);
+  }
+  $('boardModeLabel').textContent = paraLabel();
+  const prev = $('boardModePrev'), next = $('boardModeNext');
+  if (prev && next) {
+    const tShow = isTeacher;
+    prev.classList.toggle('hidden', !tShow);
+    next.classList.toggle('hidden', !tShow);
+    if (tShow) { prev.disabled = idx <= 0; next.disabled = n > 0 && idx >= n - 1; }
+  }
+}
+function setBoardMode(on) {
+  document.body.classList.toggle('board-mode-on', !!on);
+  if (on) { renderBoardMode(); }
+  const btn = $('boardModeBtn');
+  if (btn) btn.classList.toggle('on', !!on);
+}
+function initBoardMode() {
+  const btn = $('boardModeBtn');
+  if (btn) btn.onclick = () => setBoardMode(!document.body.classList.contains('board-mode-on'));
+  const exit = $('boardModeExit');
+  if (exit) exit.onclick = () => setBoardMode(false);
+  const prev = $('boardModePrev'), next = $('boardModeNext');
+  if (prev) prev.onclick = () => setRoomPara(roomPara.idx - 1);
+  if (next) next.onclick = () => setRoomPara(roomPara.idx + 1);
 }
 
 /* ------------------------- 📚 Cambiar libro ------------------------- */
@@ -3737,6 +3852,7 @@ function initWelcome() {
  ['initTypo', initTypo], ['initReadProgress', initReadProgress],
  ['initChat', initChat], ['initReactions', initReactions], ['initHands', initHands],
  ['initSwitchBook', initSwitchBook], ['checkAuth', checkAuth],
+ ['initParaBar', initParaBar], ['initBoardMode', initBoardMode],
  ['initDeepLink', initDeepLink]].forEach(([name, fn]) => {
   try {
     const r = fn();

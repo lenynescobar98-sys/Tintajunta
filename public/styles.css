@@ -1583,3 +1583,50 @@ main.layout article.chapter .paras p {
 .fb-msg { margin: 0 0 8px; color: #1a1a1a; line-height: 1.5; white-space: pre-wrap; }
 .fb-actions { display: flex; gap: 6px; }
 #fbPendingBadge { color: #b3541e; font-weight: 700; }
+
+/* ================= v81: párrafo de clase + modo pizarra ================= */
+.para-bar {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin: 0 0 14px; padding: 8px 12px;
+  background: #faf8f3; border: 1px solid #e8e0cf; border-radius: 10px;
+}
+.para-label { font-weight: 700; font-size: 14px; color: #8a5a1e; letter-spacing: .3px; }
+/* Párrafo enfocado por el profesor: se destaca para todos */
+#paras p.para-focus {
+  background: #fff8e8; border-left: 4px solid #c9962e;
+  padding: 10px 14px; border-radius: 0 8px 8px 0;
+  box-shadow: 0 2px 8px rgba(201,150,46,.15);
+}
+/* 🖥️ Modo pizarra: solo se ve la pizarra blanca */
+.board-mode {
+  position: fixed; inset: 0; z-index: 2000;
+  background: #f2f0ea; overflow-y: auto; padding: 18px 14px 40px;
+}
+.board-mode-inner {
+  max-width: 860px; margin: 0 auto;
+  background: #ffffff; border: 8px solid #c8ccd2; border-bottom-width: 22px;
+  border-radius: 3px; padding: 20px 24px 28px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.15); position: relative;
+}
+.board-mode-inner::after {
+  content: ''; position: absolute; bottom: -22px; left: 8px; right: 8px; height: 10px;
+  background: linear-gradient(to bottom, #b8bcc2, #9a9ea4); border-radius: 0 0 3px 3px;
+}
+.board-mode-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.board-mode-nav {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin-bottom: 16px; padding: 8px; background: #faf8f3;
+  border: 1px solid #e8e0cf; border-radius: 10px;
+}
+.board-mode-text { font-size: 22px; line-height: 2; color: #1a1a1a; font-family: Georgia, serif; }
+.board-mode-text p { margin: 0; }
+.board-mode-text .w.mk { border-radius: 4px; }
+/* En modo pizarra se oculta todo lo demás */
+body.board-mode-on .topbar,
+body.board-mode-on #followPill,
+body.board-mode-on main.layout,
+body.board-mode-on #readProgress,
+body.board-mode-on #typoPop,
+body.board-mode-on #toolbar,
+body.board-mode-on .imdb-bar { display: none !important; }
+#pencilBtn.on, #boardModeBtn.on { background: #8a5a1e; color: #fff; }

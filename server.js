@@ -105,6 +105,7 @@ function genRoomCode() {
 function getRoom(code) {
   if (!rooms.has(code)) rooms.set(code, { seq: 1, highlights: [], notes: [], board: { text: '', name: '', ts: 0 },
     follow: { active: false, pos: 0, ts: 0, name: '' },
+    para: { idx: 0, ts: 0 }, // v81: párrafo de clase (lo controla el profesor)
     chat: [], reactions: [], hands: [], switchTo: null });
   const st = rooms.get(code);
   if (ensureNoteCodes(st)) save();
@@ -130,9 +131,11 @@ function loadRooms() {
           const seq = Math.floor(Number(st.seq));
           const b = st.board && typeof st.board === 'object' ? st.board : {};
           const f = st.follow && typeof st.follow === 'object' ? st.follow : {};
+          const pa = st.para && typeof st.para === 'object' ? st.para : {};
           rooms.set(code, { seq: seq > 0 ? seq : 1, highlights: st.highlights, notes: st.notes,
             board: { text: String(b.text || '').slice(0, 2000), name: String(b.name || ''), ts: Number(b.ts) || 0 },
             follow: { active: !!f.active, pos: Math.min(1, Math.max(0, Number(f.pos) || 0)), ts: Number(f.ts) || 0, name: String(f.name || '') },
+            para: { idx: Math.max(0, Math.floor(Number(pa.idx) || 0)), ts: Number(pa.ts) || 0 },
             chat: Array.isArray(st.chat) ? st.chat.slice(-50) : [],
             reactions: Array.isArray(st.reactions) ? st.reactions : [],
             hands: Array.isArray(st.hands) ? st.hands : [] });
@@ -153,6 +156,7 @@ function loadRooms() {
         seq: seq > 0 ? seq : 1, highlights: parsed.highlights, notes: parsed.notes,
         board: { text: '', name: '', ts: 0 },
         follow: { active: false, pos: 0, ts: 0, name: '' },
+        para: { idx: 0, ts: 0 },
         chat: [], reactions: [], hands: [],
       });
       console.log(`[tintajunta] migrada la sala única a código "${MAIN_ROOM}": ${parsed.highlights.length} subrayados, ${parsed.notes.length} notas`);
@@ -1278,6 +1282,7 @@ app.post('/api/rooms/:room/join', (req, res) => {
   pruneHands(st);
   res.json({ ok: true, room: code, highlights: st.highlights, notes: st.notes,
     board: st.board || { text: '', name: '', ts: 0 },
+    para: st.para || { idx: 0, ts: 0 },
     chat: st.chat || [], reactions: st.reactions || [], hands: st.hands || [],
     roster: roster(code), you: { name: u.name, color: u.color, room: code } });
 });
@@ -1299,9 +1304,23 @@ app.get('/api/rooms/:room/state', (req, res) => {
   res.json({ ok: true, room: code, highlights: st.highlights, notes: st.notes,
     board: st.board || { text: '', name: '', ts: 0 },
     follow: st.follow || { active: false, pos: 0, ts: 0, name: '' },
+    para: st.para || { idx: 0, ts: 0 },
     chat: st.chat || [], reactions: st.reactions || [], hands: st.hands || [],
     switchTo: sw,
     roster: roster(code) });
+});
+/* 📖 Párrafo de clase: solo el profesor (tinta negra) mueve el párrafo para todos */
+app.post('/api/rooms/:room/para', (req, res) => {
+  const code = roomOf(req, res); if (!code) return;
+  const u = userOf(req);
+  touchPresence(code, u.name, u.color);
+  if (u.color !== 'negro') return res.status(403).json({ ok: false, error: 'solo-profesor' });
+  const st = getRoom(code);
+  let idx = Math.floor(Number(req.body && req.body.idx));
+  if (!isFinite(idx) || idx < 0) idx = 0;
+  st.para = { idx, ts: Date.now() };
+  save();
+  res.json({ ok: true, para: st.para });
 });
 /* 📚 Cambiar libro: solo el profesor puede mover a todos a otro libro */
 app.post('/api/rooms/:room/switch', (req, res) => {
@@ -1314,6 +1333,7 @@ app.post('/api/rooms/:room/switch', (req, res) => {
   const title = String((req.body && req.body.title) || '').slice(0, 120);
   if (!bookId) return res.status(400).json({ ok: false, error: 'sin-libro' });
   st.switchTo = { bookId, title, ts: Date.now() };
+  st.para = { idx: 0, ts: Date.now() }; // v81: al cambiar de libro, el párrafo vuelve al inicio
   save();
   res.json({ ok: true, switchTo: st.switchTo });
 });

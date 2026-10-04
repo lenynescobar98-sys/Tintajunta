@@ -26,6 +26,10 @@
    "ts": 0,
    "name": ""
   },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
   "chat": [],
   "reactions": [],
   "hands": []
@@ -145,6 +149,10 @@
    "ts": 0,
    "name": ""
   },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
   "chat": [],
   "reactions": [],
   "hands": []
@@ -163,6 +171,10 @@
    "pos": 0,
    "ts": 0,
    "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
   },
   "chat": [],
   "reactions": [],
@@ -183,6 +195,10 @@
    "ts": 0,
    "name": ""
   },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
   "chat": [],
   "reactions": [],
   "hands": []
@@ -201,6 +217,10 @@
    "pos": 0,
    "ts": 0,
    "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
   },
   "chat": [],
   "reactions": [],
@@ -221,6 +241,10 @@
    "ts": 0,
    "name": ""
   },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
   "chat": [],
   "reactions": [],
   "hands": []
@@ -239,6 +263,10 @@
    "pos": 0,
    "ts": 0,
    "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
   },
   "chat": [],
   "reactions": [],
@@ -259,6 +287,10 @@
    "ts": 0,
    "name": ""
   },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
   "chat": [],
   "reactions": [],
   "hands": []
@@ -277,6 +309,10 @@
    "pos": 0,
    "ts": 0,
    "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
   },
   "chat": [],
   "reactions": [],
