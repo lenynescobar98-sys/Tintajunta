@@ -2625,6 +2625,18 @@ function showImmersiveBook(b) {
   }
   rb.style.display = '';
   rb.onclick = (e) => { e.stopPropagation(); closeImmersive(); showReportModal(b.id, b.title); };
+  // v71 — 📤 Compartir en la inmersiva (crecimiento viral)
+  let sb = $('immShare');
+  if (!sb) {
+    sb = document.createElement('button');
+    sb.id = 'immShare';
+    sb.className = 'imm-share';
+    sb.title = 'Compartir este libro';
+    sb.textContent = '📤';
+    imm.appendChild(sb);
+  }
+  sb.style.display = '';
+  sb.onclick = (e) => { e.stopPropagation(); shareBook(b); };
 }
 /* ---------- carrusel principal estilo Tubi (se mueve solo) ---------- */
 let heroIdx = 0, heroTimer = null, heroSlides = [], lastHeroRotate = 0;
@@ -2752,6 +2764,7 @@ async function showLibrary(push) {
     if (!r.ok) throw new Error('http ' + r.status);
     const d = await r.json();
     libBooksCache = d.books || [];
+    window.__tjBooksReady = true; // v71: deep link ?libro=ID puede abrir
     const feat = libBooksCache.filter((b) => b.featured);
     renderHero(feat); // carrusel en movimiento: destacados + anuncios
     lastFeat = feat;
@@ -2979,6 +2992,48 @@ function showBuy(book) {
   $('buyConfirm').textContent = 'Comprar por ' + fmtPrice(book.price);
   $('buyPop').classList.remove('hidden');
 }
+/* v71 — 📖 Muestra gratis: primeros 3 párrafos en solo lectura (patrón "Look Inside").
+ * El lector prueba la escritura antes de comprar; al final, CTA a comprar. */
+function showSample(book) {
+  const ch = (book.chapters && book.chapters[0]) || {};
+  const paras = (ch.paragraphs || []).slice(0, 3);
+  $('sampleBookLine').textContent = book.title + ' — ' + book.author;
+  $('sampleText').innerHTML = paras.length
+    ? paras.map(p => `<p>${esc(p)}</p>`).join('')
+    : '<p><i>El creador aún no agregó texto de muestra.</i></p>';
+  $('samplePop').classList.remove('hidden');
+  $('samplePop').scrollTop = 0;
+}
+/* v71 — 📤 Compartir libro: Web Share API con respaldo a portapapeles.
+ * El link lleva ?libro=ID para abrir el libro directo al entrar. */
+async function shareBook(book) {
+  if (!book) return;
+  const url = location.origin + '/?libro=' + encodeURIComponent(book.id);
+  const text = `📚 "${book.title}" de ${book.author} — léelo conmigo en TintaJunta`;
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: book.title, text, url });
+      return;
+    }
+    throw new Error('no-share');
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // el usuario canceló
+    try {
+      await navigator.clipboard.writeText(text + '\n' + url);
+      toast('📋 Link copiado — pégalo donde quieras');
+    } catch (ce) {
+      prompt('Copia el link:', url);
+    }
+  }
+}
+/* v71 — 🎉 Post-compra: celebra e invita a leer JUNTOS (el diferenciador).
+ * Convierte la compra en una sala en vivo o en invitar amigos. */
+let boughtBookPending = null;
+function showBought(book) {
+  boughtBookPending = book;
+  $('boughtBookLine').textContent = book.title + ' — ' + book.author;
+  $('boughtPop').classList.remove('hidden');
+}
 function initLibrary() {
   buildSwatchesInto($('libSwatches'));
   $('libNameInput').value = myName === 'Lector' ? '' : myName;
@@ -3076,6 +3131,19 @@ function initLibrary() {
     $('pubSave').disabled = false;
   };
   $('buyCancel').onclick = () => { $('buyPop').classList.add('hidden'); buyBookPending = null; };
+  // v71 — muestra gratis, compartir y post-compra
+  $('buySample').onclick = () => { if (buyBookPending) { $('buyPop').classList.add('hidden'); showSample(buyBookPending); } };
+  $('buyShare').onclick = () => { if (buyBookPending) shareBook(buyBookPending); };
+  $('sampleClose').onclick = () => $('samplePop').classList.add('hidden');
+  $('sampleBuy').onclick = () => { $('samplePop').classList.add('hidden'); if (buyBookPending) showBuy(buyBookPending); };
+  $('boughtShare').onclick = () => { if (boughtBookPending) shareBook(boughtBookPending); };
+  $('boughtRead').onclick = () => { const b = boughtBookPending; boughtBookPending = null; $('boughtPop').classList.add('hidden'); if (b) bootBook(b); };
+  $('boughtRoom').onclick = () => {
+    const b = boughtBookPending; boughtBookPending = null;
+    $('boughtPop').classList.add('hidden');
+    if (b) { bootBook(b); toast('🔴 Toca "Sala en vivo" para leer juntos en tiempo real'); }
+    else goLiveRoom();
+  };
   /* Destacar libro en portada (anuncio pagado del creador) */
   $('featureCancel').onclick = () => { $('featurePop').classList.add('hidden'); featurePending = null; };
   $('featureConfirm').onclick = async () => {
@@ -3135,9 +3203,8 @@ function initLibrary() {
       markOwned(b.id);
       buyBookPending = null;
       $('buyPop').classList.add('hidden');
-      toast('¡Libro adquirido!');
       showLibrary(false);
-      bootBook(b);
+      showBought(b); // v71: celebra e invita a leer juntos en vivo
     } catch (e) {
       if (String(e.message || e) !== 'cancelado') toast('No se pudo completar el pago');
     }
@@ -3337,6 +3404,19 @@ function initWriting() {
   $('readClose').onclick = () => $('readPop').classList.add('hidden');
 }
 
+/* v71 — Deep link ?libro=ID: abrir un libro directo desde un link compartido. */
+async function initDeepLink() {
+  try {
+    const q = new URLSearchParams(location.search);
+    const id = (q.get('libro') || '').toUpperCase().trim();
+    if (!id) return;
+    // Espera a que la biblioteca cargue los libros
+    for (let i = 0; i < 40 && !window.__tjBooksReady; i++) await new Promise(r => setTimeout(r, 250));
+    history.replaceState(null, '', '/');
+    openBook(id, true);
+  } catch (e) { clog('deep-link: ' + (e && e.message)); }
+}
+
 /* Bienvenida: solo la primera visita. Explica qué es TintaJunta en 10 segundos. */
 function initWelcome() {
   try {
@@ -3361,7 +3441,8 @@ function initWelcome() {
  ['initReviews', initReviews], ['initProgress', initProgress], ['initReports', initReports],
  ['initTypo', initTypo], ['initReadProgress', initReadProgress],
  ['initChat', initChat], ['initReactions', initReactions], ['initHands', initHands],
- ['initSwitchBook', initSwitchBook], ['checkAuth', checkAuth]].forEach(([name, fn]) => {
+ ['initSwitchBook', initSwitchBook], ['checkAuth', checkAuth],
+ ['initDeepLink', initDeepLink]].forEach(([name, fn]) => {
   try {
     const r = fn();
     if (r && r.catch) r.catch((e) => clog('INIT-FAIL ' + name + ': ' + (e && e.message)));
