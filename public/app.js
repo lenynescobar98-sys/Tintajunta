@@ -1641,12 +1641,12 @@ function syncNameFromLib() {
 const AD_BADGE_LABEL = { 'mas-vendido': '🔥 Más vendido', 'famoso': '⭐ Famoso' };
 /* Afiliados: recomendados por TintaJunta. Prototipo: los links reales van aquí al activar cuentas de afiliado. */
 const AFFILIATES = [
-  { emoji: '👓', name: 'Lentes luz azul', store: 'Amazon', price: '~$25', hue: 210, url: 'https://www.amazon.com/dp/B0HC11K9C1/ref=cm_sw_r_as_gl_api_gl_i_XQ5REAJQBVWYNPKKKF8G?linkCode=ml1&tag=lenynalopez-20&linkId=3136a4a8563b0fa762bd257308a205ea&gaOptInStatus=true' },
-  { emoji: '🎧', name: 'Audífonos bluetooth', store: 'Amazon', price: '~$40', hue: 270, url: 'https://www.amazon.com/dp/B0H7WXNBNV/ref=cm_sw_r_as_gl_api_gl_i_RC1X2MW0SBJ9DJEK0SX8?linkCode=ml1&tag=lenynalopez-20&linkId=6c2fdb71aebaa7f63fe127c69b9ee6f0&gaOptInStatus=true' },
-  { emoji: '💡', name: 'Lámpara de lectura', store: 'Amazon', price: '~$30', hue: 45, url: 'https://www.amazon.com/dp/B0H6YB4GN7/ref=cm_sw_r_as_gl_api_gl_i_SDGYJ51ATCR9NS1SN7D6?linkCode=ml1&tag=lenynalopez-20&linkId=46fe3a3c2f7473ed3625d2322f55b470&gaOptInStatus=true' },
-  { emoji: '📱', name: 'E-reader', store: 'Amazon', price: '~$150', hue: 160, url: 'https://www.amazon.com/dp/B0FJ32FWKS/ref=cm_sw_r_as_gl_api_gl_i_HDYB0VVM5GG3MNXQ7NS3?linkCode=ml1&tag=lenynalopez-20&linkId=2ecd0e45383c549ae5b06621aff2f15e&gaOptInStatus=true' },
-  { emoji: '☕', name: 'Taza térmica', store: 'Amazon', price: '~$20', hue: 20, url: 'https://link.amazon/B03uHrImb' },
-  { emoji: '🪑', name: 'Cojín de lectura', store: 'Amazon', price: '~$35', hue: 120, url: 'https://www.amazon.com/dp/B0DTBKYSHX/ref=cm_sw_r_as_gl_api_gl_i_GSX2NQ5P16XA944E76K9?linkCode=ml1&tag=lenynalopez-20&linkId=3b4379a8eadd66d35e3e00d35f012f84&gaOptInStatus=true' },
+  { emoji: '👓', img: 'img/ads/lentes.jpg', name: 'Lentes luz azul', store: 'Amazon', price: '~$25', hue: 210, url: 'https://www.amazon.com/dp/B0HC11K9C1/ref=cm_sw_r_as_gl_api_gl_i_XQ5REAJQBVWYNPKKKF8G?linkCode=ml1&tag=lenynalopez-20&linkId=3136a4a8563b0fa762bd257308a205ea&gaOptInStatus=true' },
+  { emoji: '🎧', img: 'img/ads/audifonos.jpg', name: 'Audífonos bluetooth', store: 'Amazon', price: '~$40', hue: 270, url: 'https://www.amazon.com/dp/B0H7WXNBNV/ref=cm_sw_r_as_gl_api_gl_i_RC1X2MW0SBJ9DJEK0SX8?linkCode=ml1&tag=lenynalopez-20&linkId=6c2fdb71aebaa7f63fe127c69b9ee6f0&gaOptInStatus=true' },
+  { emoji: '💡', img: 'img/ads/lampara.jpg', name: 'Lámpara de lectura', store: 'Amazon', price: '~$30', hue: 45, url: 'https://www.amazon.com/dp/B0H6YB4GN7/ref=cm_sw_r_as_gl_api_gl_i_SDGYJ51ATCR9NS1SN7D6?linkCode=ml1&tag=lenynalopez-20&linkId=46fe3a3c2f7473ed3625d2322f55b470&gaOptInStatus=true' },
+  { emoji: '📱', img: 'img/ads/ereader.jpg', name: 'E-reader', store: 'Amazon', price: '~$150', hue: 160, url: 'https://www.amazon.com/dp/B0FJ32FWKS/ref=cm_sw_r_as_gl_api_gl_i_HDYB0VVM5GG3MNXQ7NS3?linkCode=ml1&tag=lenynalopez-20&linkId=2ecd0e45383c549ae5b06621aff2f15e&gaOptInStatus=true' },
+  { emoji: '☕', img: 'img/ads/taza.jpg', name: 'Taza térmica', store: 'Amazon', price: '~$20', hue: 20, url: 'https://link.amazon/B03uHrImb' },
+  { emoji: '🪑', img: 'img/ads/cojin.jpg', name: 'Cojín de lectura', store: 'Amazon', price: '~$35', hue: 120, url: 'https://www.amazon.com/dp/B0DTBKYSHX/ref=cm_sw_r_as_gl_api_gl_i_GSX2NQ5P16XA944E76K9?linkCode=ml1&tag=lenynalopez-20&linkId=3b4379a8eadd66d35e3e00d35f012f84&gaOptInStatus=true' },
 ];
 function renderAffiliates() {
   const row = document.getElementById('rowAff');
@@ -1656,7 +1656,7 @@ function renderAffiliates() {
     const card = document.createElement('div');
     card.className = 'ad-card';
     card.innerHTML =
-      adCardVisual(a.emoji, a.hue) +
+      adCardVisual(a.emoji, a.hue, a.img) +
       `<div class="ad-badge">🔗 ${esc(a.store)}</div>` +
       `<div class="ad-name">${esc(a.name)}</div>` +
       `<div class="ad-note">${esc(a.price)} · Link de afiliado · Toca para ver</div>`;
@@ -1684,7 +1684,7 @@ async function renderEvents() {
     const card = document.createElement('div');
     card.className = 'ad-card' + (ev.paid ? ' ad-paid' : '');
     card.innerHTML =
-      adCardVisual(ev.emoji || '📅', typeof ev.hue === 'number' ? ev.hue : 200) +
+      adCardVisual(ev.emoji || '📅', typeof ev.hue === 'number' ? ev.hue : 200, ev.img) +
       (ev.paid ? '<div class="ad-badge">⭐ Patrocinado</div>' : '') +
       `<div class="ad-name">${esc(ev.name || 'Evento')}</div>` +
       `<div class="ev-date">${esc(ev.date || '')} · ${esc(ev.place || '')}</div>` +
@@ -1701,14 +1701,15 @@ async function renderEvents() {
 }
 let paidAds = [];
 let lastFeat = [];
-function adCardVisual(emoji, hue) {
-  // Fondo editorial sobrio para anuncios
+function adCardVisual(emoji, hue, img) {
+  // Fondo editorial sobrio para anuncios; foto real si hay (con emoji como respaldo)
   const palettes = [
     ['#2b3a4a', '#1e3a5f'], ['#3a3a3a', '#1a1a1a'], ['#6e5a2e', '#8a5a1e'],
     ['#3d4a3d', '#2c362c'], ['#4a4a5a', '#282832'], ['#5a4a3a', '#33291f'],
   ];
   const [c1, c2] = palettes[Math.abs(hue || 0) % palettes.length];
-  return `<div class="ad-visual" style="background:linear-gradient(150deg,${c1},${c2})"><span>${esc(emoji)}</span></div>`;
+  const photo = img ? `<img class="ad-photo" src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">` : '';
+  return `<div class="ad-visual" style="background:linear-gradient(150deg,${c1},${c2})">${photo}<span>${esc(emoji)}</span></div>`;
 }
 async function renderAds() {
   const row = document.getElementById('rowAds');

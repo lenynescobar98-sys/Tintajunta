@@ -1015,7 +1015,7 @@ function loadEvents() {
 app.get('/api/events', (req, res) => {
   const list = loadEvents()
     .map((e) => ({ id: e.id, name: e.name, date: e.date, place: e.place, desc: e.desc,
-      url: e.url, emoji: e.emoji, hue: e.hue, paid: e.paid === true }))
+      url: e.url, emoji: e.emoji, hue: e.hue, img: e.img, paid: e.paid === true }))
     .sort((a, b) => ((b.paid ? 1 : 0) - (a.paid ? 1 : 0)));
   res.json({ ok: true, events: list });
 });

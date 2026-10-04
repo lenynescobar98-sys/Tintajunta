@@ -794,6 +794,7 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 .hero-big .hero-title { font-family: Georgia, 'Times New Roman', serif; font-size: 32px; letter-spacing: .3px; }
 /* Anuncios con visual de producto: luz de estudio */
 .ad-visual { position: relative; overflow: hidden; }
+.ad-visual .ad-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
 .ad-visual::before {
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(circle at 30% 18%, rgba(255,255,255,.38), transparent 55%);
