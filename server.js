@@ -440,7 +440,7 @@ app.get('/api/books', (req, res) => {
       chapters: b.chapters.length, createdAt: b.createdAt,
       coverUrl: b.coverUrl || null, sales: b.sales || 0,
       status: b.status || 'approved', ageRating: b.ageRating || 'all',
-      classic: !!b.classic,
+      classic: !!b.classic, language: b.language || 'es',
       verifiedAuthor: !!cp.verified,
       marks: st.highlights.length, notes: st.notes.length,
       rating: reviewSummary(b.id),
