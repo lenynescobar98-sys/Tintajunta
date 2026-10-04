@@ -232,6 +232,7 @@ function initJoin() {
     localStorage.setItem('tj_name', myName);
     localStorage.setItem('tj_color', myColor);
     localStorage.setItem('tj_room', myRoom);
+    try { localStorage.setItem('tj_inRoom', '1'); } catch (e) {} // v94: sesión activa — auto-reentrar si recarga
     $('join').classList.add('hidden');
     setViewState('room', true);
     boot();
@@ -250,6 +251,7 @@ function initJoin() {
     localStorage.setItem('tj_name', myName);
     localStorage.setItem('tj_color', myColor);
     localStorage.setItem('tj_room', myRoom);
+    try { localStorage.setItem('tj_inRoom', '1'); } catch (e) {} // v94: sesión activa
     $('join').classList.add('hidden');
     setViewState('room', true);
     boot();
@@ -1492,6 +1494,9 @@ function initNet() {
       }
       clog('enlace copiado/mostrado: ' + link);
     };
+    // v94: 🚪 Salir explícito — único que cierra la sesión de la sala
+    const erb = $('exitRoomBtn');
+    if (erb && !erb.dataset.wired) { erb.dataset.wired = '1'; erb.onclick = exitRoom; }
   }
   joinRoom();
 }
@@ -1559,6 +1564,10 @@ async function bootBook(book, push) {
   currentBook = book;
   readingType = book.classic ? 'classic' : 'book';
   localStorage.setItem('tj_room', myRoom);
+  try {
+    localStorage.setItem('tj_inRoom', '1'); // v94: sesión activa — auto-reentrar si recarga
+    localStorage.setItem('tj_lastBook', book.id); // v94: último libro abierto
+  } catch (e) {}
   setViewState('room', push);
   updateRoomLabel();
   const ch = book.chapters[0];
@@ -1605,6 +1614,50 @@ function reenterRoom(st) {
   currentBook = null;
   updateRoomLabel();
   boot();
+}
+/* v94: Salir explícito de la sala — único que borra la sesión.
+   Sin esto, una recarga auto-reentra a la sala (nada se pierde). */
+function exitRoom() {
+  try {
+    localStorage.removeItem('tj_inRoom');
+    localStorage.removeItem('tj_lastBook');
+  } catch (e) {}
+  toast('🚪 Saliste de la sala');
+  showLibrary(true);
+}
+/* v94: Auto-reentrar a la sala si había sesión activa al recargar.
+   La página nunca expulsa sola: solo el botón 🚪 Salir cierra la sesión. */
+function initAutoRejoin() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('sala') || q.get('libro')) return; // deep link tiene prioridad
+    if (localStorage.getItem('tj_inRoom') !== '1') return;
+    const savedName = localStorage.getItem('tj_name');
+    if (!savedName || savedName === 'Lector') return; // sin nombre real, no auto-entrar
+    myName = savedName;
+    myRoom = localStorage.getItem('tj_room') || 'SALA';
+    const lastBook = localStorage.getItem('tj_lastBook');
+    // Esperar a que la biblioteca cargue para poder abrir el libro
+    const tryRejoin = async () => {
+      for (let i = 0; i < 40 && !window.__tjBooksReady; i++) {
+        await new Promise(r => setTimeout(r, 250));
+      }
+      if (lastBook && window.__tjBooksReady && typeof openBook === 'function') {
+        const books = (typeof libBooksCache !== 'undefined' && libBooksCache) || [];
+        const b = books.find(x => x.id === lastBook);
+        if (b) { openBook(b.id, false); toast('📖 De vuelta en tu lectura'); return; }
+      }
+      // Sin libro: entrar directo a la sala (sin pantalla de "Entrar")
+      $('library').classList.add('hidden');
+      $('join').classList.add('hidden');
+      setViewState('room', false);
+      updateRoomLabel();
+      boot();
+      toast('👋 De vuelta en la sala');
+    };
+    // Dar tiempo a que los inits terminen
+    setTimeout(tryRejoin, 800);
+  } catch (e) { /* sin auto-rejoin, flujo normal */ }
 }
 function showViewByName(view, st) {
   if (view === 'writing') showWriting(false);
@@ -3849,7 +3902,7 @@ function initWelcome() {
  ['initChat', initChat], ['initReactions', initReactions], ['initHands', initHands],
  ['initSwitchBook', initSwitchBook], ['checkAuth', checkAuth],
  ['initParaBar', initParaBar], ['initBoardMode', initBoardMode],
- ['initDeepLink', initDeepLink]].forEach(([name, fn]) => {
+ ['initDeepLink', initDeepLink], ['initAutoRejoin', initAutoRejoin]].forEach(([name, fn]) => {
   try {
     const r = fn();
     if (r && r.catch) r.catch((e) => clog('INIT-FAIL ' + name + ': ' + (e && e.message)));
