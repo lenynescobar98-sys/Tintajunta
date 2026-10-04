@@ -1160,6 +1160,8 @@ function renderBoardMode() {
 }
 function setBoardMode(on) {
   document.body.classList.toggle('board-mode-on', !!on);
+  const panel = $('boardMode');
+  if (panel) panel.classList.toggle('hidden', !on);
   if (on) { renderBoardMode(); }
   const btn = $('boardModeBtn');
   if (btn) btn.classList.toggle('on', !!on);
