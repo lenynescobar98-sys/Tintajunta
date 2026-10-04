@@ -936,6 +936,7 @@ function relTime(ts) {
   return 'hace ' + Math.floor(h / 24) + ' d';
 }
 
+let boardSeenMaxTs = 0; // v87: para animar solo los mensajes nuevos
 function renderBoard() {
   const edit = $('boardEdit'), view = $('boardView'), meta = $('boardMeta'), clear = $('boardClear'), send = $('boardSend');
   if (!edit) return;
@@ -946,17 +947,21 @@ function renderBoard() {
   const entries = Array.isArray(board) ? board : [];
   if (!entries.length) {
     view.innerHTML = '<span class="board-empty">La pizarra está limpia — sé el primero en escribir. ✍️</span>';
+    boardSeenMaxTs = 0;
   } else {
+    const firstLoad = boardSeenMaxTs === 0;
     view.innerHTML = entries.map((e) => {
       const col = COLORS[e.color] || COLORS.azul;
       const who = e.color === 'negro' ? '🎓 ' + esc(e.name) : esc(e.name);
-      return `<div class="board-entry" style="border-left-color:${col}">` +
+      const isNew = !firstLoad && e.ts > boardSeenMaxTs; // v87: animación de entrada
+      return `<div class="board-entry${isNew ? ' board-new' : ''}" style="border-left-color:${col}">` +
         `<div class="board-entry-head"><span class="dot" style="background:${col}"></span><b>${who}</b>` +
         `<span class="board-entry-ts">${relTime(e.ts)}</span></div>` +
         `<div class="board-entry-text" style="color:${col}">${esc(e.text)}</div></div>`;
     }).join('');
+    boardSeenMaxTs = Math.max(...entries.map((e) => e.ts || 0));
   }
-  meta.textContent = entries.length ? `✏️ ${entries.length} en la pizarra` : '';
+  meta.textContent = entries.length ? `✏️ ${entries.length} mensaje${entries.length === 1 ? '' : 's'} en la pizarra` : '';
 }
 
 /* v85: enviar como entrada discreta (botón o Enter) */
@@ -1492,6 +1497,7 @@ function initNet() {
 }
 /* Entrar (o re-entrar) a la sala actual: registra presencia y trae el estado */
 function joinRoom() {
+  boardSeenMaxTs = 0; // v87: resetear animación de pizarra al entrar a la sala
   apiPost(roomBase() + '/join', {})
     .then((s) => {
       if (s.room) { myRoom = s.room; updateRoomLabel(); }
