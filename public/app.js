@@ -1125,17 +1125,17 @@ function renderChat() {
   const unread = chat.length - chatSeen;
   $('chatCount').textContent = (chatTab !== 'chat' && unread > 0) ? `(${unread})` : '';
   if (!chat.length) {
-    box.innerHTML = '<p class="notes-empty">Aún no hay mensajes. Sé el primero en escribir.</p>';
+    box.innerHTML = '<p class="chat-empty-board">La pizarra está limpia.<br>Sé el primero en escribir. ✍️</p>';
     return;
   }
   box.innerHTML = '';
   chat.forEach((m) => {
+    const ink = COLORS[m.color] || COLORS.azul;
     const div = document.createElement('div');
     div.className = 'chat-msg' + (m.name === displayName() ? ' mine' : '');
     div.innerHTML =
-      `<span class="chat-author"><span class="dot" style="background:${COLORS[m.color] || COLORS.azul}"></span>${esc(m.name)}</span>` +
-      `<span class="chat-text">${esc(m.text)}</span>` +
-      `<span class="chat-ts">${relTime(m.ts)}</span>`;
+      `<span class="chat-author" style="color:${ink}"><span class="dot" style="background:${ink}"></span>${esc(m.name)}<span class="chat-ts">${relTime(m.ts)}</span></span>` +
+      `<span class="chat-text" style="color:${ink}">${esc(m.text)}</span>`;
     box.appendChild(div);
   });
   box.scrollTop = box.scrollHeight;
@@ -1746,6 +1746,13 @@ async function initAds() {
 /* Orden de la lista: popularidad | titulo | precio */
 let libSort = 'popularidad';
 let libPill = localStorage.getItem('tj_pill') || 'todos'; // todos|gratis|destacados|nuevos|populares
+let libLang = localStorage.getItem('tj_lang') || ''; // '' = todos los idiomas
+const LANG_FLAGS = { es: '🇪🇸', en: '🇬🇧', fr: '🇫🇷', pt: '🇵🇹', ar: '🇸🇦' };
+function langBadge(b) {
+  const l = b.language || 'es';
+  if (l === 'es') return ''; // español es el default, no necesita insignia
+  return `<span class="lang-badge" title="${{en:'English',fr:'Français',pt:'Português',ar:'العربية'}[l] || l}">${LANG_FLAGS[l] || '🌍'}</span>`;
+}
 let libQuery = '';
 let libBooksCache = []; // todos los libros cargados (para filtrar sin recargar)
 /* ------------------------------ ⭐ reseñas ------------------------------
@@ -2391,6 +2398,7 @@ function visibleBooks(list) {
   else if (libPill === 'destacados') l = l.filter((b) => b.featured);
   else if (libPill === 'nuevos') l = l.filter(isNewBook);
   else if (libPill === 'populares') l = l.filter((b) => popularity(b) > 0);
+  if (libLang) l = l.filter((b) => (b.language || 'es') === libLang);
   l.sort((a, b) => popularity(b) - popularity(a) || b.createdAt - a.createdAt);
   return l;
 }
@@ -2412,7 +2420,7 @@ function coverTile(b, opts) {
   t.innerHTML =
     `<div class="tile-cover">${cover}` +
     (opts.badge ? `<div class="feat-badge">${opts.badge}</div>` : '') +
-    pendBadge + classicBadge + ageBadge +
+    pendBadge + classicBadge + ageBadge + langBadge(b) +
     (getProgress(b.id) > 120 ? `<div class="prog-badge">📖 Continuar</div>` : '') +
     reportBadge(b) +
     (b.coverUrl ? '' : `<div class="cover-title">${esc(b.title)}</div><div class="cover-author creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</div>`) +
@@ -2549,6 +2557,16 @@ function initPills() {
       renderRows();
     };
   });
+  // v79 — filtro por idioma
+  const lf = $('langFilter');
+  if (lf) {
+    lf.value = libLang;
+    lf.onchange = () => {
+      libLang = lf.value;
+      localStorage.setItem('tj_lang', libLang);
+      renderRows();
+    };
+  }
   // Los títulos de fila con › desplazan su fila (no son decorativos)
   document.querySelectorAll('#library .row-sec').forEach((sec) => {
     const h = sec.querySelector('.row-h2'), row = sec.querySelector('.hrow');
@@ -3094,6 +3112,118 @@ function showBought(book) {
   $('boughtBookLine').textContent = book.title + ' — ' + book.author;
   $('boughtPop').classList.remove('hidden');
 }
+/* v79 — 🎨 Creador de portadas para publicar libros.
+ * Paletas editoriales + textura + vista previa en vivo → render a canvas → blob para subir. */
+let generatedCoverBlob = null;
+const COVER_PALETTES = [
+  { name: 'Azul tinta',  c: ['#1e3a5f', '#142a45', '#0f2033'] },
+  { name: 'Carbón',      c: ['#2b2b2b', '#1a1a1a', '#0f0f0f'] },
+  { name: 'Dorado',      c: ['#8a5a1e', '#6e4715', '#54360f'] },
+  { name: 'Bosque',      c: ['#3d4a3d', '#2c362c', '#1e251e'] },
+  { name: 'Tierra',      c: ['#5a4a3a', '#453a2e', '#33291f'] },
+  { name: 'Pizarra',     c: ['#4a4a5a', '#383844', '#282832'] },
+];
+let coverMakerState = { pal: 0, pat: 'dots' };
+function coverMakerCSS(pal, pat) {
+  const [c1, c2, c3] = COVER_PALETTES[pal].c;
+  let tex = '';
+  if (pat === 'dots') tex = 'radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.6px) 0 0/14px 14px,';
+  else if (pat === 'lines') tex = 'repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 2px, transparent 2px 12px),';
+  return `background:${tex}linear-gradient(150deg,${c1} 0%,${c2} 65%,${c3} 100%)`;
+}
+function updateCoverPreview() {
+  const pv = $('coverPreview');
+  if (!pv) return;
+  pv.style.cssText = coverMakerCSS(coverMakerState.pal, coverMakerState.pat) +
+    ';aspect-ratio:2/3;border-radius:6px;overflow:hidden;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.2)';
+  const t = ($('pubTitle') && $('pubTitle').value.trim()) || 'Tu título';
+  $('coverPreviewTitle').textContent = t;
+  $('coverPreviewAuthor').textContent = (typeof myName !== 'undefined' && myName !== 'Lector') ? myName : 'Tu nombre';
+}
+function renderCoverToBlob() {
+  return new Promise((resolve) => {
+    const W = 600, H = 900;
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const x = cv.getContext('2d');
+    const [c1, c2, c3] = COVER_PALETTES[coverMakerState.pal].c;
+    const g = x.createLinearGradient(0, 0, W * 0.7, H);
+    g.addColorStop(0, c1); g.addColorStop(0.65, c2); g.addColorStop(1, c3);
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    // textura
+    x.fillStyle = 'rgba(255,255,255,.06)';
+    if (coverMakerState.pat === 'dots') {
+      for (let i = 14; i < W; i += 42) for (let j = 14; j < H; j += 42) { x.beginPath(); x.arc(i, j, 3, 0, 7); x.fill(); }
+    } else if (coverMakerState.pat === 'lines') {
+      x.strokeStyle = 'rgba(255,255,255,.05)'; x.lineWidth = 4;
+      for (let i = -H; i < W; i += 36) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + H, H); x.stroke(); }
+    }
+    // franja decorativa
+    x.fillStyle = 'rgba(255,255,255,.14)'; x.fillRect(48, H - 260, 90, 6);
+    // título + autor
+    const title = ($('pubTitle') && $('pubTitle').value.trim()) || 'Tu título';
+    const author = (typeof myName !== 'undefined' && myName !== 'Lector') ? myName : 'Tu nombre';
+    x.fillStyle = '#fff'; x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = 8;
+    x.font = '800 54px Georgia, serif';
+    wrapText(x, title, 48, H - 210, W - 96, 66);
+    x.shadowBlur = 0; x.font = '400 30px -apple-system, sans-serif';
+    x.fillStyle = 'rgba(255,255,255,.88)';
+    x.fillText(author, 48, H - 70, W - 96);
+    cv.toBlob((b) => resolve(b), 'image/jpeg', 0.9);
+  });
+}
+function wrapText(x, text, px, py, maxW, lh) {
+  const words = text.split(' '); let line = '', y = py;
+  for (const w of words) {
+    const t = line ? line + ' ' + w : w;
+    if (x.measureText(t).width > maxW && line) { x.fillText(line, px, y, maxW); line = w; y += lh; }
+    else line = t;
+    if (y > py + lh * 5) break;
+  }
+  x.fillText(line, px, y, maxW);
+}
+function initCoverMaker() {
+  const tog = $('coverMakerToggle'), panel = $('coverMakerPanel');
+  if (!tog || !panel || tog.dataset.init) return;
+  tog.dataset.init = '1';
+  tog.onclick = () => { panel.classList.toggle('hidden'); updateCoverPreview(); };
+  // paletas
+  const pw = $('coverPalettes');
+  COVER_PALETTES.forEach((p, i) => {
+    const s = document.createElement('button');
+    s.type = 'button'; s.className = 'pal-swatch' + (i === 0 ? ' on' : '');
+    s.title = p.name;
+    s.style.background = `linear-gradient(150deg,${p.c[0]},${p.c[1]} 60%,${p.c[2]})`;
+    s.onclick = () => {
+      coverMakerState.pal = i;
+      pw.querySelectorAll('.pal-swatch').forEach((el, j) => el.classList.toggle('on', j === i));
+      updateCoverPreview();
+    };
+    pw.appendChild(s);
+  });
+  // patrones
+  $('coverPatterns').querySelectorAll('.pat-btn').forEach((b) => {
+    b.onclick = () => {
+      coverMakerState.pat = b.dataset.pat;
+      $('coverPatterns').querySelectorAll('.pat-btn').forEach((el) => el.classList.toggle('on', el === b));
+      updateCoverPreview();
+    };
+  });
+  // vista previa en vivo al escribir el título
+  if ($('pubTitle')) $('pubTitle').addEventListener('input', updateCoverPreview);
+  // usar portada generada
+  $('coverUseBtn').onclick = async () => {
+    const st = $('coverMakerStatus');
+    st.textContent = '⏳ Generando portada…';
+    try {
+      const blob = await renderCoverToBlob();
+      if (!blob) { st.textContent = '❌ No se pudo generar'; return; }
+      generatedCoverBlob = new File([blob], 'portada.jpg', { type: 'image/jpeg' });
+      st.textContent = '✅ Portada lista — se usará al publicar';
+      toast('✅ Portada creada — lista para publicar');
+    } catch (e) { st.textContent = '❌ Error al generar'; }
+  };
+}
 function initLibrary() {
   buildSwatchesInto($('libSwatches'));
   $('libNameInput').value = myName === 'Lector' ? '' : myName;
@@ -3122,9 +3252,14 @@ function initLibrary() {
     $('pubPrice').value = '';
     $('pubText').value = '';
     $('pubCover').value = '';
+    generatedCoverBlob = null;
+    const st = $('coverMakerStatus'); if (st) st.textContent = '';
+    const panel = $('coverMakerPanel'); if (panel) panel.classList.add('hidden');
     $('publishPop').classList.remove('hidden');
   };
   $('pubCancel').onclick = () => $('publishPop').classList.add('hidden');
+  /* v79 — creador de portadas */
+  initCoverMaker();
   $('pubSave').onclick = async () => {
     const title = $('pubTitle').value.trim();
     const price = Math.round((parseFloat($('pubPrice').value) || 0) * 100);
@@ -3132,9 +3267,9 @@ function initLibrary() {
     const ageRating = ($('pubAge') && $('pubAge').value) || 'all';
     if (!title || !text) { toast('Ponle título y texto a tu libro'); return; }
     if (price > 0 && price < 199) { toast('El precio mínimo es $1.99, o publícalo gratis'); return; }
-    // validar portada en el cliente (obligatoria, tipo y 2MB)
-    const coverFile = $('pubCover').files[0] || null;
-    if (!coverFile) { toast('La portada es obligatoria — súbela para publicar'); return; }
+    // validar portada en el cliente (obligatoria, tipo y 2MB) — v79: acepta portada generada
+    const coverFile = $('pubCover').files[0] || generatedCoverBlob || null;
+    if (!coverFile) { toast('La portada es obligatoria — súbela o créala con 🎨'); return; }
     if (!$('pubContract').checked) { toast('Debes aceptar el contrato de publicación'); return; }
     if (coverFile) {
       const okType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(coverFile.type);

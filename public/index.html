@@ -10,7 +10,7 @@
 #immersive { position: fixed; inset: 0; z-index: 100; }
 #immClose { position: absolute; top: 14px; right: 16px; z-index: 101; width: 44px; height: 44px; font-size: 22px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; }
 </style>
-<link rel="stylesheet" href="styles.css?v=78" id="mainCss"
+<link rel="stylesheet" href="styles.css?v=79" id="mainCss"
   onerror="(function(l){var n=0;var t=setInterval(function(){n++;l.href='styles.css?retry='+n+'&t='+Date.now();if(n>=3)clearInterval(t);},1500);})(this)"></head>
 <body>
 
@@ -67,6 +67,14 @@
       <button class="pill" data-pill="destacados">Destacados</button>
       <button class="pill" data-pill="nuevos">Nuevos</button>
       <button class="pill" data-pill="populares">Populares</button>
+      <select id="langFilter" class="lang-filter" title="Filtrar por idioma">
+        <option value="">🌍 Idioma: Todos</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="pt">🇵🇹 Português</option>
+        <option value="ar">🇸🇦 العربية</option>
+      </select>
     </div>
     <section class="row-sec" id="secDestacados">
       <h2 class="row-h2">⭐ Destacados <span class="row-more">›</span></h2>
@@ -182,6 +190,33 @@
   </select></label>
   <label class="field"><span>Texto del libro</span><textarea id="pubText" rows="8" placeholder="Pega aquí el texto. Separa los párrafos con una línea en blanco."></textarea></label>
   <label class="field"><span>Portada * (obligatoria, imagen máx 2MB)</span><input id="pubCover" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+  <!-- v79 — creador de portadas -->
+  <div class="cover-maker">
+    <button type="button" id="coverMakerToggle" class="cover-maker-toggle">🎨 O crea tu portada aquí</button>
+    <div id="coverMakerPanel" class="cover-maker-panel hidden">
+      <div class="cover-maker-grid">
+        <div class="cover-maker-preview">
+          <div id="coverPreview" class="cover-preview">
+            <div class="cover-preview-title" id="coverPreviewTitle">Tu título</div>
+            <div class="cover-preview-author" id="coverPreviewAuthor">Tu nombre</div>
+          </div>
+          <p class="cover-maker-hint">Vista previa — así se verá en la biblioteca</p>
+        </div>
+        <div class="cover-maker-controls">
+          <p class="cover-maker-label">Paleta de colores</p>
+          <div id="coverPalettes" class="cover-palettes"></div>
+          <p class="cover-maker-label">Textura</p>
+          <div id="coverPatterns" class="cover-patterns">
+            <button type="button" data-pat="dots" class="pat-btn on">· Puntos</button>
+            <button type="button" data-pat="lines" class="pat-btn">≡ Líneas</button>
+            <button type="button" data-pat="none" class="pat-btn">— Lisa</button>
+          </div>
+          <button type="button" id="coverUseBtn" class="cover-use-btn">✅ Usar esta portada</button>
+          <p class="cover-maker-hint" id="coverMakerStatus"></p>
+        </div>
+      </div>
+    </div>
+  </div>
   <label class="field"><span>Fotos del libro (opcional, JPG/PNG/WebP máx 2MB c/u)</span><input id="pubImages" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
   <div class="rules-box">
     <b>⚠️ Antes de publicar, recuerda lo que NO puedes hacer:</b>
@@ -505,6 +540,6 @@
 <div id="toasts" class="toasts"></div>
 
 <script src="https://js.stripe.com/v3/"></script>
-<script src="app.js?v=78"></script>
+<script src="app.js?v=79"></script>
 </body>
 </html>
