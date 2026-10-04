@@ -1890,11 +1890,11 @@ async function initAds() {
 let libSort = 'popularidad';
 let libPill = localStorage.getItem('tj_pill') || 'todos'; // todos|gratis|destacados|nuevos|populares
 let libLang = localStorage.getItem('tj_lang') || ''; // '' = todos los idiomas
-const LANG_FLAGS = { es: '🇪🇸', en: '🇬🇧', fr: '🇫🇷', pt: '🇵🇹', ar: '🇸🇦', it: '🇮🇹' };
+const LANG_FLAGS = { es: '🇪🇸', en: '🇬🇧', fr: '🇫🇷', pt: '🇵🇹', ar: '🇸🇦', it: '🇮🇹', de: '🇩🇪', ru: '🇷🇺', ja: '🇯🇵', el: '🇬🇷' };
 function langBadge(b) {
   const l = b.language || 'es';
   if (l === 'es') return ''; // español es el default, no necesita insignia
-  return `<span class="lang-badge" title="${{en:'English',fr:'Français',pt:'Português',ar:'العربية'}[l] || l}">${LANG_FLAGS[l] || '🌍'}</span>`;
+  return `<span class="lang-badge" title="${{en:'English',fr:'Français',pt:'Português',ar:'العربية',it:'Italiano',de:'Deutsch',ru:'Русский',ja:'日本語',el:'Ελληνικά'}[l] || l}">${LANG_FLAGS[l] || '🌍'}</span>`;
 }
 let libQuery = '';
 let libBooksCache = []; // todos los libros cargados (para filtrar sin recargar)

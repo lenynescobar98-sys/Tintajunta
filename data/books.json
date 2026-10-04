@@ -1012,5 +1012,189 @@
     ]
    }
   ]
+ },
+ {
+  "ageRating": "all",
+  "author": "Johann Wolfgang von Goethe",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Habe nun, ach! Philosophie, Juristerei und Medizin, und leider auch Theologie durchaus studiert, mit heißem Bemühn.",
+     "Da steh ich nun, ich armer Tor! Und bin so klug als wie zuvor; heiße Magister, heiße Doktor gar, und ziehe schon an die zehen Jahr herauf, herab und quer und krumm meine Schüler an der Nase herum —",
+     "Und sehe, daß wir nichts wissen können! Das will mir schier das Herz verbrennen. Zwar bin ich gescheiter als all die Laffen, Doktoren, Magister, Schreiber und Pfaffen;",
+     "Mich plagen keine Skrupel noch Zweifel, fürchte mich weder vor Hölle noch Teufel — dafür ist mir auch alle Freud entrissen, bilde mir nicht ein, was Rechts zu wissen, bilde mir nicht ein, ich könnte was lehren, die Menschen zu bessern und zu bekehren."
+    ],
+    "title": "Monolog"
+   }
+  ],
+  "classic": true,
+  "createdAt": 1791130000008,
+  "id": "FAUSTD",
+  "language": "de",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Faust (Fragment)"
+ },
+ {
+  "ageRating": "all",
+  "author": "Fiódor Dostoievski",
+  "chapters": [
+   {
+    "paragraphs": [
+     "В начале июля, в чрезвычайно жаркое время, под вечер, один молодой человек вышел из своей каморки, которую нанимал от жильцов в С—м переулке, на улицу и медленно, как бы в нерешимости, отправился к К—у мосту.",
+     "Он благополучно избегнул встречи со своею хозяйкой на лестнице. Каморка его приходилась под самою кровлей высокого пятиэтажного дома и походила более на шкаф, чем на квартиру.",
+     "Хозяйка же его, у которой он нанимал эту каморку с обедом и прислугой, помещалась одною лестницей ниже, в отдельной квартире, и каждый раз, при выходе на улицу, ему непременно нужно было проходить мимо хозяйкиной кухни, почти всегда настежь отворенной на лестницу.",
+     "И каждый раз молодой человек, проходя мимо, чувствовал какое-то болезненное и трусливое ощущение, которого стыдился и от которого морщился."
+    ],
+    "title": "Глава 1"
+   }
+  ],
+  "classic": true,
+  "createdAt": 1791130000009,
+  "id": "CRIMEN",
+  "language": "ru",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Преступление и наказание (фрагмент)"
+ },
+ {
+  "ageRating": "all",
+  "author": "Ryūnosuke Akutagawa",
+  "chapters": [
+   {
+    "paragraphs": [
+     "ある日の暮方の事である。一人の下人が、羅生門の下で雨やみを待っていた。",
+     "広い門の下には、この男のほか誰もいない。ただ、所々丹塗の剥げた、大きな円柱に、蟋蟀が一匹とまっている。",
+     "羅生門が、朱雀大路にある以上は、この男のほかにも、雨やみをする市女笠や揉烏帽子が、もう二三人はありそうなものである。それが、この男のほかには誰もいない。",
+     "何故かと云うと、この二三年、京都には、地震とか辻風とか火事とか饑饉とか云う災がつづいて起った。そこで洛中のさびれ方は一通りではない。"
+    ],
+    "title": "一"
+   }
+  ],
+  "classic": true,
+  "createdAt": 1791130000010,
+  "id": "RASHOM",
+  "language": "ja",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "羅生門 (断片)"
+ },
+ {
+  "ageRating": "all",
+  "author": "Homero",
+  "chapters": [
+   {
+    "paragraphs": [
+     "μῆνιν ἄειδε θεὰ Πηληϊάδεω Ἀχιλῆος οὐλομένην, ἣ μυρί᾽ Ἀχαιοῖς ἄλγε᾽ ἔθηκε,",
+     "πολλὰς δ᾽ ἰφθίμους ψυχὰς Ἄϊδι προΐαψεν ἡρώων, αὐτοὺς δὲ ἑλώρια τεῦχε κύνεσσιν",
+     "οἰωνοῖσί τε πᾶσι, Διὸς δ᾽ ἐτελείετο βουλή, ἐξ οὗ δὴ τὰ πρῶτα διαστήτην ἐρίσαντε",
+     "Ἀτρεΐδης τε ἄναξ ἀνδρῶν καὶ δῖος Ἀχιλλεύς."
+    ],
+    "title": "Ῥαψῳδία Α"
+   }
+  ],
+  "classic": true,
+  "createdAt": 1791130000011,
+  "id": "ILIADA",
+  "language": "el",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Ἰλιάς (ἀπόσπασμα)"
+ },
+ {
+  "ageRating": "all",
+  "author": "Leopoldo Alas «Clarín»",
+  "chapters": [
+   {
+    "paragraphs": [
+     "La heroica ciudad dormía la siesta. El viento sur, caliente y perezoso, empujaba las nubes blanquecinas que se rasgaban al correr hacia el norte.",
+     "En las calles no había más ruido que el rumor estridente de los remolinos de polvo, trapos, pajas y papeles que iban de arroyo en arroyo, de acera en acera, de esquina en esquina, revolando y persiguiéndose, como mariposas que se buscan y huyen y que el aire envuelve en sus pliegues invisibles.",
+     "Cual turba de pilluelos, aquellas migajas de la basura, aquellas sobras de todo, se juntaban en un montón, parábanse como dormidas un momento y brincaban de nuevo sobresaltadas, dispersándose, trepando unas por las paredes hasta los cristales temblorosos de los faroles.",
+     "Vetusta, la muy noble y leal ciudad, corte en lejano siglo, era muy conocida por este recreo de los vientos."
+    ],
+    "title": "Capítulo 1"
+   }
+  ],
+  "classic": true,
+  "createdAt": 1791130000012,
+  "id": "REGENT",
+  "language": "es",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "La Regenta (fragmento)"
+ },
+ {
+  "ageRating": "all",
+  "author": "Jane Austen",
+  "chapters": [
+   {
+    "paragraphs": [
+     "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
+     "However little known the feelings or views of such a man may be on his first entering a neighbourhood, this truth is so well fixed in the minds of the surrounding families, that he is considered as the rightful property of some one or other of their daughters.",
+     "\"My dear Mr. Bennet,\" said his lady to him one day, \"have you heard that Netherfield Park is let at last?\"",
+     "Mr. Bennet replied that he had not. \"But it is,\" returned she; \"for Mrs. Long has just been here, and she told me all about it.\""
+    ],
+    "title": "Chapter 1"
+   }
+  ],
+  "classic": true,
+  "createdAt": 1791130000013,
+  "id": "ORGULL",
+  "language": "en",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Pride and Prejudice (excerpt)"
+ },
+ {
+  "ageRating": "all",
+  "author": "Alexandre Dumas",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Le 24 février 1815, la vigie de Notre-Dame de la Garde signala le trois-mâts le Pharaon, venant de Smyrne, Trieste et Naples.",
+     "Comme d'habitude, un pilote côtier partit aussitôt du port, rasa le château d'If, et alla aborder le navire entre le cap de Morgion et l'île de Rion.",
+     "Aussitôt, comme d'habitude encore, la plate-forme du fort Saint-Jean s'était couverte de curieux ; car c'est toujours une grande affaire à Marseille que l'arrivée d'un bâtiment.",
+     "Surtout quand ce bâtiment, comme le Pharaon, a été construit, gréé, arrimé sur les chantiers de la vieille Phocée, et appartient à un armateur de la ville."
+    ],
+    "title": "Chapitre 1 — Marseille. — L'arrivée."
+   }
+  ],
+  "classic": true,
+  "createdAt": 1791130000014,
+  "id": "CONDEM",
+  "language": "fr",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Le Comte de Monte-Cristo (fragment)"
+ },
+ {
+  "ageRating": "all",
+  "author": "Giovanni Boccaccio",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Umana cosa è aver compassione degli afflitti; e come che a ciascuna persona stea bene, a coloro è massimamente richesta li quali già hanno di conforto avuto mestiere e hannol trovato in alcuni: fra' quali, se alcuno mai n'ebbe bisogno o gli fu caro o già ne ricevette piacere, io son uno di quegli.",
+     "Per che, avendo io dalla mia prima giovinezza infino a questo tempo oltre modo stato acceso e stretto da alto e nobile amore più assai che alla mia bassa condizione non parea che si richiedesse, e quantunque appo coloro che discreti erano e alla cui notizia pervenne io ne fossi lodato molto e molto commendato, pur mi gravava forte il sostenerlo.",
+     "Comincia la prima giornata del Decameron, nella quale, dopo la dimostrazione fatta dall'autore per che cagione avvenisse di doversi quelle persone, che appresso si mostreranno, ragunare a ragionare insieme, sotto il reggimento di Pampinea si ragiona di quello che più aggrada a ciascuno.",
+     "Dico adunque che già erano gli anni della fruttifera incarnazione del Figliuolo di Dio al numero pervenuti di milletrecentoquarantotto, quando nella egregia città di Fiorenza, oltre a ogn'altra italica bellissima, pervenne la mortifera pestilenza."
+    ],
+    "title": "Proemio"
+   }
+  ],
+  "classic": true,
+  "createdAt": 1791130000015,
+  "id": "DECAME",
+  "language": "it",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Il Decameron (frammento)"
  }
 ]

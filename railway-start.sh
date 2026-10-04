@@ -19,6 +19,9 @@ else
 fi
 export DATA_DIR="$VOLUME/data"
 
+# --- catálogo de libros: fusiona clásicos nuevos del repo sin borrar publicados ---
+node scripts/merge-books.js "$VOLUME/data/books.json" || echo "[tintajunta] aviso: no se pudo fusionar el catálogo"
+
 # --- uploads: public/covers, public/ads, public/pageimg -> volumen ---
 for d in covers ads pageimg; do
   mkdir -p "$VOLUME/$d"
