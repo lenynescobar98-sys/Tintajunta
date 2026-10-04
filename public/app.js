@@ -1527,7 +1527,13 @@ async function renderEvents() {
 let paidAds = [];
 let lastFeat = [];
 function adCardVisual(emoji, hue) {
-  return `<div class="ad-visual" style="background:linear-gradient(150deg,hsl(${hue},55%,55%),hsl(${(hue + 30) % 360},50%,35%))"><span>${esc(emoji)}</span></div>`;
+  // Fondo editorial sobrio para anuncios
+  const palettes = [
+    ['#2b3a4a', '#1e3a5f'], ['#3a3a3a', '#1a1a1a'], ['#6e5a2e', '#8a5a1e'],
+    ['#3d4a3d', '#2c362c'], ['#4a4a5a', '#282832'], ['#5a4a3a', '#33291f'],
+  ];
+  const [c1, c2] = palettes[Math.abs(hue || 0) % palettes.length];
+  return `<div class="ad-visual" style="background:linear-gradient(150deg,${c1},${c2})"><span>${esc(emoji)}</span></div>`;
 }
 async function renderAds() {
   const row = document.getElementById('rowAds');
@@ -2668,11 +2674,11 @@ function heroSlideBook(b) {
   </div>`;
 }
 function heroSlideAd(a, paid) {
-  const hue = paid ? 200 : (a.hue || 210);
   const badgeTxt = paid ? 'Patrocinado' : ((typeof AD_BADGE_LABEL !== 'undefined' && AD_BADGE_LABEL[a.badge]) || a.badge || 'Espacio disponible');
+  // Fondo editorial sobrio para anuncios sin foto
   const bgStyle = a.photoUrl
     ? `background-image:url('${esc(a.photoUrl)}');background-size:cover;background-position:center`
-    : `background:linear-gradient(135deg,hsl(${hue},60%,45%),hsl(${(hue + 40) % 360},55%,28%))`;
+    : `background:linear-gradient(135deg,#2b3a4a 0%,#1e3a5f 55%,#141c28 100%)`;
   const emojiHtml = a.photoUrl ? '' : `<div class="hero-emoji">${esc(a.emoji)}</div>`;
   return `<div class="hero-slide hero-ad" style="${bgStyle}">
     <div class="hero-shade"></div>
@@ -2826,17 +2832,20 @@ function bookRow(b, rank) {
 /* Tarjeta con portada grande (sección Destacados). */
 /* Portada automática: 4 variantes editoriales por libro + textura sutil. Sin subir imágenes. */
 function coverStyle(id) {
+  // Paleta editorial sofisticada — nada de tonos brillantes infantiles
+  const palettes = [
+    ['#1e3a5f', '#142a45', '#0f2033'],  // azul tinta
+    ['#2b2b2b', '#1a1a1a', '#0f0f0f'],  // carbón
+    ['#8a5a1e', '#6e4715', '#54360f'],  // dorado apagado
+    ['#3d4a3d', '#2c362c', '#1e251e'],  // verde bosque apagado
+    ['#5a4a3a', '#453a2e', '#33291f'],  // tierra cálida
+    ['#4a4a5a', '#383844', '#282832'],  // gris pizarra
+  ];
   let h = 0;
-  for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % 360;
-  const v = h % 4;
-  const h2 = (h + 45) % 360, h3 = (h + 90) % 360;
-  const dots = 'radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.6px) 0 0/13px 13px';
-  const g = [
-    `linear-gradient(150deg,hsl(${h},48%,42%) 0%,hsl(${h2},52%,26%) 70%,hsl(${h3},45%,18%) 100%)`,
-    `radial-gradient(circle at 25% 12%, hsl(${h},55%,54%) 0%, transparent 58%),linear-gradient(160deg,hsl(${h},50%,38%),hsl(${h2},55%,20%))`,
-    `linear-gradient(180deg,hsl(${h},45%,50%) 0%,hsl(${h},45%,50%) 32%,hsl(${h2},50%,26%) 32.5%,hsl(${h3},48%,18%) 100%)`,
-    `linear-gradient(115deg,hsl(${h2},55%,30%) 0%,hsl(${h},50%,44%) 55%,hsl(${h3},52%,22%) 100%)`,
-  ][v];
+  for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % palettes.length;
+  const [c1, c2, c3] = palettes[h];
+  const dots = 'radial-gradient(rgba(255,255,255,.06) 1px, transparent 1.6px) 0 0/14px 14px';
+  const g = `linear-gradient(150deg,${c1} 0%,${c2} 65%,${c3} 100%)`;
   return `background:${dots},${g}`;
 }
 function bookCard(b, isFeat) {
