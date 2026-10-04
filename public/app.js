@@ -162,6 +162,49 @@ function renderTools() {
 }
 function renderPencilBtn() { renderTools(); } // compatibilidad
 
+/* v77 — Auth en header: detecta sesión y muestra login o chip de usuario */
+let headerUser = null;
+async function initHeaderAuth() {
+  const loginBtn = $('loginBtn'), chip = $('userChip');
+  if (!loginBtn || !chip) return;
+  loginBtn.onclick = () => { window.location.href = '/api/auth/google'; };
+  try {
+    const r = await fetch('/api/auth/me', { cache: 'no-store' });
+    const d = await r.json();
+    headerUser = (d && d.ok && d.user) || null;
+  } catch (e) { headerUser = null; }
+  if (headerUser) {
+    loginBtn.classList.add('hidden'); loginBtn.hidden = true;
+    chip.classList.remove('hidden'); chip.hidden = false;
+    const av = $('userAvatar'), nm = $('userName');
+    if (av) { av.src = headerUser.picture || ''; av.alt = headerUser.name || ''; }
+    if (nm) nm.textContent = (headerUser.name || headerUser.email || '').split(' ')[0];
+    chip.onclick = (e) => {
+      const m = $('userMenu');
+      if (m) { m.classList.toggle('hidden'); m.hidden = !m.hidden; }
+      e.stopPropagation();
+    };
+    document.addEventListener('click', () => {
+      const m = $('userMenu');
+      if (m) { m.classList.add('hidden'); m.hidden = true; }
+    });
+    const pb = $('userProfileBtn');
+    if (pb) pb.onclick = () => { showCreatorProfile && showCreatorProfile(headerUser.name); };
+    const lo = $('logoutBtn');
+    if (lo) lo.onclick = async () => {
+      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (e) {}
+      window.location.reload();
+    };
+  } else {
+    loginBtn.classList.remove('hidden'); loginBtn.hidden = false;
+    chip.classList.add('hidden'); chip.hidden = true;
+  }
+  // Aviso de login exitoso/fallido
+  const q = new URLSearchParams(window.location.search);
+  if (q.get('login') === 'ok') { toast('✅ Sesión iniciada'); history.replaceState(null, '', '/'); }
+  else if (q.get('login') === 'error') { toast('⚠️ No se pudo iniciar sesión'); history.replaceState(null, '', '/'); }
+}
+
 function initJoin() {
   buildSwatches();
   renderPencilBtn();
@@ -3332,6 +3375,8 @@ function initImdbBar() {
     renderRows();
   });
   $('enterBtn').onclick = goLiveRoom;
+  /* v77 — Login Google visible en header */
+  initHeaderAuth();
   // vista inmersiva
   $('immClose').onclick = closeImmersive;
   $('immCta').onclick = () => { if (immCtaFn) immCtaFn(); };
