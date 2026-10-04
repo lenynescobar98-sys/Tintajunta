@@ -10,14 +10,14 @@
     "start": 10,
     "end": 12,
     "quote": "quiero acordarme, no",
-    "text": "¡Qué comienzo tan memorable!",
+    "text": "\u00a1Qu\u00e9 comienzo tan memorable!",
     "ts": 1790966898979,
     "code": "N-6MC"
    }
   ],
   "board": {
    "text": "",
-   "name": "🎓 Profe",
+   "name": "\ud83c\udf93 Profe",
    "ts": 1791042186714
   },
   "follow": {
@@ -43,7 +43,7 @@
     "color": "azul",
     "start": 221,
     "end": 255,
-    "text": "que este sobredicho hidalgo, los ratos que estaba ocioso —que eran los más del año—, se daba a leer libros de caballerías, con tanta afición y gusto, que olvidó casi de todo punto el ejercicio",
+    "text": "que este sobredicho hidalgo, los ratos que estaba ocioso \u2014que eran los m\u00e1s del a\u00f1o\u2014, se daba a leer libros de caballer\u00edas, con tanta afici\u00f3n y gusto, que olvid\u00f3 casi de todo punto el ejercicio",
     "ts": 1791027836533
    },
    {
@@ -52,7 +52,7 @@
     "color": "azul",
     "start": 220,
     "end": 246,
-    "text": "saber que este sobredicho hidalgo, los ratos que estaba ocioso —que eran los más del año—, se daba a leer libros de caballerías, con tanta afición y",
+    "text": "saber que este sobredicho hidalgo, los ratos que estaba ocioso \u2014que eran los m\u00e1s del a\u00f1o\u2014, se daba a leer libros de caballer\u00edas, con tanta afici\u00f3n y",
     "ts": 1791027838284
    },
    {
@@ -106,7 +106,7 @@
     "color": "ambar",
     "start": 197,
     "end": 207,
-    "text": "esto importa poco a nuestro cuento: basta que en la narración",
+    "text": "esto importa poco a nuestro cuento: basta que en la narraci\u00f3n",
     "ts": 1791028466469
    },
    {

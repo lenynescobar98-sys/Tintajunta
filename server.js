@@ -106,10 +106,25 @@ function getRoom(code) {
   if (!rooms.has(code)) rooms.set(code, { seq: 1, highlights: [], notes: [], board: { text: '', name: '', ts: 0 },
     follow: { active: false, pos: 0, ts: 0, name: '' },
     para: { idx: 0, ts: 0 }, // v81: párrafo de clase (lo controla el profesor)
+    teacher: null, // v83: { name } — el profesor verificado de la sala (anti-suplantación)
     chat: [], reactions: [], hands: [], switchTo: null });
   const st = rooms.get(code);
   if (ensureNoteCodes(st)) save();
   return st;
+}
+/* v83: verifica que el usuario sea el profesor registrado de la sala.
+   El color negro por sí solo NO basta — cualquiera podría enviarlo por API. */
+function isRoomTeacher(code, name) {
+  const st = rooms.get(code);
+  return !!(st && st.teacher && st.teacher.name && st.teacher.name === name);
+}
+/* v83: registra al profesor si la sala no tiene uno; rechaza suplantadores */
+function claimTeacher(code, name, color) {
+  const st = getRoom(code);
+  if (color !== 'negro') return color; // no reclama ser profesor
+  if (!st.teacher) { st.teacher = { name, ts: Date.now() }; save(); return 'negro'; }
+  if (st.teacher.name === name) return 'negro'; // es el profesor registrado
+  return 'azul'; // suplantador: se le asigna color por defecto
 }
 /* Las manos levantadas expiran solas tras 2 minutos */
 const HAND_MS = 2 * 60 * 1000;
@@ -1277,14 +1292,15 @@ function userOf(req) {
 app.post('/api/rooms/:room/join', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  const verifiedColor = claimTeacher(code, u.name, u.color); // v83: anti-suplantación
+  touchPresence(code, u.name, verifiedColor);
   const st = getRoom(code);
   pruneHands(st);
   res.json({ ok: true, room: code, highlights: st.highlights, notes: st.notes,
     board: st.board || { text: '', name: '', ts: 0 },
     para: st.para || { idx: 0, ts: 0 },
     chat: st.chat || [], reactions: st.reactions || [], hands: st.hands || [],
-    roster: roster(code), you: { name: u.name, color: u.color, room: code } });
+    roster: roster(code), you: { name: u.name, color: verifiedColor, room: code } });
 });
 /* Latido de presencia (el cliente lo llama cada ~15s; incluye el párrafo visible) */
 app.post('/api/rooms/:room/ping', (req, res) => {
@@ -1314,7 +1330,7 @@ app.post('/api/rooms/:room/para', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
   touchPresence(code, u.name, u.color);
-  if (u.color !== 'negro') return res.status(403).json({ ok: false, error: 'solo-profesor' });
+  if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
   const st = getRoom(code);
   let idx = Math.floor(Number(req.body && req.body.idx));
   if (!isFinite(idx) || idx < 0) idx = 0;
@@ -1327,7 +1343,7 @@ app.post('/api/rooms/:room/switch', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
   touchPresence(code, u.name, u.color);
-  if (u.color !== 'negro') return res.status(403).json({ ok: false, error: 'solo-profesor' });
+  if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
   const st = getRoom(code);
   const bookId = String((req.body && req.body.bookId) || '').slice(0, 64);
   const title = String((req.body && req.body.title) || '').slice(0, 120);
@@ -1384,7 +1400,7 @@ app.post('/api/rooms/:room/hand', (req, res) => {
   pruneHands(st);
   const up = !!(req.body && req.body.up);
   const target = String((req.body && req.body.target) || '').trim() || u.name;
-  const isTeacher = u.color === 'negro';
+  const isTeacher = isRoomTeacher(code, u.name);
   if (up) {
     if (!st.hands.some((h) => h.name === u.name)) {
       st.hands.push({ name: u.name, color: u.color, ts: Date.now() });
@@ -1402,7 +1418,7 @@ app.post('/api/rooms/:room/follow', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
   touchPresence(code, u.name, u.color);
-  if (u.color !== 'negro') return res.status(403).json({ ok: false, error: 'solo-profesor' });
+  if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
   const st = getRoom(code);
   const active = !!(req.body && req.body.active);
   let pos = Number(req.body && req.body.pos);
@@ -1417,7 +1433,7 @@ app.post('/api/rooms/:room/board', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
   touchPresence(code, u.name, u.color);
-  if (u.color !== 'negro') return res.status(403).json({ ok: false, error: 'solo-profesor' });
+  if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
   const st = getRoom(code);
   const text = String((req.body && req.body.text) || '').slice(0, 2000);
   st.board = { text, name: u.name, ts: Date.now() };

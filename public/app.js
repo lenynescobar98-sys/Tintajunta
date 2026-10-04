@@ -1486,6 +1486,16 @@ function joinRoom() {
   apiPost(roomBase() + '/join', {})
     .then((s) => {
       if (s.room) { myRoom = s.room; updateRoomLabel(); }
+      // v83: el servidor verifica el color (anti-suplantación de profesor)
+      if (s.you && s.you.color && s.you.color !== myColor) {
+        myColor = s.you.color;
+        localStorage.setItem('tj_color', myColor);
+        if (typeof buildSwatches === 'function') buildSwatches();
+        if (myColor !== 'negro' && isTeacher) {
+          // Ya hay otro profesor en la sala
+          toast('⚠️ Ya hay un profesor en esta sala');
+        }
+      }
       applyState(s);
       setOnline(true);
       clog('red: dentro de ' + myRoom);
