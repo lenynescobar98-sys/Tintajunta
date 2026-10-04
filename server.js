@@ -332,6 +332,25 @@ function upsertUser(profile) {
 app.get('/api/stripe-key', (req, res) => {
   res.json({ ok: true, enabled: stripePay.isEnabled(), publishableKey: stripePay.publishableKey || null });
 });
+/* Versión del código desplegado: para verificar QUÉ versión está viva sin adivinar.
+ * Railway inyecta RAILWAY_GIT_COMMIT_SHA / RAILWAY_GIT_BRANCH en cada deploy. */
+const APP_VERSION = (() => {
+  try { return require('./package.json').version || '0.0.0'; } catch (e) { return '0.0.0'; }
+})();
+const BOOT_TIME = new Date().toISOString();
+app.get('/api/version', (req, res) => {
+  res.json({
+    ok: true,
+    version: APP_VERSION,
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_SHA || 'local',
+    branch: process.env.RAILWAY_GIT_BRANCH || 'master',
+    environment: process.env.RAILWAY_ENVIRONMENT || 'development',
+    startedAt: BOOT_TIME,
+    node: process.version,
+    stripe: { enabled: stripePay.isEnabled() },
+    googleAuth: { configured: authGoogle.isConfigured() },
+  });
+});
 /* Crea un PaymentIntent para una acción de pago. El cliente confirma con Stripe.js
  * y luego llama al endpoint original con { paymentIntentId } para finalizar. */
 const pendingStripe = new Map(); // paymentIntentId -> { type, data, amount, ts }
@@ -1600,7 +1619,23 @@ app.post('/api/admin/books/:id/review', (req, res) => {
 });
 
 const server = app.listen(PORT, () => {
-  console.log(`[tintajunta] sala en vivo en http://localhost:${PORT}`);
+  const commit = (process.env.RAILWAY_GIT_COMMIT_SHA || 'local').slice(0, 7);
+  console.log(`[tintajunta] TintaJunta v${APP_VERSION} (commit ${commit}) en http://localhost:${PORT}`);
+  console.log(`[tintajunta] entorno: ${process.env.RAILWAY_ENVIRONMENT || 'development'} · rama: ${process.env.RAILWAY_GIT_BRANCH || 'master'} · node ${process.version}`);
+  // Diagnóstico de integraciones: avisa CLARO si falta una clave (sin mostrar valores).
+  if (stripePay.isEnabled()) {
+    console.log('[tintajunta] ✓ Stripe configurado (pagos activos)');
+  } else {
+    console.warn('[tintajunta] ⚠️  STRIPE_SECRET_KEY no configurada: los PAGOS están DESHABILITADOS (endpoints devuelven stripe-disabled)');
+  }
+  if (authGoogle.isConfigured()) {
+    console.log('[tintajunta] ✓ Login con Google configurado');
+  } else {
+    console.warn('[tintajunta] ⚠️  GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET no configurados: el LOGIN con Google está DESHABILITADO');
+  }
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'tintajunta-dev-secret-cambiar-en-prod') {
+    console.warn('[tintajunta] ⚠️  SESSION_SECRET no configurado: usando secreto de desarrollo (cámbialo en producción)');
+  }
 });
 // Las conexiones del túnel quedan abiertas y en espera: que el servidor HTTP
 // no las cierre por inactividad (prototipo tras túnel).
