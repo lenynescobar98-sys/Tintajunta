@@ -103,7 +103,7 @@ function genRoomCode() {
   return code;
 }
 function getRoom(code) {
-  if (!rooms.has(code)) rooms.set(code, { seq: 1, highlights: [], notes: [], board: { text: '', name: '', ts: 0 },
+  if (!rooms.has(code)) rooms.set(code, { seq: 1, highlights: [], notes: [], board: [], // v85: lista de entradas [{text,name,color,ts}] — todos escriben
     follow: { active: false, pos: 0, ts: 0, name: '' },
     para: { idx: 0, ts: 0 }, // v81: párrafo de clase (lo controla el profesor)
     teacher: null, // v83: { name } — el profesor verificado de la sala (anti-suplantación)
@@ -144,11 +144,14 @@ function loadRooms() {
       for (const [code, st] of Object.entries(parsed)) {
         if (/^[A-Z0-9]{4,12}$/.test(code) && st && Array.isArray(st.highlights) && Array.isArray(st.notes)) {
           const seq = Math.floor(Number(st.seq));
-          const b = st.board && typeof st.board === 'object' ? st.board : {};
+          const braw = st.board;
+          // v85: migra formato antiguo {text,name,ts} a lista de entradas
+          const barr = Array.isArray(braw) ? braw
+            : (braw && braw.text ? [{ text: String(braw.text).slice(0, 500), name: String(braw.name || ''), color: 'negro', ts: Number(braw.ts) || 0 }] : []);
           const f = st.follow && typeof st.follow === 'object' ? st.follow : {};
           const pa = st.para && typeof st.para === 'object' ? st.para : {};
           rooms.set(code, { seq: seq > 0 ? seq : 1, highlights: st.highlights, notes: st.notes,
-            board: { text: String(b.text || '').slice(0, 2000), name: String(b.name || ''), ts: Number(b.ts) || 0 },
+            board: barr.filter((e) => e && e.text).slice(-20),
             follow: { active: !!f.active, pos: Math.min(1, Math.max(0, Number(f.pos) || 0)), ts: Number(f.ts) || 0, name: String(f.name || '') },
             para: { idx: Math.max(0, Math.floor(Number(pa.idx) || 0)), ts: Number(pa.ts) || 0 },
             chat: Array.isArray(st.chat) ? st.chat.slice(-50) : [],
@@ -169,7 +172,7 @@ function loadRooms() {
       const seq = Math.floor(Number(parsed.seq));
       rooms.set(MAIN_ROOM, {
         seq: seq > 0 ? seq : 1, highlights: parsed.highlights, notes: parsed.notes,
-        board: { text: '', name: '', ts: 0 },
+        board: [], // v85: lista de entradas — todos escriben
         follow: { active: false, pos: 0, ts: 0, name: '' },
         para: { idx: 0, ts: 0 },
         chat: [], reactions: [], hands: [],
@@ -425,7 +428,7 @@ app.get('/api/state', (req, res) => {
   const code = normalizeRoom(req.query.room) || MAIN_ROOM;
   const st = getRoom(code);
   res.json({ room: code, highlights: st.highlights, notes: st.notes,
-    board: st.board || { text: '', name: '', ts: 0 } });
+    board: Array.isArray(st.board) ? st.board : [] });
 });
 /* Genera un código de sala nuevo y único */
 app.get('/api/room/new', requireLogin, (req, res) => {
@@ -1297,7 +1300,7 @@ app.post('/api/rooms/:room/join', (req, res) => {
   const st = getRoom(code);
   pruneHands(st);
   res.json({ ok: true, room: code, highlights: st.highlights, notes: st.notes,
-    board: st.board || { text: '', name: '', ts: 0 },
+    board: Array.isArray(st.board) ? st.board : [],
     para: st.para || { idx: 0, ts: 0 },
     chat: st.chat || [], reactions: st.reactions || [], hands: st.hands || [],
     roster: roster(code), you: { name: u.name, color: verifiedColor, room: code } });
@@ -1318,7 +1321,7 @@ app.get('/api/rooms/:room/state', (req, res) => {
   let sw = st.switchTo || null;
   if (sw && (Date.now() - (Number(sw.ts) || 0)) > 5 * 60 * 1000) { sw = null; st.switchTo = null; }
   res.json({ ok: true, room: code, highlights: st.highlights, notes: st.notes,
-    board: st.board || { text: '', name: '', ts: 0 },
+    board: Array.isArray(st.board) ? st.board : [],
     follow: st.follow || { active: false, pos: 0, ts: 0, name: '' },
     para: st.para || { idx: 0, ts: 0 },
     chat: st.chat || [], reactions: st.reactions || [], hands: st.hands || [],
@@ -1428,17 +1431,31 @@ app.post('/api/rooms/:room/follow', (req, res) => {
   save();
   res.json({ ok: true, follow: st.follow });
 });
-/* Pizarra compartida: solo el profesor (tinta negra) puede escribir */
+/* Pizarra compartida (v85): TODOS los de la sala pueden escribir.
+   Cada entrada queda con el nombre y color de su autor. El profesor sale en negro con 🎓. */
 app.post('/api/rooms/:room/board', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
-  if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
+  const verifiedColor = claimTeacher(code, u.name, u.color); // v83: anti-suplantación
+  touchPresence(code, u.name, verifiedColor);
   const st = getRoom(code);
-  const text = String((req.body && req.body.text) || '').slice(0, 2000);
-  st.board = { text, name: u.name, ts: Date.now() };
+  const text = String((req.body && req.body.text) || '').slice(0, 500);
+  if (!text.trim()) return res.status(400).json({ ok: false, error: 'texto-vacio' });
+  if (!Array.isArray(st.board)) st.board = [];
+  st.board.push({ text: text.trim(), name: u.name, color: verifiedColor, ts: Date.now() });
+  if (st.board.length > 20) st.board = st.board.slice(-20);
   save();
   res.json({ ok: true, board: st.board });
+});
+/* Limpiar la pizarra: solo el profesor */
+app.post('/api/rooms/:room/boardClear', (req, res) => {
+  const code = roomOf(req, res); if (!code) return;
+  const u = userOf(req);
+  if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
+  const st = getRoom(code);
+  st.board = [];
+  save();
+  res.json({ ok: true, board: [] });
 });
 /* Subrayar un pasaje */
 app.post('/api/rooms/:room/highlight', (req, res) => {

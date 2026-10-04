@@ -890,7 +890,7 @@ function applyState(s) {
   } catch (e) { /* si falla el diff, renderizar normal */ }
   highlights = s.highlights || [];
   notes = s.notes || [];
-  board = s.board || { text: '', name: '', ts: 0 };
+  board = Array.isArray(s.board) ? s.board : [];
   follow = s.follow || { active: false, pos: 0, ts: 0, name: '' };
   if (s.para) roomPara = s.para;
   chat = s.chat || [];
@@ -920,9 +920,9 @@ function applyState(s) {
 }
 
 /* ------------------------- pizarra compartida ------------------------- */
-/* Solo el profesor (tinta negra 🎓) escribe; todos la ven en vivo. */
-let board = { text: '', name: '', ts: 0 };
-let boardTimer = null;
+/* v85: TODOS los de la sala pueden escribir. Cada entrada queda con el
+   nombre y color de su autor; el profesor sale en negro con 🎓. */
+let board = [];
 
 function relTime(ts) {
   if (!ts) return '';
@@ -937,45 +937,54 @@ function relTime(ts) {
 }
 
 function renderBoard() {
-  const edit = $('boardEdit'), view = $('boardView'), meta = $('boardMeta'), clear = $('boardClear');
+  const edit = $('boardEdit'), view = $('boardView'), meta = $('boardMeta'), clear = $('boardClear'), send = $('boardSend');
   if (!edit) return;
-  const teacher = isTeacher;
-  edit.classList.toggle('hidden', !teacher);
-  view.classList.toggle('hidden', teacher);
-  clear.classList.toggle('hidden', !teacher || !board.text);
-  // No pisar lo que el profesor está escribiendo
-  if (teacher && document.activeElement !== edit && edit.value !== (board.text || '')) {
-    edit.value = board.text || '';
+  // v85: el input es visible para TODOS (no solo el profesor)
+  edit.classList.remove('hidden');
+  if (send) send.classList.remove('hidden');
+  clear.classList.toggle('hidden', !isTeacher || !board.length);
+  const entries = Array.isArray(board) ? board : [];
+  if (!entries.length) {
+    view.innerHTML = '<span class="board-empty">La pizarra está limpia — sé el primero en escribir. ✍️</span>';
+  } else {
+    view.innerHTML = entries.map((e) => {
+      const col = COLORS[e.color] || COLORS.azul;
+      const who = e.color === 'negro' ? '🎓 ' + esc(e.name) : esc(e.name);
+      return `<div class="board-entry" style="border-left-color:${col}">` +
+        `<div class="board-entry-head"><span class="dot" style="background:${col}"></span><b>${who}</b>` +
+        `<span class="board-entry-ts">${relTime(e.ts)}</span></div>` +
+        `<div class="board-entry-text" style="color:${col}">${esc(e.text)}</div></div>`;
+    }).join('');
   }
-  if (!teacher) {
-    view.innerHTML = board.text
-      ? '<pre>' + esc(board.text) + '</pre>'
-      : '<span class="board-empty">La pizarra está vacía — el profesor aún no escribe nada.</span>';
-  }
-  meta.textContent = (board.text && board.name) ? '✏️ ' + board.name + ' · ' + relTime(board.ts) : '';
+  meta.textContent = entries.length ? `✏️ ${entries.length} en la pizarra` : '';
 }
 
-/* Guarda con debounce de 500ms tras dejar de escribir */
-function saveBoard() {
+/* v85: enviar como entrada discreta (botón o Enter) */
+function sendBoard() {
   const edit = $('boardEdit');
-  if (!edit || !isTeacher) return;
-  apiPost(roomBase() + '/board', { text: edit.value })
-    .then((s) => { if (s && s.ok && s.board) { board = s.board; renderBoard(); } })
-    .catch(() => toast('No se pudo guardar la pizarra — revisa tu conexión'));
+  if (!edit) return;
+  const text = (edit.value || '').trim();
+  if (!text) return;
+  edit.value = '';
+  apiPost(roomBase() + '/board', { text })
+    .then((s) => { if (s && s.ok && Array.isArray(s.board)) { board = s.board; renderBoard(); } })
+    .catch(() => toast('No se pudo escribir en la pizarra — revisa tu conexión'));
 }
 
 function initBoard() {
-  const edit = $('boardEdit'), clear = $('boardClear');
+  const edit = $('boardEdit'), clear = $('boardClear'), send = $('boardSend');
   if (!edit) return;
-  edit.addEventListener('input', () => {
-    clearTimeout(boardTimer);
-    boardTimer = setTimeout(saveBoard, 500);
+  const doSend = () => sendBoard();
+  if (send) send.onclick = doSend;
+  edit.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
   });
-  clear.onclick = () => {
+  if (clear) clear.onclick = () => {
+    if (!isTeacher) return;
     if (!confirm('¿Limpiar la pizarra para todos?')) return;
-    edit.value = '';
-    clearTimeout(boardTimer);
-    saveBoard();
+    apiPost(roomBase() + '/boardClear', {})
+      .then((s) => { if (s && s.ok) { board = []; renderBoard(); } })
+      .catch(() => toast('No se pudo limpiar la pizarra'));
   };
   renderBoard();
 }
