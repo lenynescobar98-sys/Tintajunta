@@ -1026,17 +1026,23 @@ app.post('/api/clog', (req, res) => {
  * La presencia se mantiene con latidos (ping); un barrendero elimina a los
  * ausentes. Todo son peticiones HTTPS cortas: atraviesan cualquier túnel. */
 
-const presence = new Map(); // "ROOM::nombre" -> { name, color, room, lastSeen }
+const presence = new Map(); // "ROOM::nombre" -> { name, color, room, para, lastSeen }
 const PRESENCE_TTL = 45000;
 const pkey = (room, name) => room + '::' + name;
-function touchPresence(room, name, color) {
-  presence.set(pkey(room, name), { name, color, room, lastSeen: Date.now() });
+// v68: la presencia incluye el párrafo que cada lector está viendo (para la
+// "efervescencia colectiva": ver dónde leen los demás en tiempo real).
+function touchPresence(room, name, color, para) {
+  const p = Number(para);
+  presence.set(pkey(room, name), { name, color, room,
+    para: Number.isFinite(p) && p >= 0 ? Math.floor(p) : -1,
+    lastSeen: Date.now() });
 }
 function roster(room) {
   const now = Date.now();
   const out = [];
   for (const p of presence.values()) {
-    if (p.room === room && now - p.lastSeen < PRESENCE_TTL) out.push({ name: p.name, color: p.color });
+    if (p.room === room && now - p.lastSeen < PRESENCE_TTL)
+      out.push({ name: p.name, color: p.color, para: p.para });
   }
   return out;
 }
@@ -1102,11 +1108,11 @@ app.post('/api/rooms/:room/join', (req, res) => {
     chat: st.chat || [], reactions: st.reactions || [], hands: st.hands || [],
     roster: roster(code), you: { name: u.name, color: u.color, room: code } });
 });
-/* Latido de presencia (el cliente lo llama cada ~15s) */
+/* Latido de presencia (el cliente lo llama cada ~15s; incluye el párrafo visible) */
 app.post('/api/rooms/:room/ping', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  touchPresence(code, u.name, u.color, req.body && req.body.para);
   res.json({ ok: true });
 });
 /* Estado completo de la sala (el cliente lo sondea cada ~2.5s) */

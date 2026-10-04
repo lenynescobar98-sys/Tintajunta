@@ -238,8 +238,10 @@ function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
     paras.appendChild(gal);
   }
   let idx = 0;
+  let pi = 0;
   paragraphs.forEach((text) => {
     const p = document.createElement('p');
+    p.dataset.para = pi++; // v68: índice de párrafo para presencia viva y notas
     String(text).split(/\s+/).forEach((t) => {
       if (!t) return;
       const s = document.createElement('span');
@@ -277,8 +279,49 @@ function repaintAll() {
   spanByIdx.forEach((s) => { s.style.background = ''; s.title = ''; s.classList.remove('has-note'); s.style.setProperty('--note-c', ''); });
   highlights.forEach(paintHighlight);
   paintNoteMarks();
+  paintNoteBadges(); // v68
 }
 /* Marca visual en palabras con nota: subrayado punteado del color del autor */
+/* v68 — Insignias 💬 por párrafo (patrón Wattpad): los párrafos con notas muestran
+   cuántas tienen; al tocar, se abre el panel de notas. Hace visibles las notas. */
+function paintNoteBadges() {
+  const paras = $('paras');
+  if (!paras) return;
+  paras.querySelectorAll('.note-badge').forEach((b) => b.remove());
+  const countByPara = {};
+  for (const n of notes) {
+    const s = spanByIdx[n.start];
+    const pEl = s && s.closest('p[data-para]');
+    if (!pEl) continue;
+    const pi = pEl.dataset.para;
+    countByPara[pi] = (countByPara[pi] || 0) + 1;
+  }
+  Object.keys(countByPara).forEach((pi) => {
+    const pEl = paras.querySelector(`p[data-para="${pi}"]`);
+    if (!pEl) return;
+    const b = document.createElement('button');
+    b.className = 'note-badge';
+    b.type = 'button';
+    b.title = 'Ver notas de este párrafo';
+    b.innerHTML = `💬 ${countByPara[pi]}`;
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setMarginTab('notes');
+      const first = notes.find((n) => {
+        const s = spanByIdx[n.start];
+        return s && s.closest('p[data-para]') === pEl;
+      });
+      if (first) {
+        const card = [...document.querySelectorAll('#notes .note-card')].find((c) =>
+          c.querySelector('.note-quote')?.textContent.includes((first.quote || '').slice(0, 20)));
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      const margin = document.querySelector('aside.margin');
+      if (margin && window.innerWidth < 900) margin.scrollIntoView({ behavior: 'smooth' });
+    });
+    pEl.appendChild(b);
+  });
+}
 function paintNoteMarks() {
   const seen = new Set();
   for (const n of notes) {
@@ -344,6 +387,64 @@ function renderRoster(roster) {
       `<span class="chip" data-name="${esc(p.name)}"><span class="dot" style="background:${COLORS[p.color] || COLORS.azul}"></span>${esc(p.name)}</span>`
     ).join('');
   paintHandsInRoster();
+  renderParaPresence(roster); // v68: 👁 dónde lee cada uno
+}
+
+/* v68 — Presencia viva por párrafo ("efervescencia colectiva", idea de Perusall):
+   muestra quién está leyendo cada párrafo en tiempo real. */
+let lastTogetherToast = 0;
+const togetherSeen = new Set(); // "para::nombre" ya anunciados
+function currentParaIdx() {
+  const paras = $('paras');
+  if (!paras) return -1;
+  const midY = window.scrollY + window.innerHeight * 0.4;
+  const ps = paras.querySelectorAll('p[data-para]');
+  let best = -1, bestDist = 1e9;
+  ps.forEach((p) => {
+    const r = p.getBoundingClientRect();
+    const top = r.top + window.scrollY;
+    const d = Math.abs(top + r.height / 2 - midY);
+    if (d < bestDist) { bestDist = d; best = Number(p.dataset.para); }
+  });
+  return best;
+}
+function renderParaPresence(roster) {
+  const paras = $('paras');
+  if (!paras || currentView !== 'room') return;
+  paras.querySelectorAll('.para-eyes').forEach((e) => e.remove());
+  const mine = (myName || '').trim();
+  const byPara = {};
+  (roster || []).forEach((p) => {
+    if ((p.name || '').trim() === mine) return;
+    const pi = Number(p.para);
+    if (!Number.isFinite(pi) || pi < 0) return;
+    (byPara[pi] = byPara[pi] || []).push(p);
+  });
+  Object.keys(byPara).forEach((pi) => {
+    const pEl = paras.querySelector(`p[data-para="${pi}"]`);
+    if (!pEl) return;
+    const chip = document.createElement('span');
+    chip.className = 'para-eyes';
+    const names = byPara[pi].slice(0, 3).map((p) =>
+      `<span class="dot" style="background:${COLORS[p.color] || COLORS.azul}"></span>${esc(p.name)}`).join('');
+    const more = byPara[pi].length > 3 ? ` <b>+${byPara[pi].length - 3}</b>` : '';
+    chip.innerHTML = `👁 ${names}${more} <i>lee aquí</i>`;
+    pEl.appendChild(chip);
+  });
+  // v68: aviso sutil cuando alguien llega a TU párrafo (máx 1 cada 45s, sin spam)
+  try {
+    const myPara = String(currentParaIdx());
+    const now = Date.now();
+    (byPara[myPara] || []).forEach((p) => {
+      const key = myPara + '::' + p.name;
+      if (!togetherSeen.has(key) && now - lastTogetherToast > 45000) {
+        togetherSeen.add(key);
+        lastTogetherToast = now;
+        toast(`📖 ${p.name} está leyendo este párrafo contigo`);
+      }
+    });
+    if (togetherSeen.size > 60) togetherSeen.clear(); // higiene de memoria
+  } catch (e) {}
 }
 
 /* ------------------------------- avisos ------------------------------- */
@@ -694,6 +795,7 @@ function initSelection() {
         notes.push(s.note);
         renderNotes();
         paintNoteMarks();
+        paintNoteBadges(); // v68
         toast(s.note.code ? 'Nota ' + s.note.code + ' guardada' : 'Nota guardada al margen');
       }
       setOnline(true);
@@ -1194,6 +1296,11 @@ function initNet() {
     netInitDone = true;
     setInterval(() => { if (!document.hidden && currentView === 'room') pollState(); }, 2500); // novedades de los demás (pausado si la pestaña está oculta o fuera de la sala)
     setInterval(() => { if (!document.hidden && currentView === 'room') apiPost(roomBase() + '/ping', {}).catch(() => {}); }, 15000); // presencia
+    // v68: latido de párrafo visible (cada 8s) para la presencia viva 👁
+    setInterval(() => {
+      if (document.hidden || currentView !== 'room') return;
+      try { apiPost(roomBase() + '/ping', { para: currentParaIdx() }).catch(() => {}); } catch (e) {}
+    }, 8000);
     $('copyRoom').onclick = async () => {
       try {
         await navigator.clipboard.writeText(myRoom);
@@ -1950,12 +2057,82 @@ const getProgress = (id) => {
   catch { return 0; }
 };
 let progTimer = null;
+/* v68 — Tipografía del lector (patrón Kindle/Wattpad): tamaño, espaciado y ancho.
+   Se guarda en localStorage y se aplica al artículo de lectura. */
+const TYPO_KEY = 'tj_typo_v1';
+const typoGet = () => {
+  try { return Object.assign({ size: 17, lh: 1.75, w: 'normal' }, JSON.parse(localStorage.getItem(TYPO_KEY) || '{}')); }
+  catch (e) { return { size: 17, lh: 1.75, w: 'normal' }; }
+};
+const typoSet = (t) => { try { localStorage.setItem(TYPO_KEY, JSON.stringify(t)); } catch (e) {} };
+function typoApply() {
+  const t = typoGet();
+  const article = document.querySelector('main.layout article.chapter');
+  if (!article) return;
+  article.style.setProperty('--read-size', t.size + 'px');
+  article.style.setProperty('--read-lh', t.lh);
+  article.classList.remove('read-w-narrow', 'read-w-normal', 'read-w-wide');
+  article.classList.add('read-w-' + t.w);
+  const lbl = $('typoSizeLbl'); if (lbl) lbl.textContent = t.size;
+  document.querySelectorAll('#typoLineBtns .btn-chip').forEach((b) =>
+    b.classList.toggle('on', Number(b.dataset.lh) === Number(t.lh)));
+  document.querySelectorAll('#typoWidthBtns .btn-chip').forEach((b) =>
+    b.classList.toggle('on', b.dataset.w === t.w));
+}
+function initTypo() {
+  typoApply();
+  $('typoBtn').onclick = () => { typoApply(); $('typoPop').classList.remove('hidden'); };
+  $('typoClose').onclick = () => $('typoPop').classList.add('hidden');
+  $('typoMinus').onclick = () => { const t = typoGet(); t.size = Math.max(14, t.size - 1); typoSet(t); typoApply(); };
+  $('typoPlus').onclick = () => { const t = typoGet(); t.size = Math.min(24, t.size + 1); typoSet(t); typoApply(); };
+  $('typoLineBtns').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-lh]'); if (!b) return;
+    const t = typoGet(); t.lh = Number(b.dataset.lh); typoSet(t); typoApply();
+  });
+  $('typoWidthBtns').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-w]'); if (!b) return;
+    const t = typoGet(); t.w = b.dataset.w; typoSet(t); typoApply();
+  });
+}
+
+/* v68 — Barra de progreso de lectura (patrón Kindle): % leído en tiempo real. */
+function initReadProgress() {
+  const bar = $('readProgress'), fill = $('readProgressFill'), pct = $('readProgressPct');
+  const upd = () => {
+    if (currentView !== 'room') { bar.classList.add('hidden'); return; }
+    bar.classList.remove('hidden');
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+    fill.style.width = (p * 100).toFixed(1) + '%';
+    pct.textContent = Math.round(p * 100) + '%';
+  };
+  window.addEventListener('scroll', () => requestAnimationFrame(upd), { passive: true });
+  setInterval(upd, 2000);
+}
+
+const progMetaKey = (id) => 'tj_progmeta_' + id;
+/* v68: guarda metadatos del libro junto al progreso para "Seguir leyendo" */
+function saveProgressMeta(book) {
+  if (!book || !book.id) return;
+  try {
+    localStorage.setItem(progMetaKey(book.id), JSON.stringify({
+      id: book.id, title: book.title, author: book.author,
+      cover: book.cover || '', ts: Date.now()
+    }));
+  } catch (e) {}
+}
+function getProgressMeta(id) {
+  try { return JSON.parse(localStorage.getItem(progMetaKey(id)) || 'null'); }
+  catch (e) { return null; }
+}
 function initProgress() {
   window.addEventListener('scroll', () => {
     if (currentView !== 'room' || !myRoom) return;
     clearTimeout(progTimer);
     progTimer = setTimeout(() => {
       try { localStorage.setItem(progKey(myRoom), String(window.scrollY | 0)); } catch (e) {}
+      if (currentBook) saveProgressMeta(currentBook);
     }, 800);
   }, { passive: true });
   window.addEventListener('pagehide', () => {
@@ -2066,6 +2243,42 @@ function fillRow(elId, tiles, emptyMsg) {
   });
 }
 /* Filas: Destacados / Recomendados (con pills) */
+/* v68 — "Seguir leyendo" (patrón Goodreads): la biblioteca abre con tu lectura
+   actual, no con un catálogo frío. Lee el progreso guardado en localStorage. */
+function renderContinueReading() {
+  const sec = $('secContinue'), row = $('continueRow');
+  if (!sec || !row) return;
+  const items = [];
+  try {
+    for (let i = 0; i < localStorage.length && items.length < 6; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith('tj_progress_')) continue;
+      const id = k.slice('tj_progress_'.length);
+      const y = parseInt(localStorage.getItem(k) || '0', 10) || 0;
+      if (y <= 120) continue;
+      const meta = getProgressMeta(id);
+      if (!meta) continue;
+      items.push({ id, y, meta });
+    }
+  } catch (e) {}
+  items.sort((a, b) => (b.meta.ts || 0) - (a.meta.ts || 0));
+  if (!items.length) { sec.classList.add('hidden'); return; }
+  sec.classList.remove('hidden');
+  row.innerHTML = items.map(({ id, meta }) => `
+    <button class="continue-card" data-book="${esc(id)}">
+      <span class="continue-cover">${meta.cover
+        ? `<img src="${esc(meta.cover)}" alt="" loading="lazy">`
+        : `<span class="continue-cover-ph">📖</span>`}</span>
+      <span class="continue-info">
+        <b>${esc(meta.title || 'Libro')}</b>
+        <i>${esc(meta.author || '')}</i>
+        <span class="continue-cta">Seguir leyendo →</span>
+      </span>
+    </button>`).join('');
+  row.querySelectorAll('.continue-card').forEach((c) =>
+    c.addEventListener('click', () => openBook(c.dataset.book, true)));
+}
+
 function renderRows() {
   const feat = libBooksCache.filter((b) => b.featured);
   const secD = document.getElementById('secDestacados');
@@ -2378,6 +2591,7 @@ async function showLibrary(push) {
   $('writing').classList.add('hidden');
   closeDrawer();
   currentBook = null;
+  renderContinueReading(); // v68: tu lectura actual, primero
   // skeleton mientras carga (nunca en blanco)
   renderHeroSkeleton();
   try {
@@ -2991,6 +3205,7 @@ function initWelcome() {
  ['initPills', initPills], ['initMarquee', initMarquee],
  ['initBoard', initBoard], ['initFollow', initFollow], ['initWelcome', initWelcome],
  ['initReviews', initReviews], ['initProgress', initProgress], ['initReports', initReports],
+ ['initTypo', initTypo], ['initReadProgress', initReadProgress],
  ['initChat', initChat], ['initReactions', initReactions], ['initHands', initHands],
  ['initSwitchBook', initSwitchBook], ['checkAuth', checkAuth]].forEach(([name, fn]) => {
   try {
