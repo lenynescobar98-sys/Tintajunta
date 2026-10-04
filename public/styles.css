@@ -679,13 +679,13 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 
 /* ------------------------- pizarra compartida ------------------------- */
 .board-wrap {
-  background: var(--paper-deep);
-  border: 1px solid var(--line);
-  border-top: 4px solid var(--accent);
-  border-radius: 12px;
-  padding: 14px 16px;
+  background: #ffffff;
+  border: 6px solid #d7dce2;
+  border-radius: 4px;
+  padding: 14px 16px 18px;
   margin-bottom: 22px;
   width: 100%;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
 }
 .board-head {
   display: flex;
@@ -710,10 +710,10 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   font-size: 18px;
   line-height: 1.6;
   padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--paper);
-  color: var(--ink);
+  border: 1px solid #d7dce2;
+  border-radius: 2px;
+  background: #ffffff;
+  color: #1a1a1a;
   font-family: -apple-system, 'Segoe UI', sans-serif;
   resize: vertical;
 }
@@ -721,10 +721,10 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 .board-view {
   font-size: 18px;
   line-height: 1.7;
-  color: var(--ink);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1px solid #d7dce2;
+  border-radius: 2px;
   padding: 14px;
   min-height: 96px;
   word-wrap: break-word;
