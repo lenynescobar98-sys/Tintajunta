@@ -300,6 +300,10 @@ function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
   });
   wordCount = idx;
   renderNotes();
+  /* v78: transición suave al pintar un capítulo */
+  paras.classList.remove('fade-in');
+  void paras.offsetWidth;
+  paras.classList.add('fade-in');
 }
 async function loadText() {
   const r = await fetch('/api/text');
@@ -313,13 +317,14 @@ function paintHighlight(h) {
     cover.set(i, h);
     const s = spanByIdx[i];
     if (!s) continue;
-    s.style.background = hexA(COLORS[h.color] || COLORS.azul, 0.30);
+    s.style.background = hexA(COLORS[h.color] || COLORS.azul, 0.34);
+    s.classList.add('mk');
     s.title = `${h.name} · ${COLOR_NAMES[h.color] || h.color}`;
   }
 }
 function repaintAll() {
   cover.clear();
-  spanByIdx.forEach((s) => { s.style.background = ''; s.title = ''; s.classList.remove('has-note'); s.style.setProperty('--note-c', ''); });
+  spanByIdx.forEach((s) => { s.style.background = ''; s.title = ''; s.classList.remove('has-note'); s.classList.remove('mk'); s.style.setProperty('--note-c', ''); });
   highlights.forEach(paintHighlight);
   paintNoteMarks();
   paintNoteBadges(); // v68

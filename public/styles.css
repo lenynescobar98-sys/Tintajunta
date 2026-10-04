@@ -1424,3 +1424,69 @@ main.layout article.chapter.read-w-wide #chapterTitle { max-width: none; }
 #library .row-sec { margin-bottom: 30px; }
 #library .row-h2 { margin-bottom: 4px; }
 #library .row-sub { margin-bottom: 14px; }
+
+/* ================= v78 · Experiencia de lectura premium ================= */
+/* Hoja de lectura: papel cálido que no cansa la vista */
+#paras {
+  background: #fffdf8;
+  border: 1px solid #f0e8d6;
+  border-radius: 14px;
+  padding: 26px 24px;
+  box-shadow: 0 2px 12px rgba(138,90,30,.06);
+}
+/* Tipografía de lectura superior: letras nítidas, texto que respira */
+main.layout article.chapter .paras p {
+  font-size: var(--read-size, 18px);
+  line-height: var(--read-lh, 2.0);
+  margin: 0 0 1.6em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-wrap: pretty;
+  color: var(--ink);
+}
+/* Título de capítulo con tipografía editorial */
+.chapter h2#chapterTitle {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin: 6px 0 12px;
+  color: var(--ink);
+}
+.chapter h2#chapterTitle::after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 3px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, var(--accent), #c9a227);
+  border-radius: 2px;
+}
+/* Capitular estilo libro real: primera letra grande del capítulo */
+.paras p:first-of-type::first-letter {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 3.2em;
+  font-weight: 700;
+  float: left;
+  line-height: 0.9;
+  padding: 4px 10px 0 0;
+  color: var(--accent);
+}
+/* Marcas: subrayado claro, redondeado y bonito */
+.paras .w.mk {
+  border-radius: 4px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding: 1px 0;
+}
+/* Transición suave al cambiar de capítulo */
+#paras.fade-in { animation: pageIn .45s ease; }
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 920px) {
+  #paras { padding: 20px 18px; }
+  .chapter h2#chapterTitle { font-size: 30px; }
+}
