@@ -113,10 +113,12 @@ function getRoom(code) {
   return st;
 }
 /* v83: verifica que el usuario sea el profesor registrado de la sala.
-   El color negro por sí solo NO basta — cualquiera podría enviarlo por API. */
+   El color negro por sí solo NO basta — cualquiera podría enviarlo por API.
+   Compara sin el prefijo 🎓 (migración de datos antiguos que lo traían). */
+function stripCap(n) { return String(n || '').replace(/^🎓\s*/, '').trim(); }
 function isRoomTeacher(code, name) {
   const st = rooms.get(code);
-  return !!(st && st.teacher && st.teacher.name && st.teacher.name === name);
+  return !!(st && st.teacher && stripCap(st.teacher.name) && stripCap(st.teacher.name) === stripCap(name));
 }
 /* v83: registra al profesor si la sala no tiene uno; rechaza suplantadores */
 function claimTeacher(code, name, color) {
@@ -125,6 +127,13 @@ function claimTeacher(code, name, color) {
   if (!st.teacher) { st.teacher = { name, ts: Date.now() }; save(); return 'negro'; }
   if (st.teacher.name === name) return 'negro'; // es el profesor registrado
   return 'azul'; // suplantador: se le asigna color por defecto
+}
+/* Color verificado SIN registrar profesor: para endpoints que exigen ser
+   profesor (evita que cualquiera se registre llamando a /para, /follow, etc.).
+   Solo el profesor registrado conserva el negro. */
+function verifiedColorNoClaim(code, name, color) {
+  if (color !== 'negro') return color;
+  return isRoomTeacher(code, name) ? 'negro' : 'azul';
 }
 /* Las manos levantadas expiran solas tras 2 minutos */
 const HAND_MS = 2 * 60 * 1000;
@@ -291,9 +300,16 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, re
   const v = stripePay.verifyWebhook(req);
   if (!v.ok) return res.status(400).json({ ok: false, error: v.error });
   const event = v.event;
-  if (event.type === 'payment_intent.succeeded') {
+  if (event.type === 'checkout.session.completed') {
+    // Flujo Checkout Sessions: la sesión pagada completa el pago pendiente
+    const cs = event.data.object;
+    const done = completeStripePayment(cs.id, cs.metadata || {});
+    console.log('[tintajunta] webhook checkout.session.completed', cs.id, done ? 'completado' : 'sin acción pendiente');
+  } else if (event.type === 'payment_intent.succeeded') {
     const pi = event.data.object;
-    const done = completeStripePayment(pi.id, pi.metadata || {});
+    // El PaymentIntent lleva tj_session en su metadata (ver createCheckoutSession)
+    const sid = (pi.metadata && pi.metadata.tj_session) || pi.id;
+    const done = completeStripePayment(sid, pi.metadata || {});
     console.log('[tintajunta] webhook pago', pi.id, done ? 'completado' : 'sin acción pendiente');
   }
   res.json({ ok: true, received: true });
@@ -409,7 +425,11 @@ app.post('/api/payments/intent', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'bad-type' });
     }
     if (!(amount > 0)) return res.status(400).json({ ok: false, error: 'free' });
-    const cs = await stripePay.createCheckoutSession(amount, description, { tj_type: type, ...data });
+    // URLs de retorno en el mismo origen (Stripe redirige aquí tras el pago)
+    const host = req.get('host') || 'tintajunta.com';
+    const base = `${req.protocol}://${host}`;
+    const cs = await stripePay.createCheckoutSession(amount, description, { tj_type: type, ...data },
+      base + '/?pago=ok', base + '/?pago=cancelado');
     if (!cs.ok) return res.status(500).json({ ok: false, error: cs.error || 'stripe-error' });
     pendingStripe.set(cs.id, { ...data, amount, ts: Date.now() });
     // limpieza de pendientes viejos (1h)
@@ -421,6 +441,7 @@ app.post('/api/payments/intent', async (req, res) => {
   }
 });
 app.get('/api/text', (req, res) => res.json({
+  ok: true,
   chapterTitle: CHAPTER_TITLE, bookLine: BOOK_LINE, sampleNote: SAMPLE_NOTE,
   paragraphs: PARAGRAPHS, wordCount: WORDS.length,
 }));
@@ -509,15 +530,20 @@ app.post('/api/books/:id/feature', requireLogin, async (req, res) => {
   const author = cleanName(req.body && req.body.author);
   if (b.author !== author) return res.status(403).json({ ok: false, error: 'not-owner' });
   // Pago real con Stripe (en TEST no se cobra dinero de verdad)
+  let paidId = '';
   if (stripePay.isEnabled()) {
-    const pid = String((req.body && req.body.paymentIntentId) || '');
-    const ok = await verifyStripeFor(pid, FEATURE_PRICES[plan]);
+    // El cliente envía el id de la Checkout Session (sessionId) tras pagar en Stripe
+    paidId = String((req.body && (req.body.sessionId || req.body.paymentIntentId)) || '');
+    const ok = await verifyStripeFor(paidId, FEATURE_PRICES[plan]);
     if (!ok) return res.status(402).json({ ok: false, error: 'payment-required' });
   }
-  const now = Date.now();
-  const base = isFeatured(b) ? b.featured.until : now; // extiende si ya está destacado
-  b.featured = { until: base + FEATURE_MS[plan], plan };
-  saveBooks();
+  // Idempotencia: si el webhook ya aplicó este pago, no extender de nuevo
+  if (!paidId || claimPayment(paidId)) {
+    const now = Date.now();
+    const base = isFeatured(b) ? b.featured.until : now; // extiende si ya está destacado
+    b.featured = { until: base + FEATURE_MS[plan], plan };
+    saveBooks();
+  }
   res.json({ ok: true, featured: true, until: b.featured.until, plan,
     price: FEATURE_PRICES[plan] });
 });
@@ -679,26 +705,47 @@ app.post('/api/admin/feedback/:id/status', (req, res) => {
   saveFeedback();
   res.json({ ok: true, feedback: f });
 });
-/* Registrar una compra. Con Stripe activo exige paymentIntentId verificado;
+/* Registrar una compra. Con Stripe activo exige sessionId de Checkout verificado;
  * sin Stripe (o gratis) mantiene el flujo anterior. Suma 1 venta al libro. */
 app.post('/api/books/:id/buy', requireLogin, async (req, res) => {
   const bid = String(req.params.id || '').toUpperCase();
   const b = books.get(bid);
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+  let paidId = '';
   if (stripePay.isEnabled() && b.price > 0) {
-    const pid = String((req.body && req.body.paymentIntentId) || '');
-    const ok = await verifyStripeFor(pid, b.price);
+    // El cliente envía el id de la Checkout Session (sessionId) tras pagar en Stripe
+    paidId = String((req.body && (req.body.sessionId || req.body.paymentIntentId)) || '');
+    const ok = await verifyStripeFor(paidId, b.price);
     if (!ok) return res.status(402).json({ ok: false, error: 'payment-required' });
   }
-  b.sales = (typeof b.sales === 'number' ? b.sales : 0) + 1;
-  saveBooks();
+  // Idempotencia: si el webhook ya aplicó este pago, no sumar la venta de nuevo
+  if (!paidId || claimPayment(paidId)) {
+    b.sales = (typeof b.sales === 'number' ? b.sales : 0) + 1;
+    saveBooks();
+  }
   res.json({ ok: true, sales: b.sales });
 });
-/* Verifica un PaymentIntent contra Stripe: debe existir, estar succeeded y
- * el monto debe coincidir con el esperado. */
-async function verifyStripeFor(paymentIntentId, expectedCents) {
-  if (!paymentIntentId) return false;
-  const v = await stripePay.verifyPaymentIntent(paymentIntentId);
+/* Idempotencia de pagos: un mismo pago (sessionId o paymentIntentId) solo se
+ * aplica UNA vez, aunque lleguen el webhook de Stripe y la confirmación del
+ * cliente (?pago=ok). claimPayment devuelve true la primera vez. */
+const completedPayments = new Map(); // id -> resultado resumido { adId? }
+function claimPayment(id) {
+  const k = String(id || '');
+  if (!k || completedPayments.has(k)) return false;
+  completedPayments.set(k, {});
+  if (completedPayments.size > 5000) completedPayments.delete(completedPayments.keys().next().value);
+  return true;
+}
+/* Verifica un pago contra Stripe: acepta id de Checkout Session (cs_...) o de
+ * PaymentIntent (pi_...). Debe estar pagado y el monto debe coincidir con el esperado. */
+async function verifyStripeFor(paymentId, expectedCents) {
+  const id = String(paymentId || '');
+  if (!id) return false;
+  if (id.startsWith('cs_')) {
+    const v = await stripePay.verifyCheckoutSession(id);
+    return v.ok && v.paymentStatus === 'paid' && v.amount === Math.round(expectedCents);
+  }
+  const v = await stripePay.verifyPaymentIntent(id);
   return v.ok && v.status === 'succeeded' && v.amount === Math.round(expectedCents);
 }
 /* Completa una acción de pago pendiente (llamado por el webhook de Stripe).
@@ -707,6 +754,8 @@ function completeStripePayment(paymentIntentId, metadata) {
   const p = pendingStripe.get(paymentIntentId);
   if (!p) return false;
   pendingStripe.delete(paymentIntentId);
+  // Idempotencia: si el cliente ya lo confirmó (?pago=ok), no aplicar de nuevo
+  if (!claimPayment(paymentIntentId)) return true;
   try {
     if (p.type === 'buy') {
       const b = books.get(p.bookId);
@@ -735,6 +784,8 @@ function completeStripePayment(paymentIntentId, metadata) {
           plan: p.plan, advertiser: p.advertiser, url: p.url,
           until: now + AD_MS[p.plan], createdAt: now });
         saveAds();
+        const rec = completedPayments.get(paymentIntentId);
+        if (rec) rec.adId = nid; // para que la confirmación del cliente no duplique
       }
     }
     return true;
@@ -926,11 +977,15 @@ app.post('/api/ads', requireLogin, async (req, res) => {
   const emoji = String(body.emoji || '');
   if (!AD_EMOJIS.includes(emoji)) return res.status(400).json({ ok: false, error: 'bad-emoji' });
   // Pago real con Stripe (en TEST no se cobra dinero de verdad)
+  let paidId = '';
   if (stripePay.isEnabled()) {
-    const pid = String(body.paymentIntentId || '');
-    const ok = await verifyStripeFor(pid, AD_PRICES[plan]);
+    // El cliente envía el id de la Checkout Session (sessionId) tras pagar en Stripe
+    paidId = String((body && (body.sessionId || body.paymentIntentId)) || '');
+    const ok = await verifyStripeFor(paidId, AD_PRICES[plan]);
     if (!ok) return res.status(402).json({ ok: false, error: 'payment-required' });
   }
+  // Idempotencia: si el webhook ya aplicó este pago, no duplicar el anuncio
+  const alreadyApplied = paidId && !claimPayment(paidId);
   const now = Date.now();
   // ¿renovación? solo el anunciante dueño puede extender su anuncio
   const id = String(body.id || '').toUpperCase();
@@ -938,14 +993,23 @@ app.post('/api/ads', requireLogin, async (req, res) => {
     const a = ads.get(id);
     if (!a) return res.status(404).json({ ok: false, error: 'not-found' });
     if (a.advertiser !== advertiser) return res.status(403).json({ ok: false, error: 'not-owner' });
-    const base = isAdActive(a) ? a.until : now; // extiende si sigue vigente
-    a.until = base + AD_MS[plan];
-    a.plan = plan;
-    let rurl = String(body.url || '').trim().slice(0, 300);
-    if (rurl) { if (!/^https?:\/\//i.test(rurl)) rurl = 'https://' + rurl; a.url = rurl; }
-    saveAds();
-    // En la versión real aquí va Stripe; en el prototipo la compra es simulada
+    if (!alreadyApplied) {
+      const base = isAdActive(a) ? a.until : now; // extiende si sigue vigente
+      a.until = base + AD_MS[plan];
+      a.plan = plan;
+      let rurl = String(body.url || '').trim().slice(0, 300);
+      if (rurl) { if (!/^https?:\/\//i.test(rurl)) rurl = 'https://' + rurl; a.url = rurl; }
+      saveAds();
+    }
+    // El pago ya se verificó arriba con Stripe (Checkout Session)
     return res.json({ ok: true, renewed: true, ad: { id: a.id, until: a.until }, price: AD_PRICES[plan] });
+  }
+  if (alreadyApplied) {
+    // El webhook ya creó el anuncio: devolverlo sin duplicar
+    const prev = completedPayments.get(paidId) || {};
+    const ea = prev.adId && ads.get(prev.adId);
+    if (ea) return res.json({ ok: true, renewed: false, ad: { id: ea.id, until: ea.until }, price: AD_PRICES[plan] });
+    // (si no se encontró, se crea abajo: mejor duplicado que perdido)
   }
   const name = String(body.name || '').trim().slice(0, 60);
   if (!name) return res.status(400).json({ ok: false, error: 'bad-name' });
@@ -956,7 +1020,8 @@ app.post('/api/ads', requireLogin, async (req, res) => {
     until: now + AD_MS[plan], createdAt: now };
   ads.set(nid, ad);
   saveAds();
-  // En la versión real aquí va Stripe; en el prototipo la compra es simulada
+  if (paidId) { const rec = completedPayments.get(paidId); if (rec) rec.adId = nid; }
+  // El pago ya se verificó arriba con Stripe (Checkout Session)
   res.json({ ok: true, renewed: false, ad: { id: nid, until: ad.until }, price: AD_PRICES[plan] });
 });
 /* ------------------------------ escritos ------------------------------ */
@@ -1226,7 +1291,7 @@ setInterval(() => {
   for (const [k, p] of presence) if (now - p.lastSeen >= PRESENCE_TTL) presence.delete(k);
 }, 30000).unref();
 
-const cleanName = (n) => String(n || '').trim().slice(0, 24) || 'Lector';
+const cleanName = (n) => stripCap(n).slice(0, 24) || 'Lector';
 const cleanColor = (c) => (COLORS[c] ? c : DEFAULT_COLOR);
 
 /* Palabras de una sala: si el código es un libro, usa su texto; si no, la muestra fija.
@@ -1283,13 +1348,15 @@ app.post('/api/rooms/:room/join', (req, res) => {
     board: Array.isArray(st.board) ? st.board : [],
     para: st.para || { idx: 0, ts: 0 },
     chat: st.chat || [], reactions: st.reactions || [], hands: st.hands || [],
-    roster: roster(code), you: { name: u.name, color: verifiedColor, room: code } });
+    roster: roster(code), you: { name: u.name, color: verifiedColor, room: code,
+      isTeacher: isRoomTeacher(code, u.name) } });
 });
 /* Latido de presencia (el cliente lo llama cada ~15s; incluye el párrafo visible) */
 app.post('/api/rooms/:room/ping', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color, req.body && req.body.para);
+  const vc = claimTeacher(code, u.name, u.color); // anti-suplantación también en latidos
+  touchPresence(code, u.name, vc, req.body && req.body.para);
   res.json({ ok: true });
 });
 /* Estado completo de la sala (el cliente lo sondea cada ~2.5s) */
@@ -1312,7 +1379,7 @@ app.get('/api/rooms/:room/state', (req, res) => {
 app.post('/api/rooms/:room/para', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  touchPresence(code, u.name, verifiedColorNoClaim(code, u.name, u.color));
   if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
   const st = getRoom(code);
   let idx = Math.floor(Number(req.body && req.body.idx));
@@ -1325,7 +1392,7 @@ app.post('/api/rooms/:room/para', (req, res) => {
 app.post('/api/rooms/:room/switch', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  touchPresence(code, u.name, verifiedColorNoClaim(code, u.name, u.color));
   if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
   const st = getRoom(code);
   const bookId = String((req.body && req.body.bookId) || '').slice(0, 64);
@@ -1340,11 +1407,12 @@ app.post('/api/rooms/:room/switch', (req, res) => {
 app.post('/api/rooms/:room/chat', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  const vc = claimTeacher(code, u.name, u.color); // anti-suplantación: el negro es solo del profesor
+  touchPresence(code, u.name, vc);
   const st = getRoom(code);
   const text = String((req.body && req.body.text) || '').trim().slice(0, 300);
   if (!text) return res.status(400).json({ ok: false, error: 'empty' });
-  const msg = { id: 'c' + (st.seq++), name: u.name, color: u.color, text, ts: Date.now() };
+  const msg = { id: 'c' + (st.seq++), name: u.name, color: vc, text, ts: Date.now() };
   st.chat.push(msg);
   if (st.chat.length > 50) st.chat = st.chat.slice(-50);
   save();
@@ -1355,7 +1423,8 @@ const RX_EMOJIS = ['❤️', '😮', '👏', '🤔', '⭐'];
 app.post('/api/rooms/:room/reaction', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  const vc = claimTeacher(code, u.name, u.color); // anti-suplantación
+  touchPresence(code, u.name, vc);
   const st = getRoom(code);
   const emoji = String((req.body && req.body.emoji) || '');
   const start = Math.floor(Number(req.body && req.body.start));
@@ -1369,7 +1438,7 @@ app.post('/api/rooms/:room/reaction', (req, res) => {
     st.reactions.splice(i, 1); // toggle: ya reaccioné así → quitar
     added = false;
   } else {
-    st.reactions.push({ id: 'r' + (st.seq++), name: u.name, color: u.color, start, emoji, ts: Date.now() });
+    st.reactions.push({ id: 'r' + (st.seq++), name: u.name, color: vc, start, emoji, ts: Date.now() });
   }
   save();
   res.json({ ok: true, added });
@@ -1378,7 +1447,8 @@ app.post('/api/rooms/:room/reaction', (req, res) => {
 app.post('/api/rooms/:room/hand', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  const vc = claimTeacher(code, u.name, u.color); // anti-suplantación
+  touchPresence(code, u.name, vc);
   const st = getRoom(code);
   pruneHands(st);
   const up = !!(req.body && req.body.up);
@@ -1386,7 +1456,7 @@ app.post('/api/rooms/:room/hand', (req, res) => {
   const isTeacher = isRoomTeacher(code, u.name);
   if (up) {
     if (!st.hands.some((h) => h.name === u.name)) {
-      st.hands.push({ name: u.name, color: u.color, ts: Date.now() });
+      st.hands.push({ name: u.name, color: vc, ts: Date.now() });
     }
   } else {
     // bajar la propia, o el profesor baja cualquiera
@@ -1400,7 +1470,7 @@ app.post('/api/rooms/:room/hand', (req, res) => {
 app.post('/api/rooms/:room/follow', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  touchPresence(code, u.name, verifiedColorNoClaim(code, u.name, u.color));
   if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
   const st = getRoom(code);
   const active = !!(req.body && req.body.active);
@@ -1431,6 +1501,7 @@ app.post('/api/rooms/:room/board', (req, res) => {
 app.post('/api/rooms/:room/boardClear', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
+  touchPresence(code, u.name, verifiedColorNoClaim(code, u.name, u.color));
   if (!isRoomTeacher(code, u.name)) return res.status(403).json({ ok: false, error: 'solo-profesor' });
   const st = getRoom(code);
   st.board = [];
@@ -1441,11 +1512,12 @@ app.post('/api/rooms/:room/boardClear', (req, res) => {
 app.post('/api/rooms/:room/highlight', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  const vc = claimTeacher(code, u.name, u.color); // anti-suplantación: el negro es solo del profesor
+  touchPresence(code, u.name, vc);
   const st = getRoom(code);
   const r = validRange(code, req.body && req.body.start, req.body && req.body.end);
   if (!r) return res.status(400).json({ ok: false, error: 'bad-range' });
-  const rec = { id: 'h' + (st.seq++), name: u.name, color: u.color,
+  const rec = { id: 'h' + (st.seq++), name: u.name, color: vc,
     start: r.start, end: r.end, text: passageText(code, r.start, r.end), ts: Date.now() };
   st.highlights.push(rec);
   save();
@@ -1455,12 +1527,13 @@ app.post('/api/rooms/:room/highlight', (req, res) => {
 app.post('/api/rooms/:room/note', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  const vc = claimTeacher(code, u.name, u.color); // anti-suplantación: el negro es solo del profesor
+  touchPresence(code, u.name, vc);
   const st = getRoom(code);
   const r = validRange(code, req.body && req.body.start, req.body && req.body.end);
   const text = String((req.body && req.body.text) || '').trim().slice(0, MAX_NOTE_LEN);
   if (!r || !text) return res.status(400).json({ ok: false, error: 'bad-note' });
-  const rec = { id: 'n' + (st.seq++), name: u.name, color: u.color,
+  const rec = { id: 'n' + (st.seq++), name: u.name, color: vc,
     start: r.start, end: r.end, quote: passageText(code, r.start, r.end).slice(0, 140),
     text, ts: Date.now(),
     code: genNoteCode(new Set(st.notes.map((n) => n.code).filter(Boolean))) };
@@ -1472,7 +1545,7 @@ app.post('/api/rooms/:room/note', (req, res) => {
 app.post('/api/rooms/:room/del', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const u = userOf(req);
-  touchPresence(code, u.name, u.color);
+  touchPresence(code, u.name, verifiedColorNoClaim(code, u.name, u.color));
   const st = getRoom(code);
   const kind = req.body && req.body.kind;
   const id = req.body && req.body.id;
@@ -1703,6 +1776,41 @@ app.post('/api/admin/books/:id/review', (req, res) => {
   saveBooks();
   res.json({ ok: true, status: b.status });
 });
+
+/* Migración única: el prefijo 🎓 era parte del nombre visible (displayName) y quedó
+ * guardado en datos viejos. Ahora el 🎓 se deriva del color verificado al pintar,
+ * así que se quita de todos los nombres guardados. Idempotente. */
+function migrateStripCap() {
+  let changed = false;
+  const fix = (obj, fields) => {
+    for (const f of fields) {
+      if (obj && typeof obj[f] === 'string') {
+        const s = stripCap(obj[f]);
+        if (s !== obj[f]) { obj[f] = s; changed = true; }
+      }
+    }
+  };
+  for (const b of books.values()) fix(b, ['author']);
+  for (const a of ads.values()) fix(a, ['advertiser']);
+  for (const w of writings.values()) fix(w, ['author']);
+  for (const list of reviews.values()) for (const r of list) fix(r, ['name']);
+  for (const list of reports.values()) for (const r of list) fix(r, ['reporter']);
+  for (const st of rooms.values()) {
+    if (st.teacher) fix(st.teacher, ['name']);
+    for (const l of ['highlights', 'notes', 'chat', 'board', 'reactions', 'hands'])
+      if (Array.isArray(st[l])) for (const e of st[l]) fix(e, ['name']);
+  }
+  for (const [k, c] of [...creators]) {
+    const s = stripCap(k);
+    if (s !== k) { creators.delete(k); c.name = s; creators.set(s, c); changed = true; }
+    else fix(c, ['name']);
+  }
+  if (changed) {
+    try { saveBooks(); saveAds(); saveWritings(); saveReviews(); saveReports(); save(); saveCreators(); } catch (e) {}
+    console.log('[tintajunta] migración 🎓: nombres normalizados');
+  }
+}
+migrateStripCap();
 
 const server = app.listen(PORT, () => {
   const commit = (process.env.RAILWAY_GIT_COMMIT_SHA || 'local').slice(0, 7);

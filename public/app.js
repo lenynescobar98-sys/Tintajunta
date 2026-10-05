@@ -45,8 +45,11 @@ let myName = localStorage.getItem('tj_name') || '';
 let myColor = localStorage.getItem('tj_color') || 'azul';
 let isTeacher = localStorage.getItem('tj_teacher') === '1'; // el profesor siempre usa tinta negra
 if (isTeacher) myColor = 'negro';
-/* Nombre visible: el profesor lleva 🎓 para diferenciarse siempre */
-const displayName = () => (isTeacher && myName && myName !== 'Lector' ? '🎓 ' + myName : myName);
+/* Nombre visible: PLANO, sin adornos. El 🎓 del profesor se deriva del color
+   verificado (tinta negra) al pintar, nunca del nombre — el servidor es quien
+   decide quién es profesor (anti-suplantación). */
+const displayName = () => myName;
+const capFor = (color) => (color === 'negro' ? '🎓 ' : ''); // distintivo del profesor
 let myRoom = 'SALA';
 
 /* Normaliza un código de sala igual que el servidor (null si inválido) */
@@ -167,11 +170,14 @@ let headerUser = null;
 async function initHeaderAuth() {
   const loginBtn = $('loginBtn'), chip = $('userChip');
   if (!loginBtn || !chip) return;
-  loginBtn.onclick = () => { window.location.href = '/api/auth/google'; };
+  loginBtn.onclick = () => { googleLogin(); };
   try {
     const r = await fetch('/api/auth/me', { cache: 'no-store' });
     const d = await r.json();
     headerUser = (d && d.ok && d.user) || null;
+    // Compartir el estado de Google con googleLogin()/needLogin()
+    tjGoogleEnabled = !!(d && d.googleEnabled);
+    tjAuthChecked = true;
   } catch (e) { headerUser = null; }
   if (headerUser) {
     loginBtn.classList.add('hidden'); loginBtn.hidden = true;
@@ -196,7 +202,9 @@ async function initHeaderAuth() {
       window.location.reload();
     };
   } else {
-    loginBtn.classList.remove('hidden'); loginBtn.hidden = false;
+    // Sin Google configurado en el servidor, no mostrar un botón que lleva a un error
+    if (tjGoogleEnabled) { loginBtn.classList.remove('hidden'); loginBtn.hidden = false; }
+    else { loginBtn.classList.add('hidden'); loginBtn.hidden = true; }
     chip.classList.add('hidden'); chip.hidden = true;
   }
   // Aviso de login exitoso/fallido
@@ -246,7 +254,13 @@ function initJoin() {
       const d = await r.json();
       code = d && d.code;
     } catch (e) { /* abajo */ }
-    if (!code) { toast('No se pudo crear la sala, intenta de nuevo'); return; }
+    if (!code) {
+      // Sin login el servidor no genera códigos (prototipo): crear uno local
+      // con el mismo formato; la sala se crea sola al entrar
+      const ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+      code = '';
+      for (let i = 0; i < 6; i++) code += ABC[Math.floor(Math.random() * ABC.length)];
+    }
     myRoom = code;
     localStorage.setItem('tj_name', myName);
     localStorage.setItem('tj_color', myColor);
@@ -321,7 +335,7 @@ function paintHighlight(h) {
     if (!s) continue;
     s.style.background = hexA(COLORS[h.color] || COLORS.azul, 0.34);
     s.classList.add('mk');
-    s.title = `${h.name} · ${COLOR_NAMES[h.color] || h.color}`;
+    s.title = `${capFor(h.color)}${h.name} · ${COLOR_NAMES[h.color] || h.color}`;
   }
 }
 function repaintAll() {
@@ -402,7 +416,7 @@ function renderNotes() {
     card.style.borderLeftColor = COLORS[n.color] || COLORS.azul;
     card.innerHTML =
       `<div class="note-head">
-         <span class="note-author"><span class="dot" style="background:${COLORS[n.color] || COLORS.azul}"></span>${esc(n.name)}${n.code ? `<span class="note-code">${esc(n.code)}</span>` : ''}</span>
+         <span class="note-author"><span class="dot" style="background:${COLORS[n.color] || COLORS.azul}"></span>${capFor(n.color)}${esc(n.name)}${n.code ? `<span class="note-code">${esc(n.code)}</span>` : ''}</span>
          ${n.name === displayName() ? `<button class="note-del" data-id="${n.id}" title="Borrar mi nota">✕</button>` : ''}
        </div>
        <p class="note-quote" data-start="${n.start}" data-end="${n.end}">“${esc(n.quote)}”</p>
@@ -434,7 +448,7 @@ function renderRoster(roster) {
   const box = $('presence');
   box.innerHTML = `<span style="opacity:.65">${roster.length} en la sala</span>` +
     roster.map((p) =>
-      `<span class="chip" data-name="${esc(p.name)}"><span class="dot" style="background:${COLORS[p.color] || COLORS.azul}"></span>${esc(p.name)}</span>`
+      `<span class="chip" data-name="${esc(p.name)}"><span class="dot" style="background:${COLORS[p.color] || COLORS.azul}"></span>${capFor(p.color)}${esc(p.name)}</span>`
     ).join('');
   paintHandsInRoster();
   renderParaPresence(roster); // v68: 👁 dónde lee cada uno
@@ -824,7 +838,7 @@ function initSelection() {
     if (hid) {
       apiPost(roomBase() + '/del', { kind: 'highlight', id: hid })
         .then(() => { highlights = highlights.filter((h) => h.id !== hid); repaintAll(); })
-        .catch(() => toast('No se pudo borrar'));
+        .catch(() => toast('No se pudo borrar el subrayado — revisa tu conexión'));
     }
     window.getSelection().removeAllRanges();
     hideToolbar();
@@ -915,7 +929,7 @@ function applyState(s) {
   if (isTeacher) {
     hands.forEach((h) => {
       if (!prevHands.has(h.name) && h.name !== displayName().replace(/^🎓 /, '')) {
-        toast('✋ ' + h.name + ' levantó la mano');
+        toast('✋ ' + capFor(h.color) + h.name + ' levantó la mano');
       }
     });
   }
@@ -930,12 +944,13 @@ function relTime(ts) {
   if (!ts) return '';
   const s = Math.floor((Date.now() - ts) / 1000);
   if (s < 10) return 'ahora mismo';
-  if (s < 60) return 'hace ' + s + ' s';
+  if (s < 60) return 'hace ' + s + (s === 1 ? ' segundo' : ' segundos');
   const m = Math.floor(s / 60);
-  if (m < 60) return 'hace ' + m + ' min';
+  if (m < 60) return 'hace ' + m + (m === 1 ? ' minuto' : ' minutos');
   const h = Math.floor(m / 60);
-  if (h < 24) return 'hace ' + h + ' h';
-  return 'hace ' + Math.floor(h / 24) + ' d';
+  if (h < 24) return 'hace ' + h + (h === 1 ? ' hora' : ' horas');
+  const d = Math.floor(h / 24);
+  return 'hace ' + d + (d === 1 ? ' día' : ' días');
 }
 
 let boardSeenMaxTs = 0; // v87: para animar solo los mensajes nuevos
@@ -1258,7 +1273,7 @@ function renderChat() {
   const unread = chat.length - chatSeen;
   $('chatCount').textContent = (chatTab !== 'chat' && unread > 0) ? `(${unread})` : '';
   if (!chat.length) {
-    box.innerHTML = '<p class="chat-empty-board">La pizarra está limpia.<br>Sé el primero en escribir. ✍️</p>';
+    box.innerHTML = '<p class="chat-empty-board">El chat está vacío.<br>Sé el primero en escribir. 💬</p>';
     return;
   }
   box.innerHTML = '';
@@ -1267,7 +1282,7 @@ function renderChat() {
     const div = document.createElement('div');
     div.className = 'chat-msg' + (m.name === displayName() ? ' mine' : '');
     div.innerHTML =
-      `<span class="chat-author" style="color:${ink}"><span class="dot" style="background:${ink}"></span>${esc(m.name)}<span class="chat-ts">${relTime(m.ts)}</span></span>` +
+      `<span class="chat-author" style="color:${ink}"><span class="dot" style="background:${ink}"></span>${capFor(m.color)}${esc(m.name)}<span class="chat-ts">${relTime(m.ts)}</span></span>` +
       `<span class="chat-text" style="color:${ink}">${esc(m.text)}</span>`;
     box.appendChild(div);
   });
@@ -1385,7 +1400,7 @@ function initHands() {
         toast(up ? '✋ Mano levantada' : 'Mano bajada');
         setOnline(true);
       })
-      .catch(() => { setOnline(false); toast('No se pudo — revisa tu conexión'); });
+      .catch(() => { setOnline(false); toast('No se pudo levantar la mano — revisa tu conexión'); });
   };
 }
 
@@ -1506,14 +1521,23 @@ function joinRoom() {
   apiPost(roomBase() + '/join', {})
     .then((s) => {
       if (s.room) { myRoom = s.room; updateRoomLabel(); }
-      // v83: el servidor verifica el color (anti-suplantación de profesor)
-      if (s.you && s.you.color && s.you.color !== myColor) {
-        myColor = s.you.color;
-        localStorage.setItem('tj_color', myColor);
-        if (typeof buildSwatches === 'function') buildSwatches();
-        if (myColor !== 'negro' && isTeacher) {
-          // Ya hay otro profesor en la sala
+      // v83: el servidor verifica color y rol (anti-suplantación de profesor)
+      if (s.you) {
+        if (s.you.color && s.you.color !== myColor) {
+          myColor = s.you.color;
+          localStorage.setItem('tj_color', myColor);
+          if (typeof buildSwatches === 'function') buildSwatches();
+        }
+        const serverTeacher = !!s.you.isTeacher;
+        if (isTeacher && !serverTeacher) {
+          // Otro reclamó el negro primero: degradar a estudiante en esta sala
+          isTeacher = false;
+          try { localStorage.setItem('tj_teacher', '0'); } catch (e) {}
+          if (typeof buildSwatches === 'function') buildSwatches();
           toast('⚠️ Ya hay un profesor en esta sala');
+        } else if (!isTeacher && serverTeacher) {
+          isTeacher = true;
+          try { localStorage.setItem('tj_teacher', '1'); } catch (e) {}
         }
       }
       applyState(s);
@@ -1610,7 +1634,7 @@ function reenterRoom(st) {
   closeDrawer();
   if (st && st.bookId) { openBook(st.bookId, false); return; }
   myRoom = (st && st.room) || localStorage.getItem('tj_room') || 'SALA';
-  myName = localStorage.getItem('tj_name') || myName || 'Lector'; // sin prefijo 🎓 (ese lo pone displayName)
+  myName = localStorage.getItem('tj_name') || myName || 'Lector'; // nombre plano: el 🎓 se pinta por color
   currentBook = null;
   updateRoomLabel();
   boot();
@@ -1727,10 +1751,10 @@ function renderAffiliates() {
       adCardVisual(a.emoji, a.hue, a.img) +
       `<div class="ad-badge">🔗 ${esc(a.store)}</div>` +
       `<div class="ad-name">${esc(a.name)}</div>` +
-      `<div class="ad-note">${esc(a.price)} · Link de afiliado · Toca para ver</div>`;
+      `<div class="ad-note">${esc(a.price)} · Enlace de afiliado · Toca para ver</div>`;
     card.onclick = () => {
       if (a.url) window.open(a.url, '_blank', 'noopener');
-      else toast('Link de afiliado no configurado');
+      else toast('Enlace de afiliado no configurado');
     };
     row.appendChild(card);
   });
@@ -1762,7 +1786,7 @@ async function renderAds() {
   const bo = document.createElement('div');
   bo.className = 'tile';
   bo.innerHTML =
-    `<div class="tile-cover"><img src="img/best-offer-logo.jpg" alt="Best Offer"></div>` +
+    `<div class="tile-cover"><img src="img/best-offer-logo.jpg" alt="Best Offer" loading="lazy" decoding="async"></div>` +
     `<div class="tile-title">Best Offer</div>` +
     `<div class="tile-sub">⭐ Comunidad · 8,400+ miembros</div>`;
   bo.onclick = () => showImmersiveBestOffer();
@@ -1861,45 +1885,33 @@ async function initAds() {
     syncNameFromLib();
     const adv = displayName();
     if (!adv || adv === 'Lector') { toast('Escribe tu nombre primero'); return; }
+    // Validar la foto ANTES de cobrar (tras ir a Stripe el archivo ya no estará disponible)
+    const photoFile = ($('adPhoto') && $('adPhoto').files[0]) || null;
+    if (photoFile) {
+      const okType = ['image/jpeg', 'image/png', 'image/webp'].includes(photoFile.type);
+      if (!okType) { toast('La foto debe ser JPG, PNG o WebP'); return; }
+      if (photoFile.size > 2 * 1024 * 1024) { toast('La foto no puede pasar de 2MB'); return; }
+      try {
+        const dataUrl = await new Promise((res, rej) => {
+          const fr = new FileReader();
+          fr.onload = () => res(fr.result); fr.onerror = rej;
+          fr.readAsDataURL(photoFile);
+        });
+        sessionStorage.setItem('tj_pending_photo', dataUrl);
+      } catch (e) { /* sin foto: el anuncio se crea igual */ }
+    } else {
+      try { sessionStorage.removeItem('tj_pending_photo'); } catch (e) {}
+    }
     $('adConfirm').disabled = true;
     $('adConfirm').textContent = 'Procesando…';
     try {
-      // 1. Cobrar con Stripe
-      const pid = await payWithStripe({
+      // Cobrar con Stripe: redirige; al volver (?pago=ok) initCheckoutReturn crea el anuncio
+      await payWithStripe({
         type: 'ad',
         intentParams: { name, emoji: adEmoji, badge, plan: adPlan, advertiser: adv, url: adUrl,
           ...(adPending ? { id: adPending.id } : {}) },
         description: `Anunciar "${name || 'producto'}"`, amountCents: null,
       });
-      // 2. Crear/renovar el anuncio (el servidor verifica el pago con Stripe)
-      const r = await fetch('/api/ads', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, emoji: adEmoji, badge, plan: adPlan, advertiser: adv, url: adUrl,
-          paymentIntentId: pid, ...(adPending ? { id: adPending.id } : {}) }),
-      });
-      const d = await r.json();
-      if (!d.ok) throw 0;
-      // subir foto del producto si eligió una (JPG/PNG/WebP, 2MB)
-      const photoFile = $('adPhoto').files[0] || null;
-      const adId = (d.ad && d.ad.id) || (adPending && adPending.id);
-      if (photoFile && adId) {
-        const okType = ['image/jpeg', 'image/png', 'image/webp'].includes(photoFile.type);
-        if (!okType) toast('La foto debe ser JPG, PNG o WebP');
-        else if (photoFile.size > 2 * 1024 * 1024) toast('La foto no puede pasar de 2MB');
-        else {
-          const fd = new FormData();
-          fd.append('photo', photoFile);
-          fd.append('advertiser', adv);
-          const pr = await fetch('/api/ads/' + encodeURIComponent(adId) + '/photo', { method: 'POST', body: fd });
-          const pd = await pr.json().catch(() => ({}));
-          if (!pd.ok) toast('Anuncio creado, pero la foto no se pudo subir');
-        }
-      }
-      $('adPhoto').value = '';
-      $('adPop').classList.add('hidden');
-      toast(adPending ? '🔄 ¡Anuncio renovado!' : '📢 ¡Tu anuncio está en portada!');
-      adPending = null;
-      renderAds();
     } catch (e) {
       if (String((e && e.message) || e) !== 'cancelado') toast('No se pudo completar el pago');
     }
@@ -2890,7 +2902,7 @@ function showImmersiveAd(a, paid) {
 const BEST_OFFER_URL = 'https://facebook.com/groups/1620696721546400/';
 function showImmersiveBestOffer() {
   openImmersive({
-    visual: `<img src="img/best-offer-logo.jpg" alt="Best Offer">`,
+    visual: `<img src="img/best-offer-logo.jpg" alt="Best Offer" loading="lazy" decoding="async">`,
     badge: '⭐ Comunidad',
     title: 'Best Offer',
     sub: 'Compra y vende con más de 8,400 miembros. El grupo de nuestra comunidad.',
@@ -3216,8 +3228,9 @@ async function getStripeJs() {
   stripeJs = Stripe(stripeKeyCache);
   return stripeJs;
 }
-/* Flujo de pago: crea el PaymentIntent en el servidor, cobra con la tarjeta,
- * Redirige a Stripe Checkout. Devuelve el sessionId. */
+/* Flujo de pago: crea la Checkout Session en el servidor y redirige a Stripe.
+ * Guarda el pago pendiente en localStorage; al volver de Stripe (?pago=ok),
+ * initCheckoutReturn() lo finaliza. Devuelve el sessionId. */
 function payWithStripe({ type, intentParams, description, amountCents }) {
   return new Promise(async (resolve, reject) => {
     // 1. Crear la Checkout Session en el servidor
@@ -3230,15 +3243,104 @@ function payWithStripe({ type, intentParams, description, amountCents }) {
       intent = await r.json();
       if (!intent.ok || !intent.checkoutUrl) throw new Error(intent.error || 'intent-failed');
     } catch (e) { reject(e); return; }
-    // 2. Redirigir a Stripe Checkout (página segura de Stripe)
-    // Guarda el sessionId para verificar al volver
-    try { localStorage.setItem('tj_pending_session', intent.sessionId); } catch (e) {}
+    // 2. Guardar el pendiente y redirigir a Stripe Checkout (página segura de Stripe)
+    try {
+      localStorage.setItem('tj_pending_session', intent.sessionId);
+      localStorage.setItem('tj_pending_payment', JSON.stringify({ type, params: intentParams || {}, ts: Date.now() }));
+    } catch (e) {}
     window.location.href = intent.checkoutUrl;
     // La promesa se resuelve al volver de Stripe (ver initCheckoutReturn)
     setTimeout(() => resolve(intent.sessionId), 1000);
   });
 }
-/* Al volver de Stripe Checkout (?pago=ok), verifica la sesión pendiente */
+/* Al volver de Stripe Checkout (?pago=ok / ?pago=cancelado), finaliza el pago pendiente */
+async function initCheckoutReturn() {
+  let q;
+  try { q = new URLSearchParams(location.search); } catch (e) { return; }
+  const pago = q.get('pago');
+  if (pago !== 'ok' && pago !== 'cancelado') return;
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  const clearPending = () => {
+    try {
+      localStorage.removeItem('tj_pending_session');
+      localStorage.removeItem('tj_pending_payment');
+      sessionStorage.removeItem('tj_pending_photo');
+    } catch (e) {}
+  };
+  if (pago === 'cancelado') { clearPending(); toast('Pago cancelado'); return; }
+  let pend = null, sid = null;
+  try {
+    pend = JSON.parse(localStorage.getItem('tj_pending_payment') || 'null');
+    sid = localStorage.getItem('tj_pending_session');
+  } catch (e) {}
+  clearPending();
+  if (!pend || !sid || !pend.params || (Date.now() - (pend.ts || 0)) > 24 * 3600e3) {
+    toast('✅ Pago recibido'); return;
+  }
+  try {
+    if (pend.type === 'buy') await finalizeBuy(pend.params.bookId, sid);
+    else if (pend.type === 'feature') await finalizeFeature(pend.params.bookId, pend.params.plan, pend.params.author, sid);
+    else if (pend.type === 'ad') await finalizeAd(pend.params, sid);
+    else toast('✅ Pago recibido');
+  } catch (e) {
+    clog('finalize pago falló: ' + (e && e.message));
+    toast('No se pudo confirmar el pago');
+  }
+}
+/* Finaliza una compra al volver de Stripe: registra la venta y celebra */
+async function finalizeBuy(bookId, sessionId) {
+  const r = await fetch('/api/books/' + encodeURIComponent(bookId) + '/buy', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!d.ok) throw new Error(d.error || 'buy-failed');
+  markOwned(bookId);
+  let book = (typeof libBooksCache !== 'undefined' && libBooksCache || []).find((b) => b.id === bookId);
+  if (!book) {
+    try {
+      const br = await fetch('/api/books'); const bd = await br.json();
+      book = (bd.books || []).find((b) => b.id === bookId);
+    } catch (e) {}
+  }
+  if (book) { book.sales = d.sales || book.sales; showBought(book); }
+  else toast('¡Libro adquirido!');
+  try { showLibrary(false); } catch (e) {}
+}
+/* Finaliza un destacado al volver de Stripe */
+async function finalizeFeature(bookId, plan, author, sessionId) {
+  const r = await fetch('/api/books/' + encodeURIComponent(bookId) + '/feature', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ plan, author, sessionId }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!d.ok) throw new Error(d.error || 'feature-failed');
+  toast('⭐ ¡Tu libro está destacado en portada!');
+  try { showLibrary(false); } catch (e) {}
+}
+/* Finaliza un anuncio pagado al volver de Stripe (sube la foto si se eligió una) */
+async function finalizeAd(params, sessionId) {
+  const r = await fetch('/api/ads', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...params, sessionId }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!d.ok) throw new Error(d.error || 'ad-failed');
+  const adId = (d.ad && d.ad.id) || params.id;
+  let photoData = null;
+  try { photoData = sessionStorage.getItem('tj_pending_photo'); } catch (e) {}
+  if (photoData && adId) {
+    try {
+      const blob = await (await fetch(photoData)).blob();
+      const fd = new FormData();
+      fd.append('photo', blob, 'foto.jpg');
+      fd.append('advertiser', params.advertiser);
+      await fetch('/api/ads/' + encodeURIComponent(adId) + '/photo', { method: 'POST', body: fd });
+    } catch (e) { /* la foto es opcional */ }
+  }
+  toast(params.id ? '🔄 ¡Anuncio renovado!' : '📢 ¡Tu anuncio está en portada!');
+  try { renderAds(); } catch (e) {}
+}
 /* Modal para destacar un libro propio en portada */
 async function showFeature(b) {
   syncNameFromLib();
@@ -3304,7 +3406,7 @@ async function shareBook(book) {
     if (e && e.name === 'AbortError') return; // el usuario canceló
     try {
       await navigator.clipboard.writeText(text + '\n' + url);
-      toast('📋 Link copiado — pégalo donde quieras');
+      toast('📋 Enlace copiado — pégalo donde quieras');
     } catch (ce) {
       prompt('Copia el link:', url);
     }
@@ -3491,7 +3593,7 @@ function initLibrary() {
       const d = await r.json().catch(() => ({}));
       if (!d.ok) {
         if (d.error === 'plagiarism') { toast(`⚠️ Este texto coincide ${d.score || 70}% con otro libro — debe ser original`); }
-        else if (d.error === 'too-long') { toast('⚠️ Máximo 500 páginas por libro — acorta el texto'); }
+        else if (d.error === 'too-long') { toast('⚠️ Máximo 500 párrafos por libro — acorta el texto'); }
         else toast('No se pudo publicar el libro');
         $('pubSave').disabled = false; return;
       }
@@ -3552,22 +3654,11 @@ function initLibrary() {
     const b = featurePending, plan = featurePlan;
     $('featureConfirm').disabled = true;
     try {
-      // 1. Cobrar con Stripe
-      const pid = await payWithStripe({
+      // Cobrar con Stripe: redirige; al volver (?pago=ok) initCheckoutReturn activa el destacado
+      await payWithStripe({
         type: 'feature', intentParams: { bookId: b.id, plan, author: myName },
         description: `Destacar "${b.title}"`, amountCents: null,
       });
-      // 2. Activar el destacado (el servidor verifica el pago con Stripe)
-      const r = await fetch('/api/books/' + encodeURIComponent(b.id) + '/feature', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, author: myName, paymentIntentId: pid }),
-      });
-      const d = await r.json();
-      if (!d.ok) throw 0;
-      $('featurePop').classList.add('hidden');
-      toast('⭐ ¡Tu libro está destacado en portada!');
-      featurePending = null;
-      showLibrary(false);
     } catch (e) {
       if (String((e && e.message) || e) !== 'cancelado') toast('No se pudo completar el pago');
     }
@@ -3589,23 +3680,11 @@ function initLibrary() {
     $('buyConfirm').disabled = true;
     $('buyConfirm').textContent = 'Procesando…';
     try {
-      // 1. Cobrar con Stripe
-      const pid = await payWithStripe({
+      // Cobrar con Stripe: redirige; al volver (?pago=ok) initCheckoutReturn registra la compra
+      await payWithStripe({
         type: 'buy', intentParams: { bookId: b.id },
         description: `Comprar "${b.title}"`, amountCents: b.price,
       });
-      // 2. Registrar la compra (el servidor verifica el pago con Stripe)
-      const r = await fetch('/api/books/' + encodeURIComponent(b.id) + '/buy', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paymentIntentId: pid }),
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!d.ok) throw new Error(d.error || 'buy-failed');
-      markOwned(b.id);
-      buyBookPending = null;
-      $('buyPop').classList.add('hidden');
-      showLibrary(false);
-      showBought(b); // v71: celebra e invita a leer juntos en vivo
     } catch (e) {
       if (String(e.message || e) !== 'cancelado') toast('No se pudo completar el pago');
     }
@@ -3619,8 +3698,14 @@ function initLibrary() {
 }
 
 /* ---------- Login con Google ---------- */
-let tjUser = null, tjGoogleEnabled = false;
-function googleLogin() { location.href = '/api/auth/google'; }
+let tjUser = null, tjGoogleEnabled = false, tjAuthChecked = false;
+function googleLogin() {
+  if (tjAuthChecked && !tjGoogleEnabled) {
+    toast('🔐 El login con Google no está disponible en este servidor');
+    return;
+  }
+  location.href = '/api/auth/google';
+}
 function googleLogout() {
   fetch('/api/auth/logout', { method: 'POST' }).then(() => location.reload());
 }
@@ -3630,6 +3715,7 @@ async function checkAuth() {
     const d = await r.json();
     tjUser = d.user || null;
     tjGoogleEnabled = !!d.googleEnabled;
+    tjAuthChecked = true;
     const btn = document.querySelector('#drawer button[data-go="google-login"]');
     if (btn) {
       btn.onclick = () => {
@@ -3651,9 +3737,15 @@ async function checkAuth() {
     else if (q.get('login') === 'error') { toast('❌ Error al entrar con Google'); history.replaceState(null, '', '/'); }
   } catch (e) {}
 }
-/* Si el servidor pide login (401), redirige a Google */
+/* Si el servidor pide login (401), redirige a Google (si está disponible) */
 function needLogin(res) {
-  if (res && res.status === 401) { googleLogin(); return true; }
+  if (res && res.status === 401) {
+    if (tjAuthChecked && !tjGoogleEnabled) {
+      toast('🔐 Esta acción necesita login con Google (no disponible en este servidor)');
+      return true;
+    }
+    googleLogin(); return true;
+  }
   return false;
 }
 
@@ -3868,7 +3960,7 @@ function initWelcome() {
 }
 
 /* Cada init aislado: si uno falla, los demás siguen funcionando */
-[['initJoin', initJoin], ['initLibrary', initLibrary], ['initAds', initAds],
+[['initJoin', initJoin], ['initLibrary', initLibrary], ['initCheckoutReturn', initCheckoutReturn], ['initAds', initAds],
  ['renderAds', renderAds], ['renderAffiliates', renderAffiliates],
  ['initImdbBar', initImdbBar], ['initWriting', initWriting],
  ['initPills', initPills], ['initMarquee', initMarquee],

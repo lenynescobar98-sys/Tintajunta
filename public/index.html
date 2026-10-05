@@ -10,7 +10,7 @@
 #immersive { position: fixed; inset: 0; z-index: 100; }
 #immClose { position: absolute; top: 14px; right: 16px; z-index: 101; width: 44px; height: 44px; font-size: 22px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; }
 </style>
-<link rel="stylesheet" href="styles.css?v=95" id="mainCss"
+<link rel="stylesheet" href="styles.css?v=96" id="mainCss"
   onerror="(function(l){var n=0;var t=setInterval(function(){n++;l.href='styles.css?retry='+n+'&t='+Date.now();if(n>=3)clearInterval(t);},1500);})(this)"></head>
 <body>
 
@@ -22,8 +22,8 @@
     <div class="imdb-logo">TintaJunta</div>
     <div class="imdb-spacer"></div>
     <button id="searchToggle" class="imdb-icon" title="Buscar">🔍</button>
-    <button id="enterBtn" class="imdb-enter">⚡ Sala en vivo</button>
-    <button id="loginBtn" class="imdb-login" title="Entrar con Google">🔐 Entrar</button>
+    <button id="enterBtn" class="imdb-enter">⚡<span class="enter-long"> Sala en vivo</span><span class="enter-short"> Sala</span></button>
+    <button id="loginBtn" class="imdb-login" title="Entrar con Google">🔐<span class="login-long"> Entrar</span></button>
     <div id="userChip" class="user-chip hidden" hidden>
       <img id="userAvatar" class="user-avatar" alt="">
       <span id="userName" class="user-name"></span>
@@ -249,7 +249,7 @@
   <p class="join-note">Pago seguro con tarjeta (Stripe).</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
     <button id="featureCancel" class="btn">Cancelar</button>
-    <button id="featureConfirm" class="btn btn-primary">Confirmar</button>
+    <button id="featureConfirm" class="btn btn-primary">Pagar y destacar</button>
   </div>
 </div>
 
@@ -258,7 +258,7 @@
   <h3 style="margin:0 0 6px">📢 Anunciar producto</h3>
   <p style="font-size:15px;margin:0 0 12px">Tu producto aparece en la fila "🛍️ Para leer mejor" de la portada.</p>
   <label class="field"><span>Nombre del producto</span><input id="adName" type="text" maxlength="60" placeholder="Ej. Lentes filtro luz azul"></label>
-  <label class="field"><span>Link de tu tienda (donde compran)</span><input id="adUrl" type="url" maxlength="300" placeholder="https://tutienda.com/producto"></label>
+  <label class="field"><span>Enlace de tu tienda (donde compran)</span><input id="adUrl" type="url" maxlength="300" placeholder="https://tutienda.com/producto"></label>
   <label class="field"><span>Foto del producto (JPG/PNG/WebP, máx 2MB)</span><input id="adPhoto" type="file" accept="image/jpeg,image/png,image/webp"></label>
   <div class="field"><span>Emoji</span><div id="adEmojis" class="swatches" style="max-height:none"></div></div>
   <div class="field"><span>Insignia</span>
@@ -551,7 +551,7 @@
 <!-- Editor de nota -->
 <div id="notepop" class="notepop hidden">
   <p class="notepop-quote" id="noteQuote"></p>
-  <textarea id="noteText" rows="3" maxlength="140" placeholder="Nota corta (máx 140)…"></textarea>
+  <textarea id="noteText" rows="3" maxlength="140" placeholder="Nota corta (máx. 140 caracteres)…"></textarea>
   <p class="notepop-count"><span id="noteCount">0</span>/140</p>
   <div class="rx-row" id="rxRow">
     <span class="rx-label">Reacciona:</span>
@@ -584,6 +584,6 @@
 <div id="toasts" class="toasts"></div>
 
 <script src="https://js.stripe.com/v3/"></script>
-<script src="app.js?v=95"></script>
+<script src="app.js?v=96"></script>
 </body>
 </html>

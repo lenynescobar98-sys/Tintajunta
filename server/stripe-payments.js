@@ -49,6 +49,12 @@ async function createPaymentIntent(amount, currency = 'usd', description = '', m
 async function createCheckoutSession(amount, description = '', metadata = {}, successUrl = '', cancelUrl = '') {
   const s = getStripe();
   if (!s) return { ok: false, error: 'stripe-disabled' };
+  // Stripe exige metadata con valores string (sin undefined/null)
+  const cleanMeta = {};
+  for (const [k, v] of Object.entries(metadata || {})) {
+    if (v === undefined || v === null) continue;
+    cleanMeta[String(k).slice(0, 40)] = String(v).slice(0, 500);
+  }
   try {
     const session = await s.checkout.sessions.create({
       mode: 'payment',
@@ -60,10 +66,20 @@ async function createCheckoutSession(amount, description = '', metadata = {}, su
         },
         quantity: 1,
       }],
-      metadata,
+      metadata: cleanMeta,
+      // La metadata también en el PaymentIntent: el webhook la usa para completar la compra
+      payment_intent_data: { metadata: cleanMeta },
       success_url: successUrl || 'https://tintajunta.com/?pago=ok',
       cancel_url: cancelUrl || 'https://tintajunta.com/?pago=cancelado',
     });
+    // Vincular el PaymentIntent con la sesión: el webhook 'payment_intent.succeeded'
+    // encuentra el pago pendiente por este campo
+    try {
+      if (session.payment_intent) {
+        await s.paymentIntents.update(session.payment_intent,
+          { metadata: { ...cleanMeta, tj_session: session.id } });
+      }
+    } catch (e) { /* no crítico: el webhook de checkout.session.completed cubre */ }
     return { ok: true, simulated: false, url: session.url, id: session.id };
   } catch (e) {
     return { ok: false, error: 'stripe-error', detail: String(e.message || e).slice(0, 200) };
@@ -83,6 +99,20 @@ async function verifyPaymentIntent(paymentIntentId) {
   }
 }
 
+/* Verifica una Checkout Session contra la API de Stripe (lado servidor).
+ * Devuelve { ok:true, paymentStatus, amount } si existe. */
+async function verifyCheckoutSession(sessionId) {
+  const s = getStripe();
+  if (!s) return { ok: false, error: 'stripe-disabled' };
+  try {
+    const cs = await s.checkout.sessions.retrieve(String(sessionId));
+    return { ok: true, paymentStatus: cs.payment_status, amount: cs.amount_total,
+      currency: cs.currency, metadata: cs.metadata || {} };
+  } catch (e) {
+    return { ok: false, error: 'not-found' };
+  }
+}
+
 /* Verifica la firma de un webhook de Stripe. req.body debe ser el Buffer crudo. */
 function verifyWebhook(req) {
   const s = getStripe();
@@ -97,6 +127,7 @@ function verifyWebhook(req) {
 }
 
 module.exports = {
-  isEnabled, getStripe, createPaymentIntent, createCheckoutSession, verifyPaymentIntent, verifyWebhook,
+  isEnabled, getStripe, createPaymentIntent, createCheckoutSession, verifyPaymentIntent,
+  verifyCheckoutSession, verifyWebhook,
   publishableKey: STRIPE_PUBLISHABLE_KEY,
 };

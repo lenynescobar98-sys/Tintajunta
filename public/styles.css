@@ -133,6 +133,7 @@ body {
   background: var(--btn-bg); border: 2px solid transparent; border-radius: 50%;
   width: 38px; height: 38px; font-size: 19px; cursor: pointer; margin-left: 10px;
   display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  color: var(--bar-ink);
 }
 .pencil-btn.on { border-color: var(--brand); background: rgba(30,58,95,.12); }
 #followBtn.on { border-color: #8a5a1e; background: rgba(138,90,30,.25); }
@@ -1766,4 +1767,258 @@ body.board-mode-on .imdb-bar { display: none !important; }
   #library #rowAds.hrow .ad-visual span, #library #rowAff.hrow .ad-visual span { font-size: 64px; }
   #library #rowAds.hrow .ad-name, #library #rowAff.hrow .ad-name { font-size: 15px; }
   #secAds .row-more, #secAff .row-more { display: none; }
+}
+
+/* ================= v96 · Pulido visual — frente VISUAL (2026-10-04) =================
+   Solo CSS. Ámbito: alineación, espaciado, colores, tipografía, botones,
+   modales, cards, hero y detalles. Sin cambios de lógica ni de textos. */
+
+/* 1. Barra superior en móvil: los botones ya no se deforman (el "⚡ Sala en vivo"
+   se volvía un círculo con el texto en 3 líneas) ni se cortan ("🔐 Entrar"
+   quedaba fuera de pantalla). En pantallas angostas la barra usa dos filas:
+   iconos + logo arriba, y los dos botones principales a medio ancho abajo. */
+#library .imdb-enter, #library .imdb-login { white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 560px) {
+  #library .imdb-bar { flex-wrap: wrap; row-gap: 10px; padding: 10px 12px; }
+  #library .imdb-spacer { display: none; }
+  #library #searchToggle { margin-left: auto; }
+  #library .imdb-enter, #library .imdb-login {
+    flex: 1 1 40%; text-align: center; padding: 10px 12px; font-size: 14px;
+  }
+  #library .imdb-logo { font-size: 19px; }
+  #library .imdb-icon { font-size: 20px; }
+}
+
+/* 2. Contraste: el subtítulo de sección en la portada era blanco sobre fondo
+   claro (invisible: "Obras de dominio público…", "Lo que usamos y recomendamos…"). */
+#library .row-sub { color: #6a6a6a; }
+
+/* 3. Punto activo del carrusel: era negro sobre el fondo oscuro del hero
+   (casi invisible). Ahora blanco con halo. */
+#library .hero-dot.on { background: #ffffff; box-shadow: 0 0 0 3px rgba(255,255,255,.25); }
+
+/* 4. Hero en pantallas anchas: el contenido se apelotonaba en el tercio izquierdo
+   dejando 2/3 del slide vacíos. Ahora respira centrado con tipografía mayor. */
+@media (min-width: 900px) {
+  #library .hero-slide { justify-content: center; padding: 48px 56px; min-height: 340px; }
+  #library .hero-big .hero-title { font-size: clamp(36px, 4.5vw, 56px); max-width: 700px; }
+  #library .hero-sub { font-size: 17px; max-width: 620px; }
+  #library .hero-cta { margin-top: 18px; }
+}
+
+/* 5. Modales: fondo atenuado (backdrop) solo con CSS — la página detrás ya no
+   compite visualmente con el modal. No afecta a los popups pequeños (.notepop). */
+.modal-pop {
+  box-shadow: 0 0 0 9999px rgba(20,16,10,.5), 0 36px 90px rgba(0,0,0,.65);
+}
+
+/* 6. Inputs de archivo y selects en modales: el botón nativo "Choose File"
+   (en inglés y sin estilo) se veía barato junto al diseño premium. Ahora el
+   input es una zona punteada y el botón una píldora negra; el select combina
+   con los inputs de texto (misma altura, borde y radio). */
+.modal-pop input[type=file] {
+  border: 1.5px dashed #c9c9c9; border-radius: 12px; padding: 14px;
+  background: var(--paper-deep); font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px; color: var(--ink-soft); width: 100%; cursor: pointer;
+}
+.modal-pop input[type=file]::file-selector-button {
+  font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 14px; font-weight: 700;
+  background: #1a1a1a; color: #ffffff; border: 0; border-radius: 10px;
+  padding: 9px 16px; margin-right: 12px; cursor: pointer;
+}
+.modal-pop input[type=file]::-webkit-file-upload-button {
+  font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 14px; font-weight: 700;
+  background: #1a1a1a; color: #ffffff; border: 0; border-radius: 10px;
+  padding: 9px 16px; margin-right: 12px; cursor: pointer;
+}
+.modal-pop select {
+  width: 100%; padding: 12px 38px 12px 14px; font-size: 16px; font-family: Georgia, serif;
+  border: 1px solid var(--line); border-radius: 8px; background-color: #fff; color: var(--ink);
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a5a1e' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+
+/* 7. CTA de la vista inmersiva: negro sobre fondo oscuro no se definía.
+   Borde dorado sutil para que el botón destaque. */
+.imm-cta { border: 1px solid rgba(138,90,30,.6); }
+
+/* 8. Vista inmersiva: el contenido quedaba arriba con mucho vacío abajo.
+   Centrado vertical seguro (no recorta si el contenido desborda). */
+.immersive { justify-content: safe center; }
+
+/* 9. Sala en móvil: la barra superior ocupaba 3–4 filas. Versión compacta:
+   botones y píldoras más pequeños, menos aire. */
+@media (max-width: 560px) {
+  .topbar { padding: 8px 10px; gap: 6px; }
+  .topbar-brand { font-size: 15px; }
+  .topbar-room { font-size: 13px; }
+  .pencil-btn { width: 34px; height: 34px; font-size: 17px; margin-left: 6px; }
+  .btn-chip { margin-left: 6px; font-size: 11.5px; padding: 4px 10px; }
+  .chip { font-size: 12px; padding: 4px 10px 4px 7px; gap: 5px; }
+  .presence { gap: 6px; }
+}
+
+/* 10. Acentos azules (#1a6fd4) fuera del tema premium negro/dorado:
+   insignia de ranking, botón de info y estado activo del botón de pausa. */
+.rank-badge { background: #1a1a1a; }
+.info-btn { border-color: #8a5a1e; color: #8a5a1e; }
+.chip-btn.on { background: #1a1a1a; border-color: #1a1a1a; }
+
+/* ================= v96 · Pulido móvil — iPhone 390px (2026-10-04) =================
+   Auditoría completa: touch targets ≥44px, sin zoom de teclado en iOS,
+   sin scroll horizontal, modales tipo hoja inferior, safe areas (notch /
+   Dynamic Island / home indicator), imágenes con lazy loading y sin desborde. */
+
+/* --- Base: sin scroll horizontal accidental; imágenes nunca desbordan --- */
+html, body { overflow-x: hidden; overflow-x: clip; }
+body { -webkit-tap-highlight-color: transparent; }
+img { max-width: 100%; }
+/* Las imágenes de contenido sin tamaño explícito conservan su proporción
+   (las portadas y avatares con height:100% declarado no se tocan). */
+.board-view img, .chat-text img, .note-text img, .vnote-text img,
+.imm-sub img, .kp-bio img { height: auto; }
+
+/* --- 1. Touch targets: todo lo tocable ≥44px --- */
+.swatch { width: 44px; height: 44px; }
+.pencil-btn { width: 44px; height: 44px; }
+.imdb-icon {
+  width: 44px; height: 44px; padding: 0; flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.imdb-enter, #library .imdb-login { min-height: 44px; }
+.btn { min-height: 44px; }
+.btn-chip {
+  min-height: 44px; padding: 10px 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.imm-close, .imm-report, .imm-share { width: 44px; height: 44px; }
+.info-btn { width: 44px; height: 44px; }
+.chip-btn { width: 44px; height: 44px; }
+.rx-btn { min-height: 44px; padding: 8px 14px; }
+.note-del { min-width: 44px; min-height: 44px; padding: 8px 10px; }
+.tile-report {
+  min-height: 44px; display: inline-flex; align-items: center; padding: 8px 10px;
+}
+.margin-tab { min-height: 44px; padding: 8px 14px; }
+.pat-btn { min-height: 44px; padding: 10px 14px; }
+.chat-send { min-height: 44px; }
+.board-send { min-height: 48px; }
+.plan-row input { width: 24px; height: 24px; }
+.kp-link { min-height: 44px; }
+.lang-filter { min-height: 44px; }
+.pill { min-height: 44px; }
+.ad-renew { min-height: 44px; display: inline-flex; align-items: center; }
+.ev-link { min-height: 44px; display: inline-flex; align-items: center; }
+.tile-rating { display: inline-block; padding: 10px 6px; margin: -10px 0; }
+.row-h2 .row-more {
+  min-height: 44px; min-width: 44px; display: inline-flex; align-items: center;
+  justify-content: center; margin: -10px 0;
+}
+/* Puntos del carrusel: se ven pequeños pero el área tocable es generosa */
+.hero-dot { position: relative; }
+.hero-dot::after {
+  content: ''; position: absolute; inset: -14px; cursor: pointer;
+}
+
+/* --- 2. Teclado iOS: font-size ≥16px en campos de texto (evita el zoom) --- */
+@supports (-webkit-touch-callout: none) {
+  .sort-label select,
+  .notepop textarea,
+  .chat-input-row input,
+  .vrf-form input, .vrf-form select,
+  .kp-form input, .kp-form textarea,
+  .fb-label textarea, .fb-label input,
+  #library .field textarea, #writing .field textarea, .modal-pop .field textarea {
+    font-size: 16px;
+  }
+}
+/* El chat siempre accesible: el input nunca queda tapado por el teclado */
+.chat-input-row input { scroll-margin-bottom: 12px; }
+
+/* --- 3. Unidades dinámicas: el viewport real con el teclado abierto --- */
+.modal-pop { max-height: 90vh; max-height: 90dvh; }
+.chat-box { max-height: 46vh; max-height: 46dvh; }
+.sample-text { max-height: 38vh; max-height: 38dvh; }
+.switchbook-list { max-height: 50vh; max-height: 50dvh; }
+.read-text { max-height: 50vh; max-height: 50dvh; }
+
+/* --- 4. Safe areas: notch / Dynamic Island / home indicator --- */
+.imdb-bar { padding-top: calc(12px + env(safe-area-inset-top)); }
+#library .imdb-bar { padding-top: calc(12px + env(safe-area-inset-top)); }
+.topbar { padding-top: calc(10px + env(safe-area-inset-top)); }
+.pills-row { top: calc(60px + env(safe-area-inset-top)); }
+#library .pills-row { top: calc(62px + env(safe-area-inset-top)); }
+.drawer { padding-top: calc(18px + env(safe-area-inset-top)); }
+/* El menú completo debe ser alcanzable en pantallas cortas (iPhone SE) */
+.drawer { overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom); }
+.join {
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+.toasts { bottom: calc(18px + env(safe-area-inset-bottom)); }
+.follow-pill {
+  top: calc(66px + env(safe-area-inset-top));
+  max-width: 92vw; overflow: hidden; text-overflow: ellipsis;
+}
+.read-progress { top: env(safe-area-inset-top); }
+.read-progress-pct {
+  top: calc(8px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+}
+.board-mode {
+  padding-top: calc(18px + env(safe-area-inset-top));
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  padding-left: calc(14px + env(safe-area-inset-left));
+  padding-right: calc(14px + env(safe-area-inset-right));
+}
+@media (max-width: 900px) {
+  #library .join-card.lib-stream {
+    padding-bottom: calc(30px + env(safe-area-inset-bottom));
+  }
+}
+
+/* --- 5. Header a 390px: etiquetas cortas, nada se rompe --- */
+.enter-short { display: none; }
+@media (max-width: 480px) {
+  .imdb-bar { gap: 6px; padding-left: 10px; padding-right: 10px; }
+  .imdb-logo { font-size: 17px; padding: 5px 6px; }
+  .imdb-enter { font-size: 13px; padding: 10px 14px; }
+  #library .imdb-enter { font-size: 13px; padding: 10px 14px; }
+  #library .imdb-login { font-size: 13px; padding: 10px 12px; }
+  .enter-long, .login-long { display: none; }
+  .enter-short { display: inline; }
+  .user-name { display: none; }
+  .topbar { padding-left: 12px; padding-right: 12px; gap: 8px; }
+  .presence { gap: 6px; }
+}
+
+/* --- 6. Modales en móvil: hoja inferior (bottom sheet) ---
+   Cabe en pantalla, el teclado no la tapa y el botón queda alcanzable. */
+@media (max-width: 480px) {
+  .modal-pop {
+    left: 0; right: 0; top: auto; bottom: 0; transform: none;
+    width: 100%; max-width: 100%;
+    max-height: 92vh; max-height: 92dvh;
+    border-radius: 24px 24px 0 0;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    animation: sheetIn .28s ease;
+  }
+  @keyframes sheetIn {
+    from { transform: translateY(48px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+  /* La sala de lectura respira a 390px */
+  .layout { padding: 20px 14px 90px; gap: 20px; }
+  #paras { padding: 18px 16px; }
+  main.layout article.chapter .paras p { text-align: left; }
+  .board-wrap { padding: 14px 14px; border-width: 8px; border-bottom-width: 22px; }
+  .board-send { width: 100%; }
+  .chat-box { padding: 14px 12px; }
+  /* Botones de la barra de marcado: cómodos con el pulgar */
+  .toolbar { gap: 8px; padding: 10px; max-width: calc(100vw - 16px); }
+  .toolbar .btn { padding: 12px 16px; }
+  /* El editor de nota no queda bajo el teclado */
+  .notepop { width: min(360px, calc(100vw - 24px)); }
 }
