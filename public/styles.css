@@ -721,20 +721,19 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 
 /* ------------------------- pizarra compartida ------------------------- */
 /* v87: pizarra de escuela — marco de aluminio metálico, superficie con brillo */
+/* v108: pizarra rediseñada — más cuadrada, marcos finos, acabado premium */
 .board-wrap {
-  background: linear-gradient(135deg, #ffffff 0%, #fdfdfe 40%, #f7f9fb 100%);
-  border: 10px solid #aeb4bc;
-  border-bottom-width: 26px;
-  border-radius: 4px;
-  padding: 18px 20px;
-  margin-bottom: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  border: 4px solid #b9bfc7;
+  border-bottom-width: 14px;
+  border-radius: 2px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
   width: 100%;
   box-shadow:
-    0 0 0 2px #8f959d,
-    0 0 0 3px #dfe3e8,
-    0 6px 18px rgba(0,0,0,.16),
-    inset 0 1px 0 rgba(255,255,255,.9),
-    inset 0 -14px 28px rgba(174,180,188,.10);
+    0 0 0 1px #9aa1a9,
+    0 4px 14px rgba(0,0,0,.12),
+    inset 0 1px 0 rgba(255,255,255,.95);
   position: relative;
 }
 /* Brillo de superficie sobre la pizarra */
@@ -742,21 +741,21 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 2px;
+  border-radius: 1px;
   pointer-events: none;
-  background: linear-gradient(115deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 32%);
+  background: linear-gradient(115deg, rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 30%);
 }
-/* Bandeja de marcadores estilo pizarra escolar */
+/* Bandeja de marcadores — fina y discreta */
 .board-wrap::after {
   content: '';
   position: absolute;
-  bottom: -26px;
-  left: 6px;
-  right: 6px;
-  height: 12px;
-  background: linear-gradient(to bottom, #c3c8cf 0%, #9aa0a8 60%, #848a92 100%);
-  border-radius: 0 0 4px 4px;
-  box-shadow: inset 0 2px 3px rgba(0,0,0,.18);
+  bottom: -14px;
+  left: 10px;
+  right: 10px;
+  height: 6px;
+  background: linear-gradient(to bottom, #c9ced5 0%, #a8aeb6 100%);
+  border-radius: 0 0 2px 2px;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.15);
 }
 .board-head {
   display: flex;
@@ -782,7 +781,7 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   line-height: 1.55;
   padding: 14px 16px;
   border: 2px solid #d7dce2;
-  border-radius: 6px;
+  border-radius: 2px;
   background: #ffffff;
   color: #1a1a1a;
   font-family: -apple-system, 'Segoe UI', sans-serif;
@@ -795,7 +794,7 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   background: #8a5a1e;
   color: #fff;
   border: none;
-  border-radius: 20px;
+  border-radius: 3px;
   padding: 10px 24px;
   font-size: 15px;
   font-weight: 700;
@@ -816,7 +815,7 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   padding: 10px 14px;
   margin-bottom: 12px;
   background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 2px 2px 0;
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
 }
 @keyframes boardIn {
@@ -1701,13 +1700,13 @@ main.layout article.chapter .paras p {
 }
 .board-mode-inner {
   max-width: 860px; margin: 0 auto;
-  background: #ffffff; border: 8px solid #c8ccd2; border-bottom-width: 22px;
-  border-radius: 3px; padding: 20px 24px 28px;
+  background: #ffffff; border: 4px solid #c8ccd2; border-bottom-width: 12px;
+  border-radius: 2px; padding: 20px 24px 28px;
   box-shadow: 0 4px 20px rgba(0,0,0,.15); position: relative;
 }
 .board-mode-inner::after {
-  content: ''; position: absolute; bottom: -22px; left: 8px; right: 8px; height: 10px;
-  background: linear-gradient(to bottom, #b8bcc2, #9a9ea4); border-radius: 0 0 3px 3px;
+  content: ''; position: absolute; bottom: -12px; left: 10px; right: 10px; height: 6px;
+  background: linear-gradient(to bottom, #b8bcc2, #9a9ea4); border-radius: 0 0 2px 2px;
 }
 .board-mode-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .board-mode-head .btn-chip { background: #1a1a1a; color: #fff; border-color: #1a1a1a; font-size: 14px; padding: 8px 18px; }
@@ -2239,4 +2238,9 @@ body.in-room #boardWrap {
 }
 body.in-room #boardView {
   min-height: 40vh;
+}
+
+/* v108: botones de la pizarra cuadrados (coherente con el rediseño) */
+#boardWrap .btn-chip {
+  border-radius: 3px;
 }
