@@ -248,7 +248,7 @@ function initJoin() {
     localStorage.setItem('tj_name', myName);
     localStorage.setItem('tj_color', myColor);
     localStorage.setItem('tj_room', myRoom);
-    try { localStorage.setItem('tj_inRoom', '1'); } catch (e) {} // v94: sesión activa — auto-reentrar si recarga
+
     $('join').classList.add('hidden');
     setViewState('room', true);
     boot();
@@ -273,7 +273,7 @@ function initJoin() {
     localStorage.setItem('tj_name', myName);
     localStorage.setItem('tj_color', myColor);
     localStorage.setItem('tj_room', myRoom);
-    try { localStorage.setItem('tj_inRoom', '1'); } catch (e) {} // v94: sesión activa
+
     $('join').classList.add('hidden');
     setViewState('room', true);
     boot();
@@ -1657,7 +1657,7 @@ async function bootBook(book, push) {
   readingType = book.classic ? 'classic' : 'book';
   localStorage.setItem('tj_room', myRoom);
   try {
-    localStorage.setItem('tj_inRoom', '1'); // v94: sesión activa — auto-reentrar si recarga
+
     localStorage.setItem('tj_lastBook', book.id); // v94: último libro abierto
   } catch (e) {}
   setViewState('room', push);
@@ -1727,41 +1727,8 @@ function exitRoom() {
   toast(t('exitedRoom'));
   showLibrary(true);
 }
-/* v94: Auto-reentrar a la sala si había sesión activa al recargar.
-   La página nunca expulsa sola: solo el botón 🚪 Salir cierra la sesión. */
-function initAutoRejoin() {
-  try {
-    const q = new URLSearchParams(location.search);
-    if (q.get('sala') || q.get('libro')) return; // deep link tiene prioridad
-    if (localStorage.getItem('tj_inRoom') !== '1') return;
-    const savedName = localStorage.getItem('tj_name');
-    if (!savedName || savedName === t('joinDefaultName')) return; // sin nombre real, no auto-entrar
-    myName = savedName;
-    myRoom = localStorage.getItem('tj_room') || '';
-    if (!myRoom) return; // sin sala guardada, no hay a dónde volver
-    const lastBook = localStorage.getItem('tj_lastBook');
-    // Esperar a que la biblioteca cargue para poder abrir el libro
-    const tryRejoin = async () => {
-      for (let i = 0; i < 40 && !window.__tjBooksReady; i++) {
-        await new Promise(r => setTimeout(r, 250));
-      }
-      if (lastBook && window.__tjBooksReady && typeof openBook === 'function') {
-        const books = (typeof libBooksCache !== 'undefined' && libBooksCache) || [];
-        const b = books.find(x => x.id === lastBook);
-        if (b) { openBook(b.id, false); toast(t('backToReading')); return; }
-      }
-      // Sin libro: entrar directo a la sala (sin pantalla de "Entrar")
-      $('library').classList.add('hidden');
-      $('join').classList.add('hidden');
-      setViewState('room', false);
-      updateRoomLabel();
-      boot();
-      toast(t('backToRoom'));
-    };
-    // Dar tiempo a que los inits terminen
-    setTimeout(tryRejoin, 800);
-  } catch (e) { /* sin auto-rejoin, flujo normal */ }
-}
+/* v104: auto-rejoin DESACTIVADO — al entrar siempre se muestra la biblioteca.
+   El usuario entra a la sala solo poniendo el código en el footer. */
 function showViewByName(view, st) {
   if (view === 'writing') showWriting(false);
   else if (view === 'join') goLiveRoom();
@@ -3968,6 +3935,7 @@ function initWriting() {
    compartido (lo deja en la pantalla de entrada con el código ya puesto;
    el visitante solo escribe su nombre y entra — sin login, sin fricción). */
 async function initDeepLink() {
+  try { localStorage.removeItem('tj_inRoom'); } catch (e) {} // v104: flag obsoleto, siempre mostrar biblioteca
   try {
     const q = new URLSearchParams(location.search);
     // v72: enlace a sala en vivo
@@ -4016,7 +3984,7 @@ function initWelcome() {
  ['initChat', initChat], ['initReactions', initReactions], ['initHands', initHands],
  ['initSwitchBook', initSwitchBook], ['checkAuth', checkAuth],
  ['initParaBar', initParaBar], ['initBoardMode', initBoardMode],
- ['initDeepLink', initDeepLink], ['initAutoRejoin', initAutoRejoin]].forEach(([name, fn]) => {
+ ['initDeepLink', initDeepLink]].forEach(([name, fn]) => {
   try {
     const r = fn();
     if (r && r.catch) r.catch((e) => clog('INIT-FAIL ' + name + ': ' + (e && e.message)));
