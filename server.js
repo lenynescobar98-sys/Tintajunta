@@ -240,6 +240,7 @@ function seedBooks() {
   const oid = genBookId();
   books.set(oid, {
     id: oid, title: 'La tinta compartida', author: 'TintaJunta',
+    coverUrl: 'img/covers/tinta-compartida.webp',
     price: 299, createdAt: Date.now(), status: 'approved', ageRating: 'all',
     chapters: [{ title: 'Manifiesto', paragraphs: [
       'Hay libros que se leen a solas, en silencio, con la lámpara encendida hasta tarde. Y hay libros que piden compañía: una frase que te obliga a levantar la vista y decir "mira esto".',
@@ -252,6 +253,7 @@ function seedBooks() {
   const fid = genBookId();
   books.set(fid, {
     id: fid, title: 'El faro de las palabras', author: 'TintaJunta',
+    coverUrl: 'img/covers/faro-palabras.webp',
     price: 0, createdAt: Date.now(), status: 'approved', ageRating: 'all',
     chapters: [{ title: 'Capítulo 1 — La torre', paragraphs: [
       'En lo alto del acantilado había un faro que nadie encendía desde hacía años. Su guardián, un hombre callado llamado Tomás, no cuidaba la luz: cuidaba las palabras.',
@@ -264,6 +266,7 @@ function seedBooks() {
   const cid = genBookId();
   books.set(cid, {
     id: cid, title: 'Cartas a un lector', author: 'TintaJunta',
+    coverUrl: 'img/covers/cartas-lector.webp',
     price: 0, createdAt: Date.now(), status: 'approved', ageRating: 'all',
     chapters: [{ title: 'Primera carta', paragraphs: [
       'Querido lector: te escribo esta carta sin saber tu nombre, porque los libros también son cartas que tardan años en llegar.',
