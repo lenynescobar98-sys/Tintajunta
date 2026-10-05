@@ -443,13 +443,19 @@ function renderNotes() {
   });
 }
 
-/* ----------------------------- presencia ------------------------------ */
+/* ----------------------------- presencia ------------------------------
+   Rediseño: avatares con la inicial en el color de tinta de cada uno;
+   el profesor lleva aro dorado + 🎓. paintHandsInRoster sigue usando
+   .chip / data-name, sin cambios de lógica. */
 function renderRoster(roster) {
   const box = $('presence');
-  box.innerHTML = `<span style="opacity:.65">${roster.length} en la sala</span>` +
-    roster.map((p) =>
-      `<span class="chip" data-name="${esc(p.name)}"><span class="dot" style="background:${COLORS[p.color] || COLORS.azul}"></span>${capFor(p.color)}${esc(p.name)}</span>`
-    ).join('');
+  box.innerHTML = `<span class="roster-count">${roster.length} en la sala</span>` +
+    roster.map((p) => {
+      const initial = esc((p.name || '?').trim().charAt(0).toUpperCase());
+      const teacher = p.color === 'negro';
+      const label = esc(p.name) + (teacher ? ' · Profesor 🎓' : '');
+      return `<span class="chip avatar-chip${teacher ? ' is-teacher' : ''}" data-name="${esc(p.name)}" title="${label}"><span class="avatar" style="background:${COLORS[p.color] || COLORS.azul}">${initial}</span><span class="avatar-name">${esc(p.name)}</span></span>`;
+    }).join('');
   paintHandsInRoster();
   renderParaPresence(roster); // v68: 👁 dónde lee cada uno
 }
@@ -1645,7 +1651,17 @@ function setViewState(view, push) {
     if (view === 'room') { st.room = myRoom; st.bookId = currentBook ? currentBook.id : null; }
     try { history.pushState(st, ''); } catch (e) {}
   }
-  if (view) currentView = view;
+  if (view) {
+    currentView = view;
+    // Rediseño sala: marca en el body + transición de entrada al entrar
+    document.body.classList.toggle('in-room', view === 'room');
+    if (view === 'room') {
+      ['.room-head', 'main.layout'].forEach((sel) => {
+        const el = document.querySelector(sel);
+        if (el) { el.classList.remove('room-enter'); void el.offsetWidth; el.classList.add('room-enter'); }
+      });
+    }
+  }
 }
 function hideOverlays() {
   ['library', 'join', 'writing'].forEach((id) => { const el = $(id); if (el) el.classList.add('hidden'); });

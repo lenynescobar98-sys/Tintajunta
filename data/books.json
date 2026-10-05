@@ -1196,5 +1196,235 @@
   "sales": 0,
   "status": "approved",
   "title": "Il Decameron (frammento)"
+ },
+ {
+  "id": "TRONCE",
+  "title": "El tren de las once",
+  "author": "Lucía Fernanda Ríos",
+  "description": "Elena pierde el tren de las ocho a propósito cada mañana para coincidir con el desconocido del andén 3. Lo que no sabe es que él también llega tarde por ella.",
+  "price": 299,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — El andén 3",
+    "paragraphs": [
+     "Elena llevaba tres meses perdiendo el tren de las ocho. No por despiste: salía de casa a la misma hora, caminaba al mismo ritmo y llegaba al andén exactamente cuatro minutos tarde, lo justo para ver cómo las puertas se cerraban frente a ella.",
+     "Lo hacía por él. El hombre del abrigo gris que leía el mismo libro desde hacía semanas sin pasar de la página cuarenta. Se sentaba siempre en la banca del andén 3, y Elena había empezado a aprenderse de memoria el gesto con el que se acomodaba los lentes.",
+     "Una mañana de martes, la lluvia la obligó a correr. Llegó al andén a las ocho en punto, sin aliento, y el tren estaba ahí, con las puertas abiertas. El hombre del abrigo gris la miró desde su banca y, por primera vez, sonrió.",
+     "Elena entendió en ese instante que había dos opciones: subir al tren y llegar temprano por primera vez en tres meses, o quedarse. Se quedó. El tren partió sin ella y el andén quedó en silencio.",
+     "—¿Me guardas el asiento de al lado? —preguntó él, señalando la banca—. Llevo tres meses esperando que pierdas este tren conmigo."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "RELOJM",
+  "title": "La casa de los relojes muertos",
+  "author": "Emilio Vargas Cruz",
+  "description": "Un relojero hereda una mansión donde todos los relojes se detuvieron a las 3:33. Para venderla, primero tendrá que descubrir qué pasó aquella noche.",
+  "price": 399,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — Las 3:33",
+    "paragraphs": [
+     "Martín Aguilar no creía en fantasmas, pero creía en los relojes, que era casi lo mismo. Un reloj bien cuidado no miente: mide el tiempo con la honestidad de quien no tiene nada que ocultar.",
+     "Por eso le temblaron las manos cuando abrió la puerta de la mansión de su tío y vio el recibidor: catorce relojes de pared, de pie y de mesa, todos detenidos a las 3:33. Ni uno más, ni uno menos.",
+     "El notario le había dicho que su tío murió tranquilo, dormido en su cama. Nadie le había dicho que la casa entera parecía haberse quedado sin aire a una hora exacta, como si el tiempo hubiera decidido no seguir pasando por esas paredes.",
+     "Martín sacó su lupa de relojero y se acercó al más grande, un regulador de caoba del siglo pasado. El péndulo colgaba inmóvil. Y entonces lo vio: grabadas con un alfiler en la parte interior de la puerta, había tres palabras: «No los arregles».",
+     "Afuera empezó a llover. Martín cerró la puerta del regulador con cuidado, pero no pudo evitar mirar su propio reloj de pulsera. Las manecillas seguían moviéndose. Todavía."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "LUNACR",
+  "title": "Hija de la luna creciente",
+  "author": "Valeria Montiel",
+  "description": "En un reino donde la magia se apaga con cada luna llena, una joven descubre que su sombra guarda el último hechizo del mundo.",
+  "price": 499,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — La sombra que habla",
+    "paragraphs": [
+     "Naira cumplió diecisiete años la noche en que la luna se volvió a llenar, y con ella se apagó la última lámpara mágica del reino de Serea. Su madre lloró en silencio; su abuela, en cambio, sonrió como si llevara años esperando ese momento.",
+     "—Ven —le dijo la abuela, tomándola de la muñeca—. Hay algo que debes ver antes de que amanezca.",
+     "La llevó al patio, donde la luz de la luna llena dibujaba sombras nítidas sobre la piedra. La sombra de Naira, sin embargo, no copiaba sus movimientos: mientras ella estaba quieta, su sombra levantaba lentamente un brazo y señalaba hacia las montañas.",
+     "—Tu sombra no es tuya —susurró la abuela—. Es de la última hechicera. Te ha estado esperando diecisiete años.",
+     "Naira quiso gritar, pero de su boca no salió su voz: salió una palabra antigua, en un idioma que nunca había aprendido, y las lámparas apagadas del reino parpadearon una vez, como si respiraran."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "VERSOS",
+  "title": "Versos para días grises",
+  "author": "Andrés Solano Méndez",
+  "description": "Treinta poemas cortos para los días en que el cielo pesa: sobre la lluvia, el café frío y las pequeñas victorias que nadie celebra.",
+  "price": 0,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Poemas I–V",
+    "paragraphs": [
+     "I. La lluvia no pregunta / si tienes paraguas. / Simplemente cae, / como caen las verdades / que llevamos meses evitando.",
+     "II. El café se enfrió / en la taza de ayer. / Lo caliento de nuevo / y me sabe a lunes, / a empezar otra vez / sin hacer ruido.",
+     "III. Hay victorias pequeñas: / tender la cama, / contestar ese mensaje, / salir a caminar / aunque el cielo amenace. / Nadie aplaude, / pero el pecho lo sabe.",
+     "IV. Mi abuela decía / que los días grises / son el cielo pensando. / Yo creo que tiene razón: / hasta las nubes / necesitan un respiro.",
+     "V. Si hoy pesa todo, / suelta la mitad. / El mundo seguirá girando / aunque no lo cargues tú. / Descansa, / que mañana el sol / también madruga."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "CERART",
+  "title": "El arte de empezar de cero",
+  "author": "Carolina Duarte",
+  "description": "Perdí mi trabajo, mi casa y mi rutina en un mismo año. Este libro es el mapa que me habría gustado tener: 21 pasos para reconstruirte sin prisa y sin culpa.",
+  "price": 199,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Paso 1 — Nombra lo que perdiste",
+    "paragraphs": [
+     "Cuando todo se derrumba a la vez, la mente hace algo curioso: generaliza. No dices «perdí mi empleo»; dices «lo perdí todo». Y «todo» es una palabra demasiado grande para cargarla sola.",
+     "El primer paso no es buscar trabajo, ni mudarte, ni «ser positiva». El primer paso es tomar una hoja y escribir, con nombres y apellidos, qué fue exactamente lo que perdiste. La lista duele, pero el dolor con nombre pesa menos que el dolor sin forma.",
+     "Mi lista tenía siete renglones. Siete. No «todo»: siete cosas concretas. Y frente a cada una escribí una pregunta distinta: ¿esto lo puedo recuperar, lo puedo reemplazar, o lo puedo soltar?",
+     "Tres de mis siete pérdidas eran recuperables. Dos eran reemplazables. Y dos —las más dolorosas— solo se podían soltar. Saberlo me devolvió algo que creía perdido para siempre: la sensación de tener opciones.",
+     "Empieza hoy. Una hoja, un lápiz, siete renglones o los que sean. Nombra lo que perdiste y verás que «todo» era, en realidad, un puñado de cosas con las que sí puedes trabajar."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "SENALP",
+  "title": "Señal perdida",
+  "author": "Marco Antonio Vega",
+  "description": "Una operadora de radio nocturna recibe una transmisión de su propio futuro. El mensaje tiene solo siete palabras: «No contestes la llamada de mañana».",
+  "price": 399,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — Las 2:47 AM",
+    "paragraphs": [
+     "Lucía llevaba cuatro años trabajando el turno de la madrugada en Radio Horizonte. A las 2:47 de la mañana, su audiencia se reducía a camioneros, insomnes y un hombre que llamaba cada jueves para pedir la misma canción.",
+     "Aquella noche el teléfono de la cabina sonó con un tono distinto: más grave, como si viniera de muy lejos. Lucía contestó por reflejo y escuchó estática. Después, una voz. Su voz.",
+     "—No contestes la llamada de mañana —dijo la voz, y colgó.",
+     "Lucía se quedó mirando el auricular. Revisó el identificador: número desconocido. Revisó la hora: 2:47. Se dijo que era una broma, un imitador, el cansancio. Se lo dijo tres veces, como si repetirlo lo volviera verdad.",
+     "A la mañana siguiente, a las 9:15, sonó su celular. Número desconocido. Lucía miró la pantalla durante siete tonos completos antes de decidir."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "NIEBLA",
+  "title": "Lo que la niebla esconde",
+  "author": "Isabel Fuentes Rojas",
+  "description": "Cada otoño, la niebla baja al pueblo de San Miguel y alguien desaparece. Este año, la niebla llegó dos semanas antes.",
+  "price": 299,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — Dos semanas antes",
+    "paragraphs": [
+     "En San Miguel, la niebla siempre llegaba el primer lunes de octubre. Los viejos lo sabían, los niños lo aprendían pronto: cuando la niebla baja, nadie sale después de las seis. Era una regla tan antigua como el pueblo.",
+     "Este año, la niebla llegó un 17 de septiembre. Nadie la esperaba. Don Rafael, que vendía pan desde hacía cuarenta años, cerró su puesto al mediodía y no volvió a abrirlo. Dijo que había visto algo moverse entre la bruma, algo que caminaba en dos patas pero no era una persona.",
+     "La maestra suspendió las clases de la tarde. El alcalde, que siempre se había reído de «las supersticiones», ordenó que las farolas se encendieran a las cinco. A las seis, el pueblo entero estaba encerrado en sus casas, con las cortinas corridas.",
+     "A las seis y diez, se fue la luz. Y en la oscuridad total, entre la niebla que ya cubría las ventanas, se escuchó por primera vez en años el sonido que los abuelos describían en voz baja: pasos lentos, arrastrados, deteniéndose frente a cada puerta.",
+     "Contaron después que la niebla tocó catorce puertas aquella noche. Solo una se abrió."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "MAPATE",
+  "title": "El mapa del tesoro perdido",
+  "author": "Diego Ramírez Solís",
+  "description": "Tres amigos encuentran un mapa dibujado en el forro de un libro viejo de la biblioteca. La X marca un lugar que no existe en ningún mapa moderno.",
+  "price": 0,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — El forro del libro",
+    "paragraphs": [
+     "Todo empezó un sábado aburrido en la biblioteca del barrio, cuando a Mateo se le cayó al suelo «La isla misteriosa» y del forro despegado asomó una esquina de papel amarillento que no debía estar ahí.",
+     "—Chicos —susurró, con los ojos como platos—. Esto no es parte del libro.",
+     "Era un mapa dibujado a mano, con tinta desvaída y una caligrafía antigua. Mostraba la costa, tres palmeras torcidas y una X roja sobre un punto que, según el mapa, quedaba justo donde hoy está el parque de juegos.",
+     "Valentina, que era la escéptica del grupo, frunció el ceño. —Esto lo dibujó alguien aburrido hace cien años —dijo. Pero se guardó el mapa en el bolsillo con un cuidado que desmentía sus palabras.",
+     "Esa noche, los tres se reunieron en la casa del árbol con linternas, una pala pequeña prestada sin permiso y el mapa extendido sobre una caja de cartón. La X los miraba fijamente. Y las mejores aventuras, como ya saben, siempre empiezan con una X."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "CARTAS",
+  "title": "Cartas que nunca envié",
+  "author": "Sofía Hernández Luna",
+  "description": "Durante diez años le escribí a mi padre una carta cada domingo y nunca envié ninguna. Esta es la historia de todo lo que no nos dijimos.",
+  "price": 199,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Carta 1 — Domingo",
+    "paragraphs": [
+     "Papá: Hoy cumplí treinta años y por primera vez en diez no te escribí el domingo. Te escribo el lunes, que es casi lo mismo y a la vez no se parece en nada. Esta carta, como las otras quinientas veinte, tampoco la enviaré. Pero esta vez es distinto: esta vez la voy a terminar.",
+     "Empecé a escribirte cuando mamá me dijo que te habías ido «a buscar trabajo a otra ciudad». Yo tenía veinte años y sabía leer entre líneas mejor de lo que ella creía. «Otra ciudad» era su manera de decir «no sabemos dónde está».",
+     "Al principio las cartas eran reclamos. Páginas enteras de porqués subrayados con tanta fuerza que rompía el papel. Después se volvieron noticias: me gradué, conseguí trabajo, me mudé sola. Como si fueras un lector al que hubiera que poner al día.",
+     "Con los años se volvieron otra cosa: el lugar donde te contaba lo que no le contaba a nadie. Que lloro en el carro antes de entrar a trabajar. Que a veces marco tu número viejo solo para escuchar que ya no existe.",
+     "Ayer encontré la caja donde guardo las quinientas veinte cartas. La abrí y entendí algo que me dejó sin aire: durante diez años no te estuve escribiendo a ti. Me estaba escribiendo a mí, para no olvidarme de quién soy."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "JARDIN",
+  "title": "El jardín de los sueños pequeños",
+  "author": "Elena Morales Paz",
+  "description": "Cada noche, la abuela Rosa riega un jardín donde crecen los sueños de los niños del barrio. Un cuento para leer antes de dormir.",
+  "price": 0,
+  "createdAt": 1791206432465,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — La regadera azul",
+    "paragraphs": [
+     "En la última casa de la calle Olivos vive la abuela Rosa, que tiene el pelo blanco como la luna y una regadera azul que nunca se vacía. Los niños del barrio dicen que por las noches, cuando todos duermen, la abuela sale al patio a regar su jardín secreto.",
+     "No es un jardín normal. En lugar de flores, en la tierra asoman puntitas de colores: un barquito de papel, una estrella fugaz, un cachorro de nubes. Son los sueños de los niños, que caen del cielo como semillas cada vez que alguien se duerme.",
+     "La abuela los riega uno por uno, con mucho cuidado. —Crece, sueñito, crece —les susurra—. Mañana tienes que estar listo para tu niño.",
+     "Una noche, Nico —el más pequeño del barrio— se despertó con sed y vio por la ventana a la abuela regando. Al día siguiente le preguntó: —Abuela, ¿mi sueño de anoche era el del dinosaurio bueno? La abuela guiñó un ojo. —Era el más verde de todos, mi amor. Creció hermoso.",
+     "Desde entonces, cada noche antes de dormir, los niños de la calle Olivos cierran los ojos y piensan en algo bonito, para que la abuela Rosa tenga la semilla más linda que regar."
+    ]
+   }
+  ]
  }
 ]

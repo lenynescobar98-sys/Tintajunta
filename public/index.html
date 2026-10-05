@@ -464,11 +464,32 @@
   </div>
 </div>
 
-<!-- Sala -->
-<header class="topbar">
-  <div class="topbar-brand"><button id="backBtn" class="btn-chip hidden" title="Volver a la biblioteca">←</button>TintaJunta <span class="topbar-room">· <span id="roomLabel">Sala <b id="roomCode">SALA</b></span></span><button id="copyRoom" class="btn-chip" title="Copiar el código de esta sala">⧉ copiar código</button><button id="pencilBtn" class="pencil-btn" title="Lápiz: marcar directo con tu tinta">✏️</button><button id="themeBtn" class="pencil-btn" title="Cambiar tema: claro / oscuro">🌙</button><button id="followBtn" class="pencil-btn hidden" title="👀 Sígueme: la pantalla de todos sigue tu lectura">👀</button><button id="handBtn" class="pencil-btn hidden" title="✋ Levantar la mano">✋</button><button id="switchBookBtn" class="pencil-btn hidden" title="📚 Cambiar libro: todos pasan a otro texto">📚</button><button id="boardModeBtn" class="pencil-btn" title="🖥️ Modo pizarra: solo se ve la pizarra con el párrafo actual">🖥️</button><button id="typoBtn" class="pencil-btn" title="Aa: tamaño de letra y espaciado">Aa</button><button id="exitRoomBtn" class="pencil-btn" title="🚪 Salir de la sala">🚪</button></div>
-  <div id="presence" class="presence"></div>
-  <span id="netdot" class="netdot" title="Conectando…"></span>
+<!-- Sala · encabezado de la sala en vivo (rediseño premium) -->
+<header class="topbar room-head">
+  <div class="room-head-row">
+    <button id="backBtn" class="btn-chip hidden" title="Volver a la biblioteca">←</button>
+    <div class="room-identity">
+      <span class="room-live" title="Estás dentro de una sala de lectura en vivo"><span class="live-dot"></span>En vivo</span>
+      <span class="topbar-room room-title"><span id="roomLabel">Sala <b id="roomCode">SALA</b></span></span>
+    </div>
+    <div class="room-tools" role="toolbar" aria-label="Herramientas de la sala">
+      <button id="copyRoom" class="btn-chip" title="Copiar el código de esta sala">⧉ copiar código</button>
+      <span class="tools-sep"></span>
+      <button id="pencilBtn" class="pencil-btn" title="Lápiz: marcar directo con tu tinta">✏️</button>
+      <button id="themeBtn" class="pencil-btn" title="Cambiar tema: claro / oscuro">🌙</button>
+      <button id="followBtn" class="pencil-btn hidden" title="👀 Sígueme: la pantalla de todos sigue tu lectura">👀</button>
+      <button id="handBtn" class="pencil-btn hidden" title="✋ Levantar la mano">✋</button>
+      <button id="switchBookBtn" class="pencil-btn hidden" title="📚 Cambiar libro: todos pasan a otro texto">📚</button>
+      <button id="boardModeBtn" class="pencil-btn" title="🖥️ Modo pizarra: solo se ve la pizarra con el párrafo actual">🖥️</button>
+      <button id="typoBtn" class="pencil-btn" title="Aa: tamaño de letra y espaciado">Aa</button>
+      <span class="tools-sep"></span>
+      <button id="exitRoomBtn" class="pencil-btn" title="🚪 Salir de la sala">🚪</button>
+    </div>
+  </div>
+  <div class="room-head-sub">
+    <div id="presence" class="presence"></div>
+    <span id="netdot" class="netdot" title="Conectando…"></span>
+  </div>
 </header>
 <div id="followPill" class="follow-pill hidden">👀 Siguiendo al profesor</div>
 
