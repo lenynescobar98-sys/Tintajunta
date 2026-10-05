@@ -3837,6 +3837,23 @@ function initImdbBar() {
   };
   if (frg) frg.onclick = footerRoomGo;
   if (frc) frc.addEventListener('keydown', (e) => { if (e.key === 'Enter') footerRoomGo(); });
+  // v112: entrada rápida a sala privada ARRIBA — botón 🔑 en el header + barra (mismo flujo que el footer)
+  const rkb = $('roomKeyBar'), rki = $('roomKeyInput'), rkg = $('roomKeyGo');
+  const topRoomGo = () => {
+    const code = rki ? rki.value.trim() : '';
+    if (!code) { if (rki) rki.focus(); return; }
+    const rc = normalizeRoomClient(code);
+    if (!rc) { toast(t('joinBadCode')); return; }
+    goLiveRoom(rc);
+  };
+  const rkbBtn = $('roomKeyBtn');
+  if (rkbBtn) rkbBtn.onclick = () => {
+    if (!rkb) return;
+    rkb.classList.toggle('hidden');
+    if (!rkb.classList.contains('hidden') && rki) rki.focus();
+  };
+  if (rkg) rkg.onclick = topRoomGo;
+  if (rki) rki.addEventListener('keydown', (e) => { if (e.key === 'Enter') topRoomGo(); });
   const ff = $('footerFeedback');
   if (ff) ff.onclick = (e) => { e.preventDefault(); showFeedbackModal(); };
   /* v77 — Login Google visible en header */
