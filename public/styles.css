@@ -168,6 +168,16 @@ body {
 .credits-brand { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
 .credits p { font-size: 14px; color: var(--ink-soft); margin: 4px 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
 .credits-small { font-size: 12px !important; opacity: .7; }
+/* Campo discreto "Código de sala" — única entrada pública a la sala privada */
+.room-code-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; opacity: .55; }
+.room-code-row:hover, .room-code-row:focus-within { opacity: 1; }
+.room-code-row input {
+  width: 130px; padding: 6px 10px; font-size: 12px; text-align: center;
+  border: 1px solid var(--line); border-radius: 20px; background: transparent;
+  color: var(--ink-soft); text-transform: uppercase; letter-spacing: 1px;
+}
+.room-code-row input:focus { outline: none; border-color: var(--accent); opacity: 1; }
+.room-code-row .linklike { font-size: 12px; }
 
 /* ---------- carrusel principal ---------- */
 .hero-carousel { position: relative; overflow: hidden; border-radius: 16px; margin: 6px 0 18px; box-shadow: 0 8px 28px rgba(0,0,0,.18); touch-action: pan-y; }

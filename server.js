@@ -85,10 +85,10 @@ const MAIN_ROOM = 'SALA';
 const rooms = new Map(); // código -> { seq, highlights, notes }
 
 /* Normaliza un código de sala: mayúsculas, solo alfanumérico, 4-12 caracteres.
- * Vacío => sala principal. Devuelve null si el código es inválido. */
+ * Vacío o inválido => null. No hay sala por defecto: nadie entra sin código exacto. */
 function normalizeRoom(raw) {
   const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
-  if (!code) return MAIN_ROOM;
+  if (!code) return null;
   if (code.length < 4) return null;
   return code;
 }
@@ -464,7 +464,8 @@ app.get('/api/text', (req, res) => res.json({
   paragraphs: PARAGRAPHS, wordCount: WORDS.length,
 }));
 app.get('/api/state', (req, res) => {
-  const code = normalizeRoom(req.query.room) || MAIN_ROOM;
+  const code = normalizeRoom(req.query.room);
+  if (!code) return res.status(400).json({ ok: false, error: 'bad-room' });
   const st = getRoom(code);
   res.json({ room: code, highlights: st.highlights, notes: st.notes,
     board: Array.isArray(st.board) ? st.board : [] });

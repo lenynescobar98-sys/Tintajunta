@@ -58,16 +58,16 @@ if (isTeacher) myColor = 'negro';
    decide quién es profesor (anti-suplantación). */
 const displayName = () => myName;
 const capFor = (color) => (color === 'negro' ? '🎓 ' : ''); // distintivo del profesor
-let myRoom = 'SALA';
+let myRoom = '';
 
 /* Normaliza un código de sala igual que el servidor (null si inválido) */
 function normalizeRoomClient(raw) {
   const code = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
-  if (!code) return 'SALA';
+  if (!code) return null;
   if (code.length < 4) return null;
   return code;
 }
-myRoom = normalizeRoomClient(localStorage.getItem('tj_room')) || 'SALA';
+myRoom = normalizeRoomClient(localStorage.getItem('tj_room')) || '';
 let highlights = [];
 let notes = [];
 let wordCount = 0;
@@ -236,15 +236,15 @@ function initJoin() {
     applyTheme();
   };
   $('nameInput').value = myName;
-  $('roomInput').value = myRoom === 'SALA' ? '' : myRoom;
+  $('roomInput').value = myRoom || '';
   const doJoin = () => {
     myName = $('nameInput').value.trim().slice(0, 24) || t('joinDefaultName');
     const rc = normalizeRoomClient($('roomInput').value);
-    if ($('roomInput').value.trim() && !rc) {
-      toast(t('joinBadCode'));
+    if (!rc) {
+      toast(t('joinNeedCode'));
       return;
     }
-    myRoom = rc || 'SALA';
+    myRoom = rc;
     localStorage.setItem('tj_name', myName);
     localStorage.setItem('tj_color', myColor);
     localStorage.setItem('tj_room', myRoom);
@@ -1627,7 +1627,7 @@ function updateRoomLabel() {
   } else {
     let code = $('roomCode');
     if (!code) {
-      $('roomLabel').innerHTML = t('roomName') + ' <b id="roomCode">SALA</b>' + typeBadge;
+      $('roomLabel').innerHTML = t('roomName') + ' <b id="roomCode">' + esc(myRoom || '····') + '</b>' + typeBadge;
       code = $('roomCode');
     } else {
       $('roomLabel').innerHTML = t('roomName') + ' <b id="roomCode">' + esc(myRoom) + '</b>' + typeBadge;
@@ -1711,7 +1711,7 @@ function reenterRoom(st) {
   hideOverlays();
   closeDrawer();
   if (st && st.bookId) { openBook(st.bookId, false); return; }
-  myRoom = (st && st.room) || localStorage.getItem('tj_room') || 'SALA';
+  myRoom = (st && st.room) || localStorage.getItem('tj_room') || '';
   myName = localStorage.getItem('tj_name') || myName || t('joinDefaultName'); // nombre plano: el 🎓 se pinta por color
   currentBook = null;
   updateRoomLabel();
@@ -1737,7 +1737,8 @@ function initAutoRejoin() {
     const savedName = localStorage.getItem('tj_name');
     if (!savedName || savedName === t('joinDefaultName')) return; // sin nombre real, no auto-entrar
     myName = savedName;
-    myRoom = localStorage.getItem('tj_room') || 'SALA';
+    myRoom = localStorage.getItem('tj_room') || '';
+    if (!myRoom) return; // sin sala guardada, no hay a dónde volver
     const lastBook = localStorage.getItem('tj_lastBook');
     // Esperar a que la biblioteca cargue para poder abrir el libro
     const tryRejoin = async () => {
@@ -3794,13 +3795,20 @@ function closeDrawer() {
   d.classList.add('hidden'); d.setAttribute('hidden', '');
   s.classList.add('hidden'); s.setAttribute('hidden', '');
 }
-function goLiveRoom() {
+function goLiveRoom(roomCode) {
   syncNameFromLib();
   closeDrawer();
   $('library').classList.add('hidden');
   $('writing').classList.add('hidden');
   $('nameInput').value = myName === t('joinDefaultName') ? '' : myName;
-  myRoom = 'SALA';
+  // Sala privada: el código viene del campo discreto del footer o del deep link (?sala=CODIGO).
+  // Si se pasa código explícito úsalo; si no, conserva el myRoom ya fijado (deep link).
+  // Sin código no hay default: el campo sale vacío y nadie entra sin el código exacto.
+  if (roomCode) {
+    const rc = normalizeRoomClient(roomCode);
+    if (rc) myRoom = rc;
+  }
+  const ri = $('roomInput'); if (ri) ri.value = myRoom || '';
   const j = $('join');
   j.classList.remove('hidden');
   j.classList.remove('view-enter'); void j.offsetWidth; j.classList.add('view-enter');
@@ -3842,6 +3850,17 @@ function initImdbBar() {
     renderRows();
   });
   $('enterBtn').onclick = goLiveRoom;
+  // Campo discreto "Código de sala" en el footer — única entrada pública a la sala privada
+  const frc = $('footerRoomCode'), frg = $('footerRoomGo');
+  const footerRoomGo = () => {
+    const code = frc ? frc.value.trim() : '';
+    if (!code) { if (frc) frc.focus(); return; }
+    const rc = normalizeRoomClient(code);
+    if (!rc) { toast(t('joinBadCode')); return; }
+    goLiveRoom(rc);
+  };
+  if (frg) frg.onclick = footerRoomGo;
+  if (frc) frc.addEventListener('keydown', (e) => { if (e.key === 'Enter') footerRoomGo(); });
   const ff = $('footerFeedback');
   if (ff) ff.onclick = (e) => { e.preventDefault(); showFeedbackModal(); };
   /* v77 — Login Google visible en header */

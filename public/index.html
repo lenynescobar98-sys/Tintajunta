@@ -23,7 +23,7 @@
     <div class="imdb-spacer"></div>
     <button id="searchToggle" class="imdb-icon" data-i18n-title="searchTitle" title="Buscar">🔍</button>
     <button id="langBtn" class="imdb-icon lang-btn" data-i18n-title="langBtnTitle" title="Idioma · Language"><span id="langBtnLbl">EN</span></button>
-    <button id="enterBtn" class="imdb-enter">⚡<span class="enter-long" data-i18n="liveLong"> Sala en vivo</span><span class="enter-short" data-i18n="liveShort"> Sala</span></button>
+    <button id="enterBtn" class="imdb-enter hidden" hidden>⚡<span class="enter-long" data-i18n="liveLong"> Sala en vivo</span><span class="enter-short" data-i18n="liveShort"> Sala</span></button>
     <button id="loginBtn" class="imdb-login" data-i18n-title="loginTitle" title="Entrar con Google">🔐<span class="login-long" data-i18n="loginLong"> Entrar</span></button>
     <div id="userChip" class="user-chip hidden" hidden>
       <img id="userAvatar" class="user-avatar" alt="">
@@ -41,7 +41,7 @@
     <div class="drawer-head">TintaJunta</div>
     <button data-go="library" data-i18n="dwLibrary">📚 Biblioteca</button>
     <button data-go="write" data-i18n="dwWrite">✍️ Escribir</button>
-    <button data-go="live" data-i18n="dwLive">⚡ Sala en vivo</button>
+    <button data-go="live" data-i18n="dwLive" class="hidden" hidden>⚡ Sala en vivo</button>
     <button data-go="publish" data-i18n="dwPublish">＋ Publicar libro</button>
     <button data-go="ad" data-i18n="dwAd">📢 Anunciar</button>
     <button data-go="achievements" data-i18n="dwAch">🏆 Mis logros</button>
@@ -118,7 +118,7 @@
       <p class="row-sub" data-i18n="secAffSub">Lo que usamos y recomendamos para leer mejor. Si compras, nos apoyas sin pagar de más.</p>
       <div id="rowAff" class="hrow"></div>
     </section>
-    <div class="stream-join">
+    <div class="stream-join hidden" hidden>
     <h2 class="row-h2" data-i18n="liveH">⚡ Sala en vivo</h2>
     <p class="row-sub" data-i18n="liveSub">Entra con tu nombre, sin cuenta. Lee y marca junto a otros en tiempo real.</p>
     <label class="field">
@@ -145,6 +145,10 @@
       <p data-i18n="footTag">Lee juntos, marca con tu tinta.</p>
       <p class="credits-small" data-i18n-html="footBy">Creado por <b>Lenyn Escobar</b> · CEO de TintaJunta</p>
       <p class="credits-small">© 2026 TintaJunta · <a href="#" id="footerFeedback" class="credits-link" data-i18n="footReport">🐛 Reportar problema</a></p>
+      <div class="room-code-row">
+        <input id="footerRoomCode" type="text" maxlength="12" data-i18n-ph="footRoomCodePh" placeholder="Código de sala" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button id="footerRoomGo" type="button" class="linklike" data-i18n="footRoomGo">Entrar →</button>
+      </div>
     </footer>
   </div>
 </div>
@@ -285,7 +289,7 @@
     <p data-i18n-html="wel1">📚 <b>Lee</b> — abre un libro y léelo a tu ritmo.</p>
     <p data-i18n-html="wel2">🎨 <b>Marca</b> — subraya con tu tinta y deja notas que todos ven.</p>
     <p data-i18n-html="wel3">✍️ <b>Escribe</b> — guarda tus propios textos.</p>
-    <p data-i18n-html="wel4">⚡ <b>Sala en vivo</b> — escribe tu nombre abajo y toca "⚡ Sala en vivo" arriba. Sin cuenta.</p>
+    <p data-i18n-html="wel4">📚 Lee a tu ritmo — abre cualquier libro y empieza. Todo gratis.</p>
   </div>
   <div style="display:flex;justify-content:flex-end;margin-top:14px">
     <button id="welcomeOk" class="btn btn-primary" data-i18n="welOk">Entendido</button>
@@ -426,8 +430,8 @@
       <div id="swatches" class="swatches"></div>
     </div>
     <label class="field">
-      <span data-i18n="joinCodeLbl">Código de sala (opcional)</span>
-      <input id="roomInput" type="text" maxlength="12" data-i18n-ph="joinCodePh" placeholder="Vacío = sala principal" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <span data-i18n="joinCodeLbl">Código de sala</span>
+      <input id="roomInput" type="text" maxlength="12" data-i18n-ph="joinCodePh" placeholder="Escribe el código" autocomplete="off" autocapitalize="characters" spellcheck="false">
     </label>
     <button id="joinBtn" class="btn-primary" data-i18n="joinBtn">Entrar a la sala</button>
     <button id="createRoomBtn" class="linklike" type="button" data-i18n="joinCreate">+ Crear una sala nueva con código</button>
