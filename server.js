@@ -321,7 +321,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '256kb' }));
 /* Sesiones (login con Google). La sesión identifica al usuario por req.session.user */
 app.set('trust proxy', 1);
+/* Store de sesiones en archivos — el login sobrevive reinicios del servidor. */
+const SESSIONS_DIR = path.join(DATA_DIR, 'sessions');
+function fileSessionStore() {
+  const Store = session.Store;
+  class FileStore extends Store {
+    constructor() { super(); try { fs.mkdirSync(SESSIONS_DIR, { recursive: true }); } catch (e) {} }
+    _path(sid) { return path.join(SESSIONS_DIR, String(sid).replace(/[^a-zA-Z0-9_-]/g, '') + '.json'); }
+    get(sid, cb) {
+      fs.readFile(this._path(sid), 'utf8', (err, data) => {
+        if (err) return cb(null, null);
+        try { cb(null, JSON.parse(data)); } catch (e) { cb(null, null); }
+      });
+    }
+    set(sid, sess, cb) { fs.writeFile(this._path(sid), JSON.stringify(sess), (err) => cb && cb(err)); }
+    destroy(sid, cb) { fs.unlink(this._path(sid), () => cb && cb(null)); }
+    touch(sid, sess, cb) { this.set(sid, sess, cb); }
+  }
+  return new FileStore();
+}
 app.use(session({
+  store: fileSessionStore(),
   secret: process.env.SESSION_SECRET || 'tintajunta-dev-secret-cambiar-en-prod',
   resave: false,
   saveUninitialized: false,
