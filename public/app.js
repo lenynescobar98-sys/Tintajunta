@@ -2000,6 +2000,8 @@ if (!LIB_PILLS.includes(libPill)) {
 }
 let libLang = localStorage.getItem('tj_lang') || ''; // '' = todos los idiomas
 const LANG_FLAGS = { es: '🇪🇸', en: '🇬🇧', fr: '🇫🇷', pt: '🇵🇹', ar: '🇸🇦', it: '🇮🇹', de: '🇩🇪', ru: '🇷🇺', ja: '🇯🇵', el: '🇬🇷' };
+const LANG_NAMES = { es: 'Español', en: 'English', fr: 'Français', pt: 'Português', ar: 'العربية', it: 'Italiano', de: 'Deutsch', ru: 'Русский', ja: '日本語', el: 'Ελληνικά' };
+function langName(l) { return LANG_NAMES[(l || 'es').toLowerCase()] || l || 'es'; }
 function langBadge(b) {
   const l = b.language || 'es';
   if (l === 'es') return ''; // español es el default, no necesita insignia
@@ -2731,6 +2733,7 @@ function coverTile(b, opts) {
   const mine = b.author === displayName() && myName !== t('joinDefaultName');
   const vBadge = b.verifiedAuthor ? '<span class="vbadge" title="' + t('creatorVerifiedTitle') + '">✔️</span>' : '';
   const classicBadge = b.classic ? '<div class="classic-badge">' + t('classicBadge') + '</div>' : '';
+  const originalBadge = !b.classic ? '<div class="original-badge">' + t('originalBadge') + '</div>' : '';
   const ageBadge = b.ageRating && b.ageRating !== 'all'
     ? `<div class="age-badge">${b.ageRating === '18' ? '🔞 +18' : '🔞 +13'}</div>` : '';
   const pendBadge = b.status === 'pending' ? '<div class="feat-badge" style="background:#b45309">' + t('reviewBadge') + '</div>' : '';
@@ -2740,12 +2743,13 @@ function coverTile(b, opts) {
   tile.innerHTML =
     `<div class="tile-cover">${cover}` +
     (opts.badge ? `<div class="feat-badge">${opts.badge}</div>` : '') +
-    pendBadge + classicBadge + ageBadge + langBadge(b) +
+    pendBadge + classicBadge + originalBadge + ageBadge + langBadge(b) +
     (getProgress(b.id) > 120 ? `<div class="prog-badge">${t('tileContinue')}</div>` : '') +
     reportBadge(b) +
     (b.coverUrl ? '' : `<div class="cover-title">${esc(b.title)}</div><div class="cover-author creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</div>`) +
     `</div>` +
     `<div class="tile-title">${esc(b.title)} ${vBadge}</div>` +
+    `<div class="tile-author">${esc(b.author)} · ${LANG_FLAGS[b.language || 'es'] || '🌍'} ${langName(b.language)}</div>` +
     `<div class="tile-sub">🎨 ${b.marks || 0} · ${ratingHtml(b)}` +
     (mine && !opts.badge ? ` · <u class="tile-feat">⭐ destacar</u>` : '') +
     ` · ${reportBtnHtml(b)}</div>`;
