@@ -1195,7 +1195,7 @@ const adPhotoUpload = multer({
     else cb(new Error('bad-type'));
   },
 });
-app.post('/api/ads/:id/photo', (req, res) => {
+app.post('/api/ads/:id/photo', requireLogin, (req, res) => {
   const a = ads.get(String(req.params.id || '').toUpperCase());
   if (!a) return res.status(404).json({ ok: false, error: 'not-found' });
   adPhotoUpload.single('photo')(req, res, (err) => {

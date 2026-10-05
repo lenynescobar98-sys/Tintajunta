@@ -1883,7 +1883,7 @@ async function showAdModal(existing) {
     box.appendChild(b);
   });
   // precios del servidor
-  let prices = { day: 299, week: 1499 };
+  let prices = { day: 199, week: 799, month: 1999 };
   try {
     const r = await fetch('/api/ad-prices');
     const d = await r.json();
@@ -2090,24 +2090,24 @@ async function showCreatorProfile(name) {
 function showCreatorEdit(p) {
   const body = $('creatorBody');
   const s = p.socials || {};
-  body.innerHTML = `<div class="kp"><div class="kp-sec" style="margin-top:0">Editar perfil — ${esc(p.name)}</div>
+  body.innerHTML = `<div class="kp"><div class="kp-sec" style="margin-top:0">${t('kpEditFor')}${esc(p.name)}</div>
   <div class="kp-form">
-    <div><label>Foto de perfil</label>
+    <div><label>${t('kpPhotoLbl')}</label>
       <div class="kp-photo-row">
         <div class="kp-avatar" style="width:56px;height:56px;font-size:24px">${p.photo ? `<img src="${esc(p.photo)}" alt="">` : kpInitial(p.name)}</div>
         <input type="file" id="kpPhoto" accept="image/jpeg,image/png,image/webp,image/gif" style="font-size:13px">
       </div></div>
-    <div><label>Bio corta (160)</label><input id="kpBio" maxlength="160" value="${esc(p.bio || '')}" placeholder="Una línea sobre ti"></div>
-    <div><label>Ubicación</label><input id="kpLoc" maxlength="60" value="${esc(p.location || '')}" placeholder="Ciudad, País"></div>
-    <div><label>Sitio web</label><input id="kpWeb" maxlength="120" value="${esc(p.website || '')}" placeholder="https://tusitio.com"></div>
-    <div><label>Redes oficiales</label><div class="kp-soc">` +
+    <div><label>${t('kpBioLbl')}</label><input id="kpBio" maxlength="160" value="${esc(p.bio || '')}" placeholder="${t('kpBioPh')}"></div>
+    <div><label>${t('kpLocLbl')}</label><input id="kpLoc" maxlength="60" value="${esc(p.location || '')}" placeholder="${t('kpCityPh')}"></div>
+    <div><label>${t('kpWebLbl')}</label><input id="kpWeb" maxlength="120" value="${esc(p.website || '')}" placeholder="https://tusitio.com"></div>
+    <div><label>${t('kpSocLbl')}</label><div class="kp-soc">` +
     SOCIAL_DEFS.map((d) =>
       `<input id="kpSoc_${d.key}" maxlength="120" value="${esc(s[d.key] || '')}" placeholder="${d.emoji} ${d.label}">`
     ).join('') + `</div></div>
-    <div><label>Acerca de (1000)</label><textarea id="kpAbout" maxlength="1000" placeholder="Cuéntales a tus lectores quién eres…">${esc(p.about || '')}</textarea></div>
+    <div><label>${t('kpAboutLbl')}</label><textarea id="kpAbout" maxlength="1000" placeholder="${t('kpAboutPh')}">${esc(p.about || '')}</textarea></div>
     <div style="display:flex;gap:8px">
-      <button class="btn" id="kpCancel" style="flex:1">Cancelar</button>
-      <button class="btn btn-primary" id="kpSave" style="flex:2">💾 Guardar</button>
+      <button class="btn" id="kpCancel" style="flex:1">${t('btnCancel')}</button>
+      <button class="btn btn-primary" id="kpSave" style="flex:2">${t('kpSaveBtn')}</button>
     </div>
   </div></div>`;
   $('kpCancel').onclick = () => showCreatorProfile(p.name);
@@ -2115,7 +2115,7 @@ function showCreatorEdit(p) {
 }
 async function saveCreatorProfile(name) {
   const btn = $('kpSave');
-  btn.disabled = true; btn.textContent = 'Guardando…';
+  btn.disabled = true; btn.textContent = t('kpSaving');
   const socials = {};
   SOCIAL_DEFS.forEach((d) => { socials[d.key] = ($('kpSoc_' + d.key) || {}).value || ''; });
   try {
@@ -2138,16 +2138,16 @@ async function saveCreatorProfile(name) {
     });
     const d = await r.json().catch(() => ({}));
     if (!d.ok) throw new Error(d.error || 'save-failed');
-    toast('Perfil actualizado ✅');
+    toast(t('kpSaved'));
     showCreatorProfile(name); // recargar
   } catch (e) {
-    const msg = e.message === 'not-owner' ? 'Solo el dueño puede editar este perfil (entra con Google).'
-      : e.message === 'login' ? 'Entra con Google para editar tu perfil.'
-      : e.message === 'too-big' ? 'La foto es muy pesada (máx 2MB).'
-      : e.message === 'bad-type' ? 'La foto debe ser JPG, PNG, WebP o GIF.'
-      : 'No se pudo guardar. Revisa tu conexión.';
+    const msg = e.message === 'not-owner' ? t('kpOwnerOnly')
+      : e.message === 'login' ? t('kpNeedGoogle')
+      : e.message === 'too-big' ? t('kpPhotoHeavy')
+      : e.message === 'bad-type' ? t('kpPhotoType')
+      : t('vrfSaveErr');
     toast(msg);
-    btn.disabled = false; btn.textContent = '💾 Guardar';
+    btn.disabled = false; btn.textContent = t('kpSaveBtn');
   }
 }
 /* Tocar el nombre/avatar de un creador abre su perfil (delegado global,
@@ -2164,10 +2164,10 @@ function vRow(emoji, title, desc, statusHtml, formHtml) {
     `<p class="vrf-desc">${desc}</p>${formHtml || ''}</div>`;
 }
 function vStatus(state, okText, pendText) {
-  if (state === 'ok') return `<span class="vrf-ok">✅ ${okText || 'Verificado'}</span>`;
-  if (state === 'pending') return `<span class="vrf-pend">⏳ ${pendText || 'En revisión'}</span>`;
-  if (state === 'rejected') return `<span class="vrf-no">❌ Rechazado</span>`;
-  return `<span class="vrf-no">⚪ Pendiente</span>`;
+  if (state === 'ok') return `<span class="vrf-ok">✅ ${okText || t('vrfVerified')}</span>`;
+  if (state === 'pending') return `<span class="vrf-pend">⏳ ${pendText || t('vrfInReview')}</span>`;
+  if (state === 'rejected') return `<span class="vrf-no">${t('vrfRejected')}</span>`;
+  return `<span class="vrf-no">${t('vrfPending')}</span>`;
 }
 async function showVerifications() {
   const name = displayName();
@@ -2181,53 +2181,53 @@ async function showVerifications() {
     const d = await r.json();
     if (d.ok) p = d.profile;
   } catch (e) {}
-  if (!p) { body.innerHTML = '<p class="join-note">No se pudo cargar. Revisa tu conexión.</p>'; return; }
+  if (!p) { body.innerHTML = '<p class="join-note">' + t('loadErr') + '</p>'; return; }
   const idSt = p.identity && p.identity.status ? p.identity.status : 'none';
   body.innerHTML =
-    vRow('✔️', 'Creador verificado', 'La insignia azul junto a tu nombre genera confianza.',
-      p.verified ? vStatus('ok') : '<span class="vrf-no">⚪ La otorga el administrador</span>', '') +
-    vRow('📝', 'Originalidad', 'Cada libro que publicas pasa una revisión anti-plagio automática.',
-      vStatus('ok', 'Activa'), '') +
-    vRow('🪪', 'Identidad', 'Confirma quién eres con tu nombre completo y documento.',
+    vRow('✔️', t('vrfRowVerified'), t('vrfRowVerifiedDesc'),
+      p.verified ? vStatus('ok') : `<span class="vrf-no">${t('vrfGrantedByAdmin')}</span>`, '') +
+    vRow('📝', t('vrfRowOriginality'), t('vrfIdHint'),
+      vStatus('ok', t('vrfActive')), '') +
+    vRow('🪪', t('vrfRowIdentity'), t('vrfIdDesc'),
       vStatus(idSt === 'approved' ? 'ok' : idSt),
       idSt === 'approved' ? '' :
-      `<div class="vrf-form"><input id="vIdName" placeholder="Nombre completo" maxlength="80" value="${esc((p.identity && p.identity.fullName) || '')}">` +
-      `<input id="vIdDoc" placeholder="Documento de identidad" maxlength="40">` +
-      `<button class="btn btn-primary" id="vIdSend">Enviar a revisión</button></div>`) +
-    vRow('🔞', 'Clasificación de edad', 'Elige la clasificación al publicar: Todos, +13 o +18.',
-      vStatus('ok', 'Activa'), '') +
-    vRow('🛡️', 'Revisión previa', 'Tus libros salen en la biblioteca tras la aprobación del administrador.',
-      vStatus('ok', 'Activa'), '') +
-    vRow('📧', 'Email verificado', 'Confirma tu correo con el código que te mostramos.',
+      `<div class="vrf-form"><input id="vIdName" placeholder="${t('vrfIdNamePh')}" maxlength="80" value="${esc((p.identity && p.identity.fullName) || '')}">` +
+      `<input id="vIdDoc" placeholder="${t('vrfDocPh')}" maxlength="40">` +
+      `<button class="btn btn-primary" id="vIdSend">${t('vrfSendReview')}</button></div>`) +
+    vRow('🔞', t('vrfRowAge'), t('vrfChooseRating'),
+      vStatus('ok', t('vrfActive')), '') +
+    vRow('🛡️', t('vrfRowPreReview'), t('vrfRowPreReviewDesc'),
+      vStatus('ok', t('vrfActive')), '') +
+    vRow('📧', t('vrfRowEmail'), t('vrfEmailDesc'),
       vStatus(p.emailVerified ? 'ok' : 'none'),
       p.emailVerified ? `<p class="vrf-done">${esc(p.email || '')}</p>` :
       `<div class="vrf-form"><input id="vEmail" type="email" placeholder="tu@correo.com" maxlength="80" value="${esc(p.email || '')}">` +
-      `<button class="btn btn-primary" id="vEmailSend">Enviar código</button>` +
+      `<button class="btn btn-primary" id="vEmailSend">${t('vrfSendCode')}</button>` +
       `<div id="vEmailCodeWrap" class="hidden"><p class="vrf-code" id="vEmailCode"></p>` +
-      `<input id="vEmailCodeIn" placeholder="Código de 6 dígitos" maxlength="6" inputmode="numeric">` +
-      `<button class="btn btn-primary" id="vEmailVerify">Verificar</button></div></div>`) +
-    vRow('📱', 'Teléfono verificado', 'Confirma tu número con el código que te mostramos.',
+      `<input id="vEmailCodeIn" placeholder="${t('vrfCodePh')}" maxlength="6" inputmode="numeric">` +
+      `<button class="btn btn-primary" id="vEmailVerify">${t('vrfVerifyBtn')}</button></div></div>`) +
+    vRow('📱', t('vrfRowPhone'), t('vrfPhoneDesc'),
       vStatus(p.phoneVerified ? 'ok' : 'none'),
       p.phoneVerified ? `<p class="vrf-done">${esc(p.phone || '')}</p>` :
       `<div class="vrf-form"><input id="vPhone" placeholder="+1 555 123 4567" maxlength="20" value="${esc(p.phone || '')}">` +
-      `<button class="btn btn-primary" id="vPhoneSend">Enviar código</button>` +
+      `<button class="btn btn-primary" id="vPhoneSend">${t('vrfSendCode')}</button>` +
       `<div id="vPhoneCodeWrap" class="hidden"><p class="vrf-code" id="vPhoneCode"></p>` +
-      `<input id="vPhoneCodeIn" placeholder="Código de 6 dígitos" maxlength="6" inputmode="numeric">` +
-      `<button class="btn btn-primary" id="vPhoneVerify">Verificar</button></div></div>`) +
-    vRow('🏦', 'Cuenta bancaria', 'Para recibir tus pagos. La verifica el administrador.',
+      `<input id="vPhoneCodeIn" placeholder="${t('vrfCodePh')}" maxlength="6" inputmode="numeric">` +
+      `<button class="btn btn-primary" id="vPhoneVerify">${t('vrfVerifyBtn')}</button></div></div>`) +
+    vRow('🏦', t('vrfRowBank'), t('vrfBankDesc'),
       vStatus(p.bankVerified ? 'ok' : (p.bank ? 'pending' : 'none')),
       p.bankVerified ? `<p class="vrf-done">${esc(p.bank.bank)} ···· ${esc(p.bank.last4)}</p>` :
-      `<div class="vrf-form"><input id="vBankName" placeholder="Banco" maxlength="60">` +
-      `<input id="vBankRout" placeholder="Número de ruta" maxlength="20" inputmode="numeric">` +
-      `<input id="vBankAcct" placeholder="Número de cuenta" maxlength="30" inputmode="numeric">` +
-      `<button class="btn btn-primary" id="vBankSend">Enviar a verificación</button></div>`) +
-    vRow('🧾', 'Datos fiscales', 'Necesarios para tus pagos como creador.',
+      `<div class="vrf-form"><input id="vBankName" placeholder="${t('vrfBankNamePh')}" maxlength="60">` +
+      `<input id="vBankRout" placeholder="${t('vrfBankRoutPh')}" maxlength="20" inputmode="numeric">` +
+      `<input id="vBankAcct" placeholder="${t('vrfBankAcctPh')}" maxlength="30" inputmode="numeric">` +
+      `<button class="btn btn-primary" id="vBankSend">${t('vrfSendVerify')}</button></div>`) +
+    vRow('🧾', t('vrfRowTax'), t('vrfTaxDesc'),
       vStatus(p.taxDone ? 'ok' : 'none'),
-      p.taxDone ? `<p class="vrf-done">Datos registrados</p>` :
-      `<div class="vrf-form"><input id="vTaxName" placeholder="Nombre legal" maxlength="80">` +
-      `<input id="vTaxAddr" placeholder="Dirección" maxlength="120">` +
-      `<input id="vTaxSsn" placeholder="SSN (últimos 4)" maxlength="4" inputmode="numeric">` +
-      `<button class="btn btn-primary" id="vTaxSend">Guardar</button></div>`);
+      p.taxDone ? `<p class="vrf-done">${t('vrfTaxDone')}</p>` :
+      `<div class="vrf-form"><input id="vTaxName" placeholder="${t('vrfTaxNamePh')}" maxlength="80">` +
+      `<input id="vTaxAddr" placeholder="${t('vrfTaxAddrPh')}" maxlength="120">` +
+      `<input id="vTaxSsn" placeholder="${t('vrfTaxSsnPh')}" maxlength="4" inputmode="numeric">` +
+      `<button class="btn btn-primary" id="vTaxSend">${t('vrfSave')}</button></div>`);
   const post = async (url, data) => {
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     return r.json().catch(() => ({}));
@@ -2236,48 +2236,49 @@ async function showVerifications() {
   const bind = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
   bind('vIdSend', async () => {
     const d = await post(`/api/creators/${enc}/identity`, { fullName: $('vIdName').value, docId: $('vIdDoc').value });
-    toast(d.ok ? '🪪 Identidad enviada a revisión' : 'Completa nombre y documento');
+    toast(d.ok ? t('vrfIdSent') : t('vrfNeedId'));
     if (d.ok) showVerifications();
   });
   bind('vEmailSend', async () => {
     const d = await post(`/api/creators/${enc}/email`, { email: $('vEmail').value });
-    if (!d.ok) { toast('Revisa el correo ingresado'); return; }
+    if (!d.ok) { toast(t('vrfBadEmail')); return; }
     $('vEmailCodeWrap').classList.remove('hidden');
-    $('vEmailCode').textContent = 'Tu código (prototipo): ' + d.code;
+    $('vEmailCode').textContent = t('vrfCodeSent') + d.code;
   });
   bind('vEmailVerify', async () => {
     const d = await post(`/api/creators/${enc}/email/verify`, { code: $('vEmailCodeIn').value });
-    toast(d.ok ? '📧 Email verificado' : 'Código incorrecto');
+    toast(d.ok ? t('vrfEmailOk') : t('vrfBadCode'));
     if (d.ok) showVerifications();
   });
   bind('vPhoneSend', async () => {
     const d = await post(`/api/creators/${enc}/phone`, { phone: $('vPhone').value });
-    if (!d.ok) { toast('Revisa el número ingresado'); return; }
+    if (!d.ok) { toast(t('vrfBadPhone')); return; }
     $('vPhoneCodeWrap').classList.remove('hidden');
-    $('vPhoneCode').textContent = 'Tu código (prototipo): ' + d.code;
+    $('vPhoneCode').textContent = t('vrfCodeSent') + d.code;
   });
   bind('vPhoneVerify', async () => {
     const d = await post(`/api/creators/${enc}/phone/verify`, { code: $('vPhoneCodeIn').value });
-    toast(d.ok ? '📱 Teléfono verificado' : 'Código incorrecto');
+    toast(d.ok ? t('vrfPhoneOk') : t('vrfBadCode'));
     if (d.ok) showVerifications();
   });
   bind('vBankSend', async () => {
     const d = await post(`/api/creators/${enc}/bank`, { bank: $('vBankName').value, routing: $('vBankRout').value, account: $('vBankAcct').value });
-    toast(d.ok ? '🏦 Datos enviados a verificación' : 'Completa banco, ruta y cuenta');
+    toast(d.ok ? t('vrfBankSent') : t('vrfNeedBank'));
     if (d.ok) showVerifications();
   });
   bind('vTaxSend', async () => {
     const d = await post(`/api/creators/${enc}/tax`, { legalName: $('vTaxName').value, address: $('vTaxAddr').value, ssn4: $('vTaxSsn').value });
-    toast(d.ok ? '🧾 Datos fiscales guardados' : 'Completa todos los campos (SSN: 4 dígitos)');
+    toast(d.ok ? t('vrfTaxOk') : t('vrfNeedFields'));
     if (d.ok) showVerifications();
   });
 }
 /* ------------------------- 🐛 Reporte de fallos --------------------------
    El usuario reporta lo que no funciona; se guarda en el servidor para
    que Alejandro lo revise en el panel admin. */
-const VIEW_LABELS = { library: 'Biblioteca', room: 'Sala en vivo', join: 'Entrar a sala', writing: 'Escribir', immersive: 'Vista inmersiva' };
+const VIEW_LABELS = { library: 'viewLibrary', room: 'viewRoom', join: 'viewJoin', writing: 'viewWriting', immersive: 'viewImmersive' };
 function showFeedbackModal() {
-  const viewName = VIEW_LABELS[currentView] || currentView || 'Biblioteca';
+  const _vlk = VIEW_LABELS[currentView] || 'viewLibrary';
+  const viewName = (currentView && !VIEW_LABELS[currentView]) ? currentView : t(_vlk);
   $('fbPage').value = viewName;
   $('fbMessage').value = '';
   $('fbName').value = (displayName() && displayName() !== t('joinDefaultName')) ? displayName() : '';
@@ -2285,7 +2286,7 @@ function showFeedbackModal() {
   $('fbCancel').onclick = () => $('feedbackPop').classList.add('hidden');
   $('fbSend').onclick = async () => {
     const message = $('fbMessage').value.trim();
-    if (!message) { toast('Escribe qué no funciona.'); return; }
+    if (!message) { toast(t('fbNeedMsg')); return; }
     $('fbSend').disabled = true;
     try {
       const r = await fetch('/api/feedback', { method: 'POST',
@@ -2294,16 +2295,16 @@ function showFeedbackModal() {
       const d = await r.json().catch(() => ({}));
       if (d && d.ok) {
         $('feedbackPop').classList.add('hidden');
-        toast('✅ Reporte enviado. ¡Gracias!');
-      } else toast('No se pudo enviar. Intenta de nuevo.');
-    } catch (e) { toast('Sin conexión. Intenta de nuevo.'); }
+        toast(t('fbSent'));
+      } else toast(t('fbErr'));
+    } catch (e) { toast(t('fbOffline')); }
     $('fbSend').disabled = false;
   };
 }
 /* ------------------------- 🛡️ Panel admin ------------------------- */
 async function showAdminPanel() {
   const body = $('adminBody');
-  body.innerHTML = '<p class="join-note">Cargando…</p>';
+  body.innerHTML = '<p class="join-note">' + t('loading') + '</p>';
   $('adminPop').classList.remove('hidden');
   $('adminClose').onclick = () => $('adminPop').classList.add('hidden');
   let d = null;
@@ -2311,34 +2312,34 @@ async function showAdminPanel() {
     const r = await fetch('/api/admin/pending?admin=' + encodeURIComponent(displayName()));
     d = await r.json();
   } catch (e) {}
-  if (!d || !d.ok) { body.innerHTML = '<p class="join-note">Sin acceso.</p>'; return; }
+  if (!d || !d.ok) { body.innerHTML = '<p class="join-note">' + t('admNoAccess') + '</p>'; return; }
   const post = async (url, data) => {
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     return r.json().catch(() => ({}));
   };
   const admin = displayName();
   let html = '';
-  html += `<h4>📚 Libros en revisión (${d.pendingBooks.length})</h4>`;
+  html += `<h4>${t('admBooks', { n: d.pendingBooks.length })}</h4>`;
   html += d.pendingBooks.length ? d.pendingBooks.map((b) =>
-    `<div class="adm-row"><span><b>${esc(b.title)}</b> · ${esc(b.author)} · ${b.ageRating === '18' ? '+18' : b.ageRating === '13' ? '+13' : 'Todos'}</span>` +
-    `<span><button class="btn btn-primary" data-adm="book-ok" data-id="${esc(b.id)}">Aprobar</button> ` +
-    `<button class="btn" data-adm="book-no" data-id="${esc(b.id)}">Rechazar</button></span></div>`
-  ).join('') : '<p class="join-note">Nada pendiente.</p>';
-  html += `<h4>🪪 Identidades (${d.pendingIdentity.length})</h4>`;
+    `<div class="adm-row"><span><b>${esc(b.title)}</b> · ${esc(b.author)} · ${b.ageRating === '18' ? '+18' : b.ageRating === '13' ? '+13' : t('ageAll')}</span>` +
+    `<span><button class="btn btn-primary" data-adm="book-ok" data-id="${esc(b.id)}">${t('admApprove')}</button> ` +
+    `<button class="btn" data-adm="book-no" data-id="${esc(b.id)}">${t('admReject')}</button></span></div>`
+  ).join('') : '<p class="join-note">' + t('admNothing') + '</p>';
+  html += `<h4>${t('admIdentities', { n: d.pendingIdentity.length })}</h4>`;
   html += d.pendingIdentity.length ? d.pendingIdentity.map((c) =>
     `<div class="adm-row"><span><b>${esc(c.name)}</b> · ${esc(c.fullName)} · doc ${esc(c.docId)}</span>` +
-    `<span><button class="btn btn-primary" data-adm="id-ok" data-id="${esc(c.name)}">Aprobar</button> ` +
-    `<button class="btn" data-adm="id-no" data-id="${esc(c.name)}">Rechazar</button></span></div>`
-  ).join('') : '<p class="join-note">Nada pendiente.</p>';
-  html += `<h4>🏦 Cuentas bancarias (${d.pendingBank.length})</h4>`;
+    `<span><button class="btn btn-primary" data-adm="id-ok" data-id="${esc(c.name)}">${t('admApprove')}</button> ` +
+    `<button class="btn" data-adm="id-no" data-id="${esc(c.name)}">${t('admReject')}</button></span></div>`
+  ).join('') : '<p class="join-note">' + t('admNothing') + '</p>';
+  html += `<h4>${t('admBanks', { n: d.pendingBank.length })}</h4>`;
   html += d.pendingBank.length ? d.pendingBank.map((c) =>
     `<div class="adm-row"><span><b>${esc(c.name)}</b> · ${esc(c.bank)} ···· ${esc(c.last4)}</span>` +
-    `<span><button class="btn btn-primary" data-adm="bank-ok" data-id="${esc(c.name)}">Verificar</button></span></div>`
-  ).join('') : '<p class="join-note">Nada pendiente.</p>';
+    `<span><button class="btn btn-primary" data-adm="bank-ok" data-id="${esc(c.name)}">${t('vrfVerifyBtn')}</button></span></div>`
+  ).join('') : '<p class="join-note">' + t('admNothing') + '</p>';
   /* 🐛 Reportes de fallos */
-  html += `<h4>🐛 Reportes de fallos <span id="fbPendingBadge"></span></h4><div id="fbList"><p class="join-note">Cargando…</p></div>`;
-  html += `<h4>✔️ Creador verificado</h4><div class="vrf-form"><input id="admVName" placeholder="Nombre del creador" maxlength="60">` +
-    `<button class="btn btn-primary" id="admVTog">Otorgar / quitar insignia</button></div>`;
+  html += `<h4>${t('admBugs')} <span id="fbPendingBadge"></span></h4><div id="fbList"><p class="join-note">${t('loading')}</p></div>`;
+  html += `<h4>${t('admVerifyCreator')}</h4><div class="vrf-form"><input id="admVName" placeholder="${t('admCreatorNamePh')}" maxlength="60">` +
+    `<button class="btn btn-primary" id="admVTog">${t('admToggleBadge')}</button></div>`;
   body.innerHTML = html;
   loadAdminFeedback();
   body.querySelectorAll('button[data-adm]').forEach((btn) => {
@@ -2351,16 +2352,16 @@ async function showAdminPanel() {
         r2 = await post('/api/admin/identity/review', { admin, name: id, approved: kind === 'id-ok' });
       else if (kind === 'bank-ok')
         r2 = await post('/api/admin/bank/verify', { admin, name: id, verified: true });
-      toast(r2.ok ? 'Hecho' : 'No se pudo');
+      toast(r2.ok ? t('admDone') : t('admFail'));
       if (r2.ok) { showAdminPanel(); showLibrary(false); }
     };
   });
   const vt = $('admVTog');
   if (vt) vt.onclick = async () => {
     const nm = $('admVName').value.trim();
-    if (!nm) { toast('Escribe el nombre del creador'); return; }
+    if (!nm) { toast(t('admNeedCreator')); return; }
     const r2 = await post('/api/admin/creator/verify', { admin, name: nm, verified: true });
-    toast(r2.ok ? `✔️ ${nm} verificado` : 'No se pudo');
+    toast(r2.ok ? t('admVerified', { name: nm }) : t('admFail'));
   };
 }
 /* 🐛 Carga los reportes de fallos en el panel admin */
@@ -2377,15 +2378,15 @@ async function loadAdminFeedback() {
   const list = d.feedback || [];
   const nuevos = list.filter((f) => f.status === 'nuevo').length;
   if (badge) badge.textContent = nuevos > 0 ? `(${nuevos} nuevos)` : '';
-  if (!list.length) { box.innerHTML = '<p class="join-note">Sin reportes. 🎉</p>'; return; }
-  const stLabel = { nuevo: '🆕 Nuevo', leido: '👁️ Leído', resuelto: '✅ Resuelto' };
+  if (!list.length) { box.innerHTML = '<p class="join-note">' + t('admNoReports') + '</p>'; return; }
+  const stLabel = { nuevo: '🆕 Nuevo', leido: t('admRead'), resuelto: '✅ Resuelto' };
   box.innerHTML = list.map((f) =>
     `<div class="fb-card fb-${f.status}">` +
     `<div class="fb-head"><span class="fb-st">${stLabel[f.status] || f.status}</span>` +
-    `<span class="fb-meta">${esc(f.page || '')} · ${esc(f.name || 'Anónimo')} · ${relTime(f.ts)}</span></div>` +
+    `<span class="fb-meta">${esc(f.page || '')} · ${esc(f.name || t('anonymous'))} · ${relTime(f.ts)}</span></div>` +
     `<p class="fb-msg">${esc(f.message)}</p>` +
     `<div class="fb-actions">` +
-    (f.status !== 'leido' ? `<button class="btn btn-sm" data-fb="leido" data-id="${f.id}">Marcar leído</button>` : '') +
+    (f.status !== 'leido' ? `<button class="btn btn-sm" data-fb="leido" data-id="${f.id}">${t('admMarkRead')}</button>` : '') +
     (f.status !== 'resuelto' ? `<button class="btn btn-sm btn-primary" data-fb="resuelto" data-id="${f.id}">Resuelto</button>` : '') +
     `</div></div>`
   ).join('');
@@ -2393,13 +2394,13 @@ async function loadAdminFeedback() {
     btn.onclick = async () => {
       const r2 = await post('/api/admin/feedback/' + encodeURIComponent(btn.dataset.id) + '/status',
         { admin: displayName(), status: btn.dataset.fb });
-      toast(r2.ok ? 'Hecho' : 'No se pudo');
+      toast(r2.ok ? t('admDone') : t('admFail'));
       if (r2.ok) loadAdminFeedback();
     };
   });
 }
 function ratingHtml(b) {
-  return `<span class="tile-rating" data-book="${esc(b.id)}" title="Ver / dejar reseña">${ratingText(b)}</span>`;
+  return `<span class="tile-rating" data-book="${esc(b.id)}" title="${t('revViewTitle')}">${ratingText(b)}</span>`;
 }
 let reviewBookId = null, reviewStars = 5;
 function showReviewModal(bookId, bookTitle) {
@@ -2425,16 +2426,16 @@ function paintReviewStars() {
 }
 async function loadBookReviews(bookId) {
   const list = $('reviewList');
-  list.innerHTML = '<p class="join-note">Cargando reseñas…</p>';
+  list.innerHTML = '<p class="join-note">' + t('revLoading') + '</p>';
   try {
     const r = await fetch('/api/books/' + encodeURIComponent(bookId) + '/reviews', { cache: 'no-store' });
     const d = await r.json();
     if (!d.ok) throw 0;
-    if (!d.reviews.length) { list.innerHTML = '<p class="join-note">Aún no hay reseñas. ¡Sé el primero!</p>'; return; }
+    if (!d.reviews.length) { list.innerHTML = '<p class="join-note">' + t('revEmpty') + '</p>'; return; }
     list.innerHTML = d.reviews.map((x) =>
       `<div class="review-item"><b>${esc(x.name)}</b> <span class="r-stars">${'★'.repeat(x.stars)}${'☆'.repeat(5 - x.stars)}</span>` +
       (x.comment ? `<p>${esc(x.comment)}</p>` : '') + `</div>`).join('');
-  } catch (e) { list.innerHTML = '<p class="join-note">No se pudieron cargar las reseñas.</p>'; }
+  } catch (e) { list.innerHTML = '<p class="join-note">' + t('revErr') + '</p>'; }
 }
 function initReviews() {
   $('reviewCancel').onclick = () => $('reviewPop').classList.add('hidden');
@@ -2449,10 +2450,10 @@ function initReviews() {
       });
       const d = await r.json();
       if (!d.ok) throw 0;
-      toast('¡Gracias por tu reseña! ⭐');
+      toast(t('revThanks'));
       $('reviewPop').classList.add('hidden');
       refreshBookRating(reviewBookId, d.avg, d.count);
-    } catch (e) { toast('No se pudo guardar la reseña — revisa tu conexión'); }
+    } catch (e) { toast(t('revSaveErr')); }
     $('reviewSave').disabled = false;
   };
 }
@@ -2463,20 +2464,23 @@ function refreshBookRating(bookId, avg, count) {
 }
 /* ------------------------------ 🚩 reportes ------------------------------
    Botón discreto en tarjetas e inmersiva; modal con motivos; 3+ = insignia. */
-const REPORT_REASONS = [
-  ['no-original', 'No es un libro original del autor'],
-  ['copyright', 'Tiene derechos de autor (es un libro comercial)'],
-  ['dominio-publico', 'Es de dominio público'],
-  ['copiado', 'Contenido copiado de otro creador'],
-  ['otro', 'Otro motivo'],
-];
+function reportReasons() {
+  return [
+    ['no-original', t('repR1')],
+    ['copyright', t('repR2')],
+    ['dominio-publico', t('repR3')],
+    ['copiado', t('repR4')],
+    ['otro', t('repROther')],
+  ];
+}
+
 const REPORT_THRESHOLD = 3;
 function reportBadge(b) {
   return (b.reports || 0) >= REPORT_THRESHOLD
-    ? `<div class="report-badge">⚠️ Reportado por la comunidad</div>` : '';
+    ? `<div class="report-badge">${t('repBadge')}</div>` : '';
 }
 function reportBtnHtml(b) {
-  return `<span class="tile-report" data-book="${esc(b.id)}" title="Reportar este libro">🚩</span>`;
+  return `<span class="tile-report" data-book="${esc(b.id)}" title="${t('repBtnTitle')}">🚩</span>`;
 }
 let reportBookId = null, reportReason = 'no-original';
 function showReportModal(bookId, bookTitle) {
@@ -2486,7 +2490,7 @@ function showReportModal(bookId, bookTitle) {
   $('reportOtherWrap').classList.add('hidden');
   const box = $('reportReasons');
   box.innerHTML = '';
-  REPORT_REASONS.forEach(([key, label]) => {
+  reportReasons().forEach(([key, label]) => {
     const row = document.createElement('label');
     row.className = 'plan-row' + (key === reportReason ? ' sel' : '');
     row.innerHTML = `<input type="radio" name="rreason" value="${key}" ${key === reportReason ? 'checked' : ''}>` +
@@ -2511,7 +2515,7 @@ function initReports() {
     if (!reportBookId) return;
     syncNameFromLib();
     if (reportReason === 'otro' && !$('reportOther').value.trim()) {
-      toast('Escribe el motivo del reporte'); return;
+      toast(t('repNeedReason')); return;
     }
     $('reportSave').disabled = true;
     try {
@@ -2521,16 +2525,16 @@ function initReports() {
       });
       const d = await r.json();
       if (!d.ok) {
-        if (d.error === 'duplicate') toast('Ya reportaste este libro');
+        if (d.error === 'duplicate') toast(t('repAlready'));
         else throw 0;
       } else {
         toast(d.count >= REPORT_THRESHOLD
-          ? 'Reporte enviado. Este libro ya tiene ' + d.count + ' reportes.'
-          : 'Reporte enviado. Gracias por cuidar la comunidad.');
+          ? t('repSentN') + d.count + '.'
+          : t('repSentThanks'));
         refreshBookReports(reportBookId, d.count);
       }
       $('reportPop').classList.add('hidden');
-    } catch (e) { toast('No se pudo enviar el reporte — revisa tu conexión'); }
+    } catch (e) { toast(t('repErr')); }
     $('reportSave').disabled = false;
   };
 }
@@ -3377,7 +3381,7 @@ async function showFeature(b) {
   featurePlan = 'week';
   $('featureBookTitle').textContent = b.title;
   // precios del servidor
-  let prices = { day: 499, week: 2499 };
+  let prices = { day: 199, week: 799, month: 1999 };
   try {
     const r = await fetch('/api/feature-prices');
     const d = await r.json();
