@@ -1291,13 +1291,18 @@ function t(key, vars) {
   }
   return s;
 }
+/* ¿Existe la clave en algún diccionario? (evita pintar la clave cruda si el JS va desfasado del HTML) */
+function hasKey(key) {
+  const pack = I18N[UI_LANG] || {};
+  return (key in pack) || (I18N.es[key] !== undefined);
+}
 /* Aplica data-i18n* a todo el DOM estático */
 function applyStaticI18n() {
-  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
-  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
-  document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
-  document.querySelectorAll('[data-i18n-title]').forEach((el) => { el.title = t(el.dataset.i18nTitle); });
-  document.title = t('docTitle');
+  document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.dataset.i18n; if (hasKey(k)) el.textContent = t(k); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { const k = el.dataset.i18nHtml; if (hasKey(k)) el.innerHTML = t(k); });
+  document.querySelectorAll('[data-i18n-ph]').forEach((el) => { const k = el.dataset.i18nPh; if (hasKey(k)) el.placeholder = t(k); });
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => { const k = el.dataset.i18nTitle; if (hasKey(k)) el.title = t(k); });
+  if (hasKey('docTitle')) document.title = t('docTitle');
   try { document.documentElement.lang = UI_LANG; } catch (e) {}
   updateLangUI();
 }
