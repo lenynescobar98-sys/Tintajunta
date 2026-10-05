@@ -2710,8 +2710,17 @@ function visibleBooks(list) {
   else if (libPill === 'nuevos') l = l.filter(isNewBook);
   else if (libPill === 'populares') l = l.filter((b) => popularity(b) > 0);
   if (libLang) l = l.filter((b) => (b.language || 'es') === libLang);
-  l.sort((a, b) => popularity(b) - popularity(a) || b.createdAt - a.createdAt);
+  // v101: español primero, inglés segundo, los demás idiomas después
+  l.sort((a, b) => langPriority(a.language) - langPriority(b.language)
+    || popularity(b) - popularity(a) || b.createdAt - a.createdAt);
   return l;
+}
+/* Prioridad de idioma para ordenar: es → en → resto */
+function langPriority(lang) {
+  const l = (lang || 'es').toLowerCase();
+  if (l === 'es') return 0;
+  if (l === 'en') return 1;
+  return 2;
 }
 /* Tarjeta de portada para filas horizontales (estilo Tubi) */
 function coverTile(b, opts) {
@@ -2818,8 +2827,10 @@ function renderRows() {
   fillRow('rowRecomendados',
     rec.map((b) => coverTile(b, {})),
     libQuery ? t('noResults') : t('publishFirst'));
-  // 📜 Clásicos gratis: dominio público, sin creador
-  const cls = libBooksCache.filter((b) => b.classic);
+  // 📜 Clásicos gratis: dominio público, sin creador (v101: es → en → resto)
+  const cls = libBooksCache.filter((b) => b.classic)
+    .sort((a, b) => langPriority(a.language) - langPriority(b.language)
+      || popularity(b) - popularity(a) || b.createdAt - a.createdAt);
   const secC = document.getElementById('secClassics');
   if (secC) secC.style.display = cls.length ? '' : 'none';
   fillRow('rowClassics', cls.map((b) => coverTile(b, {})), '');
