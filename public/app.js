@@ -2725,8 +2725,8 @@ function langPriority(lang) {
 /* Tarjeta de portada para filas horizontales (estilo Tubi) */
 function coverTile(b, opts) {
   opts = opts || {};
-  const t = document.createElement('div');
-  t.className = 'tile';
+  const tile = document.createElement('div'); // v101: era `t` y tapaba la función i18n t() → TypeError en clásicos/propios/con portada
+  tile.className = 'tile';
   const mine = b.author === displayName() && myName !== t('joinDefaultName');
   const vBadge = b.verifiedAuthor ? '<span class="vbadge" title="' + t('creatorVerifiedTitle') + '">✔️</span>' : '';
   const classicBadge = b.classic ? '<div class="classic-badge">' + t('classicBadge') + '</div>' : '';
@@ -2736,7 +2736,7 @@ function coverTile(b, opts) {
   const cover = b.coverUrl
     ? `<img src="${esc(b.coverUrl)}" alt="${t('kpCoverAlt', { title: esc(b.title) })}" loading="lazy">`
     : `<div style="position:absolute;inset:0;${coverStyle(b.id)}"></div>`;
-  t.innerHTML =
+  tile.innerHTML =
     `<div class="tile-cover">${cover}` +
     (opts.badge ? `<div class="feat-badge">${opts.badge}</div>` : '') +
     pendBadge + classicBadge + ageBadge + langBadge(b) +
@@ -2748,7 +2748,7 @@ function coverTile(b, opts) {
     `<div class="tile-sub">🎨 ${b.marks || 0} · ${ratingHtml(b)}` +
     (mine && !opts.badge ? ` · <u class="tile-feat">⭐ destacar</u>` : '') +
     ` · ${reportBtnHtml(b)}</div>`;
-  t.onclick = (e) => {
+  tile.onclick = (e) => {
     if (e.target.classList && e.target.classList.contains('tile-feat')) {
       e.stopPropagation(); showFeature(b); return;
     }
@@ -2760,7 +2760,7 @@ function coverTile(b, opts) {
     }
     opts.onClick ? opts.onClick() : openBook(b.id);
   };
-  return t;
+  return tile;
 }
 function fillRow(elId, tiles, emptyMsg) {
   const row = document.getElementById(elId);
