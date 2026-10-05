@@ -1956,7 +1956,13 @@ async function initAds() {
 }
 /* Orden de la lista: popularidad | titulo | precio */
 let libSort = 'popularidad';
-let libPill = localStorage.getItem('tj_pill') || 'todos'; // todos|destacados|nuevos|populares
+const LIB_PILLS = ['todos', 'destacados', 'nuevos', 'populares'];
+let libPill = localStorage.getItem('tj_pill') || 'todos';
+// v100: sanea pills obsoletas (ej. 'gratis' de antes de quitar la venta) — sin pill válida ninguna quedaba activa
+if (!LIB_PILLS.includes(libPill)) {
+  libPill = 'todos';
+  try { localStorage.setItem('tj_pill', 'todos'); } catch (e) {}
+}
 let libLang = localStorage.getItem('tj_lang') || ''; // '' = todos los idiomas
 const LANG_FLAGS = { es: '🇪🇸', en: '🇬🇧', fr: '🇫🇷', pt: '🇵🇹', ar: '🇸🇦', it: '🇮🇹', de: '🇩🇪', ru: '🇷🇺', ja: '🇯🇵', el: '🇬🇷' };
 function langBadge(b) {
