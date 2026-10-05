@@ -281,6 +281,27 @@ function seedBooks() {
 }
 loadBooks();
 
+/* Backfill de portadas de clásicos: si el volumen de datos persistente trae
+ * un books.json anterior a las portadas HD (coverUrl null), se reconstruye
+ * desde public/covers/<id>.webp. Autocura despliegues con datos viejos. */
+function backfillClassicCovers() {
+  const coversDir = path.join(__dirname, 'public', 'covers');
+  let fixed = 0;
+  for (const b of books.values()) {
+    if (b.classic && !b.coverUrl && typeof b.id === 'string' && /^[A-Z]{6}$/.test(b.id)) {
+      if (fs.existsSync(path.join(coversDir, b.id + '.webp'))) {
+        b.coverUrl = '/covers/' + b.id + '.webp';
+        fixed++;
+      }
+    }
+  }
+  if (fixed > 0) {
+    saveBooks();
+    console.log(`[tintajunta] portadas de clásicos restauradas: ${fixed}`);
+  }
+}
+backfillClassicCovers();
+
 let saveTimer = null;
 function save() {
   clearTimeout(saveTimer);
