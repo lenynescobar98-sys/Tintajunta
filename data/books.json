@@ -3,7 +3,7 @@
   "id": "BEUVHA",
   "title": "La tinta compartida",
   "author": "TintaJunta",
-  "price": 299,
+  "price": 0,
   "createdAt": 1790972823172,
   "chapters": [
    {
@@ -1202,7 +1202,7 @@
   "title": "El tren de las once",
   "author": "Lucía Fernanda Ríos",
   "description": "Elena pierde el tren de las ocho a propósito cada mañana para coincidir con el desconocido del andén 3. Lo que no sabe es que él también llega tarde por ella.",
-  "price": 299,
+  "price": 0,
   "createdAt": 1791206432465,
   "sales": 0,
   "status": "approved",
@@ -1225,7 +1225,7 @@
   "title": "La casa de los relojes muertos",
   "author": "Emilio Vargas Cruz",
   "description": "Un relojero hereda una mansión donde todos los relojes se detuvieron a las 3:33. Para venderla, primero tendrá que descubrir qué pasó aquella noche.",
-  "price": 399,
+  "price": 0,
   "createdAt": 1791206432465,
   "sales": 0,
   "status": "approved",
@@ -1248,7 +1248,7 @@
   "title": "Hija de la luna creciente",
   "author": "Valeria Montiel",
   "description": "En un reino donde la magia se apaga con cada luna llena, una joven descubre que su sombra guarda el último hechizo del mundo.",
-  "price": 499,
+  "price": 0,
   "createdAt": 1791206432465,
   "sales": 0,
   "status": "approved",
@@ -1294,7 +1294,7 @@
   "title": "El arte de empezar de cero",
   "author": "Carolina Duarte",
   "description": "Perdí mi trabajo, mi casa y mi rutina en un mismo año. Este libro es el mapa que me habría gustado tener: 21 pasos para reconstruirte sin prisa y sin culpa.",
-  "price": 199,
+  "price": 0,
   "createdAt": 1791206432465,
   "sales": 0,
   "status": "approved",
@@ -1317,7 +1317,7 @@
   "title": "Señal perdida",
   "author": "Marco Antonio Vega",
   "description": "Una operadora de radio nocturna recibe una transmisión de su propio futuro. El mensaje tiene solo siete palabras: «No contestes la llamada de mañana».",
-  "price": 399,
+  "price": 0,
   "createdAt": 1791206432465,
   "sales": 0,
   "status": "approved",
@@ -1340,7 +1340,7 @@
   "title": "Lo que la niebla esconde",
   "author": "Isabel Fuentes Rojas",
   "description": "Cada otoño, la niebla baja al pueblo de San Miguel y alguien desaparece. Este año, la niebla llegó dos semanas antes.",
-  "price": 299,
+  "price": 0,
   "createdAt": 1791206432465,
   "sales": 0,
   "status": "approved",
@@ -1386,7 +1386,7 @@
   "title": "Cartas que nunca envié",
   "author": "Sofía Hernández Luna",
   "description": "Durante diez años le escribí a mi padre una carta cada domingo y nunca envié ninguna. Esta es la historia de todo lo que no nos dijimos.",
-  "price": 199,
+  "price": 0,
   "createdAt": 1791206432465,
   "sales": 0,
   "status": "approved",
@@ -1423,6 +1423,694 @@
      "La abuela los riega uno por uno, con mucho cuidado. —Crece, sueñito, crece —les susurra—. Mañana tienes que estar listo para tu niño.",
      "Una noche, Nico —el más pequeño del barrio— se despertó con sed y vio por la ventana a la abuela regando. Al día siguiente le preguntó: —Abuela, ¿mi sueño de anoche era el del dinosaurio bueno? La abuela guiñó un ojo. —Era el más verde de todos, mi amor. Creció hermoso.",
      "Desde entonces, cada noche antes de dormir, los niños de la calle Olivos cierran los ojos y piensan en algo bonito, para que la abuela Rosa tenga la semilla más linda que regar."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "FRN1",
+  "title": "La Lettre de Novembre",
+  "author": "Camille Desroches",
+  "description": "Une enveloppe sans timbre, glissée sous la porte d'une librairie, bouleverse la vie tranquille d'Élodie. Une romance douce sur le courage d'aimer et les belles histoires qui commencent par hasard.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "fr",
+  "chapters": [
+   {
+    "title": "Chapitre 1 — Une enveloppe sans timbre",
+    "paragraphs": [
+     "Chaque matin d'automne, Élodie traversait le square Saint-Pierre pour rejoindre la librairie où elle travaillait depuis six ans. Ce mardi-là, pourtant, quelque chose l'arrêta devant la vieille boîte aux lettres bleue : une enveloppe crème, sans timbre ni adresse, glissée à moitié sous la porte de la librairie. Son prénom y était écrit d'une écriture élégante qu'elle ne reconnaissait pas.",
+     "À l'intérieur, une seule phrase : « Vous souriez quand vous lisez, et cela m'a donné envie de vous écrire. » Élodie relut la phrase trois fois, le cœur battant, cherchant dans sa mémoire un visage, une voix, un client régulier qui aurait pu l'observer ainsi. La librairie était petite, mais des dizaines de visages défilaient chaque semaine entre les rayons.",
+     "Elle décida de ne rien dire à personne, gardant l'enveloppe dans le tiroir de son bureau comme un secret précieux. Les jours suivants, elle surprit son propre reflet dans la vitrine, guettant un sourire qu'elle ne savait plus quand elle avait esquissé. Qui pouvait la regarder lire avec tant d'attention, et depuis combien de temps ?",
+     "Le vendredi, une deuxième enveloppe l'attendait, cette fois posée sur le comptoir : « Demain, à dix-huit heures, le banc près du grand tilleul. Je porterai un livre rouge. » Élodie sentit ses mains trembler. Elle ne savait pas si elle irait, mais elle savait déjà qu'elle ne dormirait pas de la nuit.",
+     "Ce soir-là, elle choisit sa robe bleue, celle qu'elle n'avait pas portée depuis des années, et se demanda si le courage ressemblait à cela : un battement de cœur un peu trop fort, et l'envie irrésistible de croire qu'une belle histoire pouvait encore commencer."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "FRN2",
+  "title": "Le Dernier Train de Minuit",
+  "author": "Julien Marchand",
+  "description": "Un homme retrouvé mort dans un train parti vide, un billet pour une destination qui n'existe pas. Le commissaire Aubert enquête sur un mystère qui défie toute logique.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "fr",
+  "chapters": [
+   {
+    "title": "Chapitre 1 — Le quai numéro neuf",
+    "paragraphs": [
+     "Le commissaire Aubert détestait les gares la nuit, avec leurs néons fatigués et leurs annonces qui résonnent dans le vide. Pourtant, ce jeudi à minuit passé, c'est bien sur le quai numéro neuf qu'on l'avait appelé : un homme gisait entre deux wagons du dernier train, et personne ne l'avait vu monter. Le contrôleur jurait que le train était parti vide de voyageurs.",
+     "La victime, un certain Léo Varin, tenait encore dans sa main fermée un billet composté pour une destination qui n'existait sur aucune carte : « Valbriant ». Aubert connaissait chaque ligne du réseau par cœur, et ce nom ne lui disait absolument rien. Le billet, lui, semblait authentique : même papier, même encre, même perforation.",
+     "« Personne ne monte dans un train fantôme par hasard », murmura l'inspectrice Nadia Selmi en photographiant la scène. Elle remarqua alors un détail que les autres avaient manqué : sous le banc du wagon, une valise neuve, vide, portant une étiquette au même nom inconnu. Valbriant revenait comme un refrain que personne n'osait chanter.",
+     "Aubert décida de garder l'affaire pour lui quelques jours, le temps de comprendre. Il passa la nuit dans les archives de la compagnie, feuilletant des registres vieux d'un siècle, jusqu'à ce qu'une carte jaunie lui arrache un frisson : Valbriant y figurait, entouré d'un cercle rouge, avec une mention manuscrite : « ligne fermée après l'accident de 1924 ».",
+     "Dehors, un train siffla dans la nuit, bien qu'aucun départ ne fût prévu avant l'aube. Aubert leva les yeux vers le quai numéro neuf, désert et silencieux, et comprit soudain que cette enquête ne ressemblerait à aucune autre."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ENN1",
+  "title": "The Signal from Kepler",
+  "author": "Marcus Ellery",
+  "description": "A deep-space listening station picks up a signal that has been broadcasting for forty years — and it's counting down. Dr. Mara Okonkwo must decide who to trust when the silence between stars starts answering back.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "en",
+  "chapters": [
+   {
+    "title": "Chapter 1 — Static",
+    "paragraphs": [
+     "Dr. Mara Okonkwo had spent eleven years listening to the silence between stars, and she knew every shade of cosmic noise the way a sailor knows the sea. That Tuesday, at 03:14 ship time, the array on Kepler Station picked up something that was not noise at all: a repeating pulse, too regular for nature and too patient for anything human. It had been broadcasting for at least four decades.",
+     "The signal came from the direction of Kepler-442, a quiet orange dwarf nearly twelve hundred light-years away, and it carried structure — prime numbers first, then something stranger: a slow, deliberate countdown. Mara ran the analysis three times before she allowed herself to believe the numbers on the screen. Whatever was out there knew how to count, and it wanted to be heard.",
+     "Protocol demanded she report the finding to the Consortium before doing anything else, but the countdown troubled her in a way she could not explain to a committee. It was decreasing too slowly for a warning and too steadily for a coincidence, as if the sender were measuring time on a scale humans had never considered. She copied the raw data onto a private drive, telling herself it was only a backup.",
+     "That night she dreamed of an ocean made of glass, and of something vast moving beneath it, patient as geology. When she woke, the countdown had dropped by exactly one, and a new layer had appeared in the signal: a pattern her software flagged as language-like, though no dictionary on Earth could parse it. Mara stared at the waveform until her eyes burned.",
+     "By morning, the private drive was gone from her locker, and a message waited on her terminal from an address that did not exist: 'You heard us first. Come alone to Dock 7.' Mara looked out at the stars wheeling past the viewport and understood, with sudden cold clarity, that the silence between stars had never been empty at all."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "PTN1",
+  "title": "O Café da Esquina",
+  "author": "Inês Almeida",
+  "description": "Um pedido trocado num café de bairro transforma-se no melhor engano da vida de Beatriz. Um romance doce sobre encontros inesperados e segundas oportunidades.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "pt",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — O pedido errado",
+    "paragraphs": [
+     "Beatriz entrou no café da esquina numa tarde de chuva, só para se abrigar, e saiu de lá com o coração um pouco mais leve do que quando entrara. O atendente, um rapaz de sorriso fácil chamado Rafael, trocou o pedido dela por engano e serviu-lhe um chocolate quente com canela em vez do café preto. Ela ia reclamar, mas o cheiro doce a fez mudar de ideia.",
+     "Nos dias seguintes, Beatriz deu por si a inventar desculpas para passar pelo café: uma carta para enviar, um livro para devolver, uma simples vontade de caminhar mais devagar. Rafael já sabia o pedido dela de cor e desenhava pequenas folhas na espuma do chocolate, como quem assina uma obra de arte efémera. Conversavam de livros, de filmes e da chuva que não dava tréguas.",
+     "Numa sexta-feira, ele escreveu um bilhete no guardanapo: «Amanhã faço anos. Aparece às sete? Vou fechar o café só para nós dois.» Beatriz dobrou o guardanapo com cuidado e guardou-o na carteira, entre as fotografias antigas. Passou a noite inteira a escolher o vestido, rindo sozinha da própria ansiedade.",
+     "O café, à luz das velas, parecia um lugar inventado para eles: Rafael cozinhara massa à bolonhesa, queimara ligeiramente o pão e servira o chocolate quente de sempre para a sobremesa. Riram até tarde, e quando a chuva recomeçou lá fora, nenhum dos dois teve pressa de ir embora. Havia um silêncio confortável entre as palavras, como uma música baixa.",
+     "Meses depois, Beatriz ainda pedia chocolate quente com canela, mesmo nos dias de calor, e Rafael ainda desenhava folhas na espuma. Dizem os frequentadores do café que o pedido errado foi o melhor engano da história daquela esquina — e nenhum dos dois discorda."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "PTN2",
+  "title": "O Reino das Marés",
+  "author": "Tiago Ferraz",
+  "description": "Uma concha que canta, uma maré que desobedece e um reino adormecido sob as ondas. Maya tem três noites para salvar a sua aldeia — e descobrir quem realmente é.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "pt",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — A concha que cantava",
+    "paragraphs": [
+     "Maya encontrou a concha na praia ao amanhecer, meio enterrada na areia molhada, e jurou que ouvira o seu nome sussurrado lá de dentro. Não era o som oco do mar que as conchas costumam guardar: era uma melodia antiga, cantada numa língua que ela nunca aprendera e, ainda assim, compreendia. Escondeu-a no bolso do casaco antes que alguém a visse.",
+     "Naquela noite, a maré subiu mais do que em qualquer noite de que a aldeia se lembrasse, e as águas pararam mesmo à porta da casa de Maya, como um cão obediente à espera do dono. A avó, pálida, contou-lhe então a lenda que todos julgavam esquecida: debaixo das ondas dormia o Reino das Marés, e só uma concha cantora podia acordar a sua rainha. A família de Maya guardava esse segredo há sete gerações.",
+     "A concha aqueceu na mão de Maya e a melodia tornou-se mais clara, transformando-se em palavras: «Devolve-me ao mar antes da lua cheia, ou a maré levará a aldeia.» Maya sentiu as pernas tremerem, mas também uma coragem estranha, antiga, como se o sangue das suas antepassadas corresse mais depressa nas veias. Tinha três noites para decidir o que fazer.",
+     "No dia seguinte, arranjou um pequeno barco e remou sozinha até à gruta das gaivotas, onde a avó dissera que o véu entre os mundos era mais fino. A água dentro da gruta brilhava com uma luz verde-azulada, e formas imensas moviam-se devagar lá no fundo, pacientes como montanhas. Maya ergueu a concha bem alto e cantou de volta a melodia, com a voz a tremer.",
+     "O mar respondeu com um rugido suave, e uma onda morna envolveu o barco sem o virar, depositando aos pés de Maya uma coroa de coral e madrepérola. Quando olhou para a aldeia, a maré já recuava mansamente, como se nada tivesse acontecido. Mas Maya sabia que, a partir daquela noite, o mar a conhecia pelo nome — e nunca mais a deixaria partir por completo."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "PTN3",
+  "title": "Poemas para a Chuva",
+  "author": "Beatriz Campos",
+  "description": "Uma coleção de poemas em prosa sobre a chuva, a memória e os pequenos milagres do quotidiano. Versos para ler devagar, ao som da água na janela.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "pt",
+  "chapters": [
+   {
+    "title": "Capítulo 1 — Águas de abril",
+    "paragraphs": [
+     "A chuva chega devagar, como quem pede licença à janela, e lava os telhados da cidade com dedos frios e pacientes. Cada gota carrega um pequeno espelho onde o céu cinzento se mira e sorri. Eu fico a ouvir, imóvel, aprendendo de cor a gramática da água.",
+     "Nas poças da rua, as luzes acendem-se duas vezes: uma no candeeiro, outra no reflexo trémulo que a chuva desenha. As crianças saltam por cima das poças como quem salta por cima do tempo. Ser criança, penso, é acreditar que a água guarda segredos só para nós.",
+     "O cheiro da terra molhada sobe do jardim e traz-me a infância inteira num só fôlego: o quintal da avó, os caracóis depois da trovoada, o medo bom dos relâmpagos ao longe. A memória, descubro, mora mais no nariz do que nos olhos. Basta chover para eu voltar a ter sete anos.",
+     "Quando a chuva para, o mundo fica suspenso num silêncio de vidro, e cada folha segura uma gota como quem segura uma joia. O sol, tímido, ensaia o seu regresso por entre as nuvens. E eu percebo, enfim, que a chuva nunca foi tristeza: foi sempre a cidade a lavar a cara para recomeçar.",
+     "Guardo estes versos como quem guarda conchas: vazios de mar, cheios de rumor. Se um dia me perguntarem onde mora a poesia, apontarei para a janela num dia de chuva. Ela mora ali, entre a gota que cai e a que ainda hesita no vidro."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ITN1",
+  "title": "Il Mistero di Via Roma 47",
+  "author": "Elena Moretti",
+  "description": "Un avvocato trovato morto nel suo studio, una frase interrotta e una cassaforte vuota. Il commissario De Santis indaga su un delitto che qualcuno vuole insabbiare a ogni costo.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "it",
+  "chapters": [
+   {
+    "title": "Capitolo 1 — La porta socchiusa",
+    "paragraphs": [
+     "Il commissario De Santis odiava le mattine d'inverno a Torino, ma quella di martedì si annunciava peggiore delle altre: una telefonata alle sei lo aveva svegliato per un cadavere in via Roma 47. La porta dell'appartamento era socchiusa, le luci accese, e sul tavolo della cucina una tazzina di caffè ancora tiepida. Chiunque fosse uscito di lì, lo aveva fatto da pochi minuti.",
+     "La vittima, l'avvocato Ettore Baldi, giaceva riverso sulla scrivania dello studio, con una penna stilografica ancora stretta tra le dita. Sul foglio davanti a lui, un'unica frase interrotta a metà: «So chi ha preso i soldi della...». De Santis lesse e rilesse quelle parole, chiedendosi quale verità scomoda Baldi stesse per scrivere. La cassaforte, alle sue spalle, era aperta e vuota.",
+     "L'ispettrice Greta Fontana notò subito ciò che gli altri avevano trascurato: sul davanzale della finestra, una scia di fango fresco con l'impronta parziale di una scarpa numero quarantadue. Baldi calzava il quaranta, e in casa non c'era nessun altro paio di scarpe infangate. Qualcuno era entrato dalla finestra del cortile interno, un salto di quasi tre metri che pochi avrebbero osato.",
+     "De Santis decise di non far trapelare nulla alla stampa e passò il pomeriggio negli archivi del tribunale, sfogliando i fascicoli seguiti da Baldi negli ultimi due anni. Un nome tornava con insistenza tra le carte: la società immobiliare Vesta, coinvolta in una compravendita sospetta da due milioni di euro. Baldi ne era il legale, fino a tre settimane prima, quando si era dimesso senza spiegazioni.",
+     "Quella sera, mentre la nebbia scendeva sui portici di via Roma, il telefono di De Santis squillò: una voce sconosciuta sussurrò «Smetta di cercare, commissario, o la prossima tazzina sarà la sua», e riattaccò. De Santis rimase immobile, la tazzina tiepida ancora impressa nella mente, e capì che l'assassino lo stava osservando da molto vicino."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ITN2",
+  "title": "Una Lettera da Positano",
+  "author": "Marco Bellini",
+  "description": "Una lettera d'amore scritta dieci anni prima e mai spedita riemerge in un cassetto a Positano. Giulia dovrà decidere se il passato merita una seconda occasione.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "it",
+  "chapters": [
+   {
+    "title": "Capitolo 1 — La busta azzurra",
+    "paragraphs": [
+     "Giulia tornava ogni estate a Positano, nella casa della nonna sopra la spiaggia, e ogni estate giurava che sarebbe stata l'ultima. Quell'anno, però, mentre svuotava un vecchio cassetto, trovò una busta azzurra ingiallita dal tempo, con il suo nome scritto in una calligrafia che non conosceva. Dentro, poche righe: «Ti ho vista ridere sulla spiaggia, e ho capito che dovevo scriverti. — A.»",
+     "La lettera era datata dieci anni prima, quando Giulia aveva diciassette anni e passava le giornate tra i tuffi dagli scogli e i gelati al limone. Cercò nella memoria un volto, un nome che iniziasse per A, ma trovò solo l'eco confusa di quell'estate lontana. La nonna, interrogata, sorrise in modo enigmatico e disse soltanto: «Certe lettere arrivano quando è il momento.»",
+     "Nei giorni seguenti, Giulia si sorprese a guardare con occhi diversi ogni angolo del paese: la scalinata della chiesa, il bar sul lungomare, la piccola libreria dove comprava i romanzi d'estate. Chissà quante volte aveva incrociato quello sguardo senza accorgersene, chissà da quanto tempo qualcuno la osservava ridere. L'idea la turbava e la lusingava insieme.",
+     "Una sera, al tramonto, decise di rispondere: scrisse una lettera alla volta, senza sapere a chi spedirla, e la lasciò nella cassetta delle lettere della nonna, come un messaggio in una bottiglia. «Caro A», scrisse, «dieci anni dopo, la tua lettera mi ha trovata. Se esisti ancora, dammi un segno.» Rise da sola della propria follia, ma il cuore le batteva forte.",
+     "La mattina dopo, sulla soglia di casa, c'era una seconda busta azzurra, fresca d'inchiostro: «Domani, alle sei, sulla spiaggia grande. Riconoscimi dal libro che tengo in mano.» Giulia strinse la lettera al petto e guardò il mare, che scintillava come se sapesse già come sarebbe andata a finire."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ITN3",
+  "title": "Il Riccio e la Stella",
+  "author": "Sofia Ricci",
+  "description": "Un piccolo riccio che guarda le stelle impara a donare la propria luce al bosco. Una favola tenera sull'amicizia, il coraggio e la generosità.",
+  "price": 0,
+  "createdAt": 1791206815601,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "it",
+  "chapters": [
+   {
+    "title": "Capitolo 1 — Il riccio che guardava il cielo",
+    "paragraphs": [
+     "C'era una volta, in un bosco di querce antiche, un piccolo riccio di nome Spino che invece di dormire passava le notti a guardare il cielo. Gli altri ricci lo prendevano in giro: «Le stelle non si mangiano e non tengono caldo», dicevano rotolandosi tra le foglie. Ma Spino non riusciva a smettere di chiedersi perché le stelle brillassero solo per chi sapeva guardarle.",
+     "Una notte d'autunno, la stella più luminosa del cielo sembrò ammiccare proprio a lui, e Spino sentì una vocina sottile come un filo d'erba: «Se vuoi, ti insegno a brillare anche tu.» Il riccio tremò tutto, non di paura ma di gioia, perché nessuno gli aveva mai parlato con tanta gentilezza. «Come faccio?» chiese con un filo di voce. «Raccogli la luce del giorno e donala di notte», rispose la stella.",
+     "Da quella sera, Spino cominciò a raccogliere raggi di sole tra gli aculei durante il giorno, sopportando le risate dei compagni che lo chiamavano «il riccio lucertola». Quando calava la bufera e il bosco piombava nel buio, lui scuoteva piano gli aculei e una polvere dorata illuminava il sentiero. Le lepri smarrite ritrovarono la strada di casa, e i gufi lo ringraziarono con inchini solenni.",
+     "L'inverno arrivò crudele, e una notte la neve coprì ogni cosa, spegnendo anche il coraggio degli animali più forti. Spino, infreddolito ma deciso, salì sulla collina più alta e liberò tutta la luce accumulata in mesi di sole: il bosco si accese come un presepe, e gli animali uscirono dalle tane a guardare il miracolo. Perfino la luna, da lassù, sembrò sorridere al piccolo riccio.",
+     "Da allora, quando una stella cade dal cielo, i vecchi del bosco dicono che è andata a trovare Spino, per ringraziarlo di aver insegnato a tutti la lezione più luminosa: chi dona la propria luce non la perde mai, ma la vede moltiplicarsi negli occhi di chi la riceve."
+    ]
+   }
+  ]
+ },
+ {
+  "ageRating": "all",
+  "author": "Helene Brandt",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Der Regen trommelte gegen die Scheiben des Präsidiums, als das Telefon um drei Uhr morgens klingelte. Lena Brandt griff nach dem Hörer, noch halb im Schlaf, und hörte die Stimme des Hafenmeisters. Am Anleger drei lag eine Gestalt reglos zwischen den Containern.",
+     "Zwanzig Minuten später stand sie im Scheinwerferlicht der Streifenwagen und zog ihren Mantel enger. Der Nebel kroch vom Wasser herauf und verschluckte die Kräne des Hafens. Der Tote trug einen teuren Anzug, doch seine Schuhe fehlten.",
+     "„Dritter Fall in sechs Wochen“, murmelte ihr Kollege Marek und hielt die Taschenlampe auf eine nasse Visitenkarte in der Hand des Opfers. Darauf stand nur ein einziges Wort: „Schweig“. Lena spürte, wie ihr der Atem stockte.",
+     "Zurück im Büro breitete sie die Fotos der drei Tatorte auf dem Tisch aus. Alle Opfer waren nachts verschwunden, alle waren bei Nebel gefunden worden. Irgendjemand kannte den Hafen besser als die Polizei – und spielte mit ihnen."
+    ],
+    "title": "Kapitel 1 — Der Anruf um drei"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Kommissarin Lena Brandt jagt einen Mörder, der seine Opfer nur an nebligen Nächten im Hamburger Hafen zurücklässt – und jede Spur scheint ins Wasser zu fallen.",
+  "id": "DEN1",
+  "language": "de",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Der Nebel von St. Pauli"
+ },
+ {
+  "ageRating": "all",
+  "author": "Jonas Reuther",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Mira hatte ihr ganzes Leben zwischen Pergament und Tinte verbracht, doch noch nie hatte eine Karte geatmet. In der Nacht, als der Sturm über das Tal fegte, hörte sie es zum ersten Mal: ein leises Flüstern aus dem Papier. Die gezeichneten Berge bewegten sich kaum merklich, wie die Brust eines Schlafenden.",
+     "Sie beugte sich über den Tisch und hielt die Kerze näher heran. Die Linien der Bergkämme zitterten, und aus den Tälern stiegen Worte auf, die sie nicht verstand. Ihr Herz pochte so laut, dass sie fürchtete, es könnte die Berge wecken.",
+     "Am Morgen packte sie ihren Rucksack, nahm die flüsternde Karte und verließ das Dorf, ohne ein Wort zu sagen. Die Ältesten hatten immer gewarnt, dass die Berge Geheimnisse hüteten, die kein Mensch erfahren dürfe. Doch Mira musste wissen, was sie ihr zu sagen versuchten.",
+     "Drei Tage wanderte sie bergauf, bis sie den Pass erreichte, der auf keiner ihrer Karten verzeichnet war. Dort, zwischen zwei Gipfeln aus schwarzem Stein, stand ein Tor aus Licht. Und das Flüstern wurde zu einer Stimme, die ihren Namen rief.",
+     "Mira trat hindurch, und die Welt hinter dem Tor war aus Farben gemacht, die sie nie zuvor gesehen hatte. Die Berge dort waren keine Berge, sondern schlafende Riesen. Und einer von ihnen öffnete langsam die Augen."
+    ],
+    "title": "Kapitel 1 — Die Karte, die atmete"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Als die junge Kartografin Mira entdeckt, dass die Berge auf ihren Karten flüstern, begibt sie sich auf eine Reise, die die Grenzen ihrer Welt für immer verschiebt.",
+  "id": "DEN2",
+  "language": "de",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Die flüsternden Berge"
+ },
+ {
+  "ageRating": "all",
+  "author": "Clara Sommerfeld",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Der Buchladen in der Heidelberger Altstadt roch nach Staub und Vanille, und Anna liebte ihn vom ersten Augenblick an. Zwischen zwei Bänden von Rilke fand sie ein schmales Buch, dessen Seiten verklebt waren. Als sie es vorsichtig öffnete, fielen ein Dutzend vergilbter Briefe heraus.",
+     "Die Briefe waren an eine Frau namens Elisabeth gerichtet, datiert auf den Sommer 1962, und jeder einzelne endete mit den Worten: „Bis der Neckar rückwärts fließt, dein Thomas.“ Anna las sie alle an Ort und Stelle, das Herz schwer vor Rührung. Wer war Thomas gewesen, und hatte Elisabeth je geantwortet?",
+     "Der Buchhändler, ein alter Mann mit freundlichen Augen, erzählte ihr, das Buch stamme aus dem Nachlass einer Dame aus der Nachbarschaft. „Elisabeth Vogel“, sagte er. „Sie ist vor zwei Jahren gestorben.“ Anna spürte einen Stich. Die Liebesgeschichte war nie zu Ende erzählt worden.",
+     "Am nächsten Tag kehrte sie mit einer Entscheidung zurück: Sie würde Thomas finden. Auf dem letzten Brief stand eine Adresse in der Unteren Straße. Als sie klingelte, öffnete ein Mann in ihrem Alter die Tür – und in seinen Augen lag dasselbe sehnsüchtige Blau wie in den Briefen."
+    ],
+    "title": "Kapitel 1 — Das Buch mit dem Geheimnis"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "In einem alten Buchladen in Heidelberg findet Anna einen Stapel Liebesbriefe aus dem Jahr 1962 – und der Enkel des Absenders steht plötzlich vor ihr.",
+  "id": "DEN3",
+  "language": "de",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Briefe an den Sommer"
+ },
+ {
+  "ageRating": "all",
+  "author": "Emil Hartmann",
+  "chapters": [
+   {
+    "paragraphs": [
+     "In einem Dorf am Rande des Waldes lebte ein Mädchen namens Liora, das ein Geheimnis hütete. Jede Nacht, wenn der Mond aufging, setzte sie sich ans Fenster und spann sein Licht zu feinem, silbernem Garn. Aus dem Garn webte ihre Großmutter Tücher, die im Dunkeln leuchteten.",
+     "Eines Abends jedoch blieb der Himmel schwarz. Liora wartete bis Mitternacht, doch der Mond erschien nicht. Die Spindel in ihren Händen blieb still, und zum ersten Mal in ihrem Leben fühlte sie sich verloren.",
+     "„Der Mond ist krank“, flüsterte die Großmutter und legte ihr die Hand auf die Schulter. „Jemand muss zu ihm hinaufsteigen und ihn gesund pflegen.“ Liora nickte tapfer, packte ein Bündel Silberfäden und machte sich auf den Weg zum höchsten Berg.",
+     "Auf dem Gipfel fand sie den Mond, klein und blass, zusammengerollt wie ein krankes Tier. Liora wickelte ihn in ihr silbernes Garn und sang ihm das Schlaflied ihrer Großmutter. Langsam, ganz langsam, begann er wieder zu leuchten."
+    ],
+    "title": "Kapitel 1 — Das silberne Garn"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Jede Nacht spinnt die kleine Liora Mondlicht zu silbernem Garn – bis der Mond eines Abends nicht mehr aufgeht und sie ihn suchen muss.",
+  "id": "DEN4",
+  "language": "de",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Das Mädchen und die Mondspindel"
+ },
+ {
+  "ageRating": "all",
+  "author": "Дмитрий Соколов",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Дождь барабанил по зонту Андрея Волкова, когда он остановился перед антикварной лавкой на набережной Мойки. Витрина была пуста, дверь приоткрыта, а внутри царил разгром. Хозяин лавки, Илья Громов, исчез три дня назад, не оставив ни записки, ни следов.",
+     "На полу среди осколков фарфора Волков заметил клочок холста. На нём был изображён фрагмент лица — женского, с печальными глазами. Реставратор, вызванный полицией, побледнел: такой картины не числилось ни в одном каталоге.",
+     "Вечером Волков сидел в своём кабинете и рассматривал клочок под лупой. В углу холста виднелась подпись, почти стёртая временем. Он разобрал лишь два слова, и от них по спине пробежал холодок.",
+     "Ночью ему позвонил неизвестный и предложил встретиться у развода мостов. «Приходите один, — сказал голос, — и вы узнаете, куда исчез Громов». Волков положил трубку и долго смотрел в окно, где над Невой сгущалась тень."
+    ],
+    "title": "Глава 1 — Пустая витрина"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Частный сыщик Андрей Волков расследует исчезновение антиквара в Петербурге, и все нити ведут к картине, которой не должно существовать.",
+  "id": "RUN1",
+  "language": "ru",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Тень над Невой"
+ },
+ {
+  "ageRating": "all",
+  "author": "Ольга Морозова",
+  "chapters": [
+   {
+    "paragraphs": [
+     "В три часа ночи обсерватория на Кавказе была самым тихим местом на планете. Вера Ланина сидела перед мониторами, допивая остывший чай, когда самописец вдруг ожил. Из динамиков полился ритмичный сигнал — слишком правильный, чтобы быть природным.",
+     "Она проверила частоту трижды, потом ещё раз. Сигнал повторялся каждые одиннадцать секунд, и в его структуре угадывалась речь. Когда компьютер расшифровал первую фразу, руки Веры задрожали.",
+     "«Вера, это ты. Не отвечай на сигнал». Голос был её собственным — старше лет на двадцать, усталый и настойчивый. Она перечитала расшифровку десять раз, надеясь найти ошибку.",
+     "По инструкции она обязана была доложить о контакте руководству. Но голос из будущего просил молчать, и Вера впервые в жизни нарушила протокол. Она выключила запись и осталась одна в тишине, которая теперь казалась оглушительной.",
+     "Утром сигнал исчез, будто его никогда не было. Но на столе Веры лежал листок с расшифровкой, и она знала: что бы ни случилось дальше, её жизнь уже разделилась на «до» и «после»."
+    ],
+    "title": "Глава 1 — Три часа ночи"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Радиоастроном Вера Ланина ловит из глубокого космоса сигнал — и с ужасом понимает, что это её собственный голос из будущего.",
+  "id": "RUN2",
+  "language": "ru",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Сигнал из тишины"
+ },
+ {
+  "ageRating": "all",
+  "author": "Елена Романова",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Поезд прибыл на рассвете, и Марина сразу узнала запах родного города — липовый цвет и речная сырость. Дом с синими ставнями стоял в конце улицы, точно такой, каким она его помнила. Пятнадцать лет она не решалась сюда вернуться.",
+     "Ключ повернулся в замке с трудом, будто дом не хотел её впускать. Внутри пахло сушёными травами и старыми книгами. На столе в гостиной лежала недошитая скатерть бабушки — игла так и осталась воткнутой в ткань.",
+     "Марина вышла в сад и замерла: у соседнего забора стоял Павел. Тот самый Павел, с которым они в семнадцать лет поклялись никогда не расставаться. Он постарел, но улыбка осталась прежней — чуть кривая, слева.",
+     "«Ты всё-таки приехала», — сказал он просто, будто они расстались вчера. Марина почувствовала, как тёплый сентябрьский ветер коснулся её щеки. Продажа дома вдруг перестала казаться такой уж необходимой."
+    ],
+    "title": "Глава 1 — Дом с синими ставнями"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Марина возвращается в родной город продать дом бабушки — и встречает первую любовь, которую не видела пятнадцать лет.",
+  "id": "RUN3",
+  "language": "ru",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Тёплый ветер сентября"
+ },
+ {
+  "ageRating": "all",
+  "author": "Иван Ковалёв",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Алёнка заметила его в первую ночь полнолуния: на подоконнике сидел кот, сотканный из лунного света. Он был почти прозрачный, и сквозь него виднелись звёзды. «Пойдём, — сказал кот, — пока луна высоко».",
+     "Она накинула шаль и вылезла в окно вслед за ним. Кот шёл по серебряной дорожке лунного света, и там, где ступали его лапы, расцветали светящиеся цветы. Алёнка шла босиком, и цветы щекотали ей пятки.",
+     "Дорожка привела их к озеру, гладкому, как зеркало. «Это страна забытых снов, — объяснил кот. — Всё, что люди забывают во сне, живёт здесь». Из воды вынырнул бумажный кораблик и поплыл прямо к Алёнке.",
+     "На кораблике лежала её потерянная заколка — та самая, о которой она плакала целый вечер год назад. Алёнка прижала её к груди и поняла: ничего на свете не пропадает бесследно, нужно только знать, где искать."
+    ],
+    "title": "Глава 1 — Серебряные следы"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Каждую ночь к Алёнке приходит кот, сотканный из лунного света, и уводит её в страну, где сбываются забытые сны.",
+  "id": "RUN4",
+  "language": "ru",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Девочка и лунный кот"
+ },
+ {
+  "ageRating": "all",
+  "author": "Νίκος Παπαδόπουλος",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Το καράβι έφτασε στο νησί λίγο πριν το σούρουπο, και η Ελένη είδε πρώτη το φως. Ο φάρος στον βράχο ήταν αναμμένος, παρόλο που ο φαροφύλακας, ο γέρο-Μανώλης, είχε εξαφανιστεί τρεις μέρες πριν. Κανείς δεν ήξερε ποιος τον είχε ανάψει.",
+     "Στο μικρό καφενείο του λιμανιού, οι ψαράδες μιλούσαν χαμηλόφωνα. «Τη νύχτα που χάθηκε, ακούστηκε μια φωνή απ' τον φάρο», είπε ο καπετάν-Γιώργης. «Μια φωνή που τραγουδούσε». Η Ελένη, δημοσιογράφος από την Αθήνα, σημείωνε τα πάντα.",
+     "Ανέβηκε στον φάρο την αυγή, με τον αέρα να σφυρίζει στ' αυτιά της. Η πόρτα ήταν κλειδωμένη από μέσα. Μέσα, στο πάτωμα, βρήκε ένα σημειωματάριο με την τελευταία σελίδα σκισμένη — και ένα κλειδί που δεν ταίριαζε σε καμία κλειδαριά του φάρου.",
+     "Το βράδυ, καθώς ο ήλιος βούλιαζε στο Αιγαίο, το φως άναψε ξανά μόνο του. Η Ελένη κοίταξε ψηλά και είδε μια σκιά να κινείται πίσω από τα τζάμια. Κάποιος ήταν εκεί πάνω — κάποιος που δεν ήθελε να βρεθεί."
+    ],
+    "title": "Κεφάλαιο 1 — Το φως που άναψε μόνο του"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Σ' ένα μικρό νησί του Αιγαίου, ο φαροφύλακας εξαφανίζεται ένα βράδυ — και το φως του φάρου ανάβει μόνο του.",
+  "id": "ELN1",
+  "language": "el",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Το μυστήριο του φάρου"
+ },
+ {
+  "ageRating": "all",
+  "author": "Ελένη Καραγιάννη",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Το πλοίο έμπαινε στο λιμάνι την ώρα που ο ήλιος έβαφε τα σπίτια ροζ και πορτοκαλί. Η Μαρία στεκόταν στο κατάστρωμα και κρατούσε σφιχτά το κάγκελο. Δέκα χρόνια είχε να πατήσει στη Σαντορίνη, δέκα χρόνια είχε να δει τον Αλέξη.",
+     "Το πατρικό της σπίτι στα Φηρά την περίμενε με κλειστά παντζούρια και μυρωδιά λεβάντας. Η γιαγιά της είχε φύγει τον χειμώνα, αφήνοντάς της το σπίτι και ένα γράμμα: «Γύρνα, παιδί μου. Το νησί σε περιμένει».",
+     "Το απόγευμα κατέβηκε στην παραλία, εκεί όπου κάποτε κολυμπούσαν μαζί. Και τον είδε: στεκόταν στον ίδιο βράχο, με την ίδια αγέρωχη στάση. Ο Αλέξης γύρισε, την αναγνώρισε αμέσως, και το χαμόγελό του ήταν σαν το πρώτο κύμα του καλοκαιριού.",
+     "«Άργησες», της είπε απλά, σαν να είχαν χωρίσει χθες. Η Μαρία ένιωσε την καρδιά της να χτυπάει δυνατά. Μερικοί έρωτες δεν σβήνουν ποτέ — απλώς περιμένουν το σωστό καλοκαίρι για να ξαναγεννηθούν."
+    ],
+    "title": "Κεφάλαιο 1 — Επιστροφή"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Η Μαρία επιστρέφει στη Σαντορίνη μετά από δέκα χρόνια και ξαναβρίσκει τον έρωτα που νόμιζε ότι είχε ξεχάσει.",
+  "id": "ELN2",
+  "language": "el",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Το καλοκαίρι των κυμάτων"
+ },
+ {
+  "ageRating": "all",
+  "author": "Γιώργος Δημητρίου",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Ο Πέτρος άκουσε τη φωνή ένα απόγευμα, καθώς έπαιζε κάτω από τη μεγάλη βελανιδιά. Δεν ήταν ανθρώπινη φωνή — ήταν σαν ψίθυρος φύλλων, σαν τραγούδι πουλιών. «Πέτρο», έλεγε ο άνεμος, «σε χρειαζόμαστε».",
+     "Στην αρχή νόμισε ότι το φανταζόταν. Αλλά ο άνεμος επέμενε, και του έδειξε: το δάσος πέθαινε. Τα δέντρα μαραίνονταν το ένα μετά το άλλο, και κανείς από τους μεγάλους δεν καταλάβαινε γιατί.",
+     "«Μόνο εσύ μπορείς να μας ακούσεις», του εξήγησε ο άνεμος. «Κάτω από τις ρίζες της βελανιδιάς κοιμάται κάτι παλιό και πεινασμένο». Ο Πέτρος έσφιξε τις γροθιές του. Φοβόταν, αλλά το δάσος ήταν το σπίτι του.",
+     "Τη νύχτα, με ένα φαναράκι στο χέρι, ο Πέτρος άρχισε να σκάβει κάτω από τη βελανιδιά. Ο άνεμος φυσούσε γύρω του σαν προστατευτικά φτερά. Και τότε το φτυάρι του χτύπησε κάτι σκληρό — κάτι που έλαμπε στο σκοτάδι.",
+     "Ήταν ένα παλιό, σκουριασμένο κλειδί, δεμένο με ρίζες. Ο Πέτρος το σήκωσε ψηλά, και ο άνεμος ούρλιαξε από χαρά. Το κλειδί άνοιγε την πόρτα που κρατούσε φυλακισμένο το πνεύμα του δάσους — και μόνο ένα παιδί που άκουγε τον άνεμο μπορούσε να τη βρει."
+    ],
+    "title": "Κεφάλαιο 1 — Η φωνή στις φυλλωσιές"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Ο μικρός Πέτρος ανακαλύπτει ότι μπορεί να μιλάει με τον άνεμο — και ο άνεμος του ζητάει βοήθεια για να σωθεί το δάσος.",
+  "id": "ELN3",
+  "language": "el",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Τα φτερά του ανέμου"
+ },
+ {
+  "ageRating": "all",
+  "author": "Μαρία Θεοδώρου",
+  "chapters": [
+   {
+    "paragraphs": [
+     "Το πρωί η θάλασσα ξυπνάει γαλάζια, σαν μάτια παιδιού που ονειρεύεται. Τα κύματα γράφουν στην άμμο ιστορίες που κανείς δεν διάβασε.",
+     "Κι εγώ στέκομαι στην ακτή με τα πόδια γυμνά και την καρδιά ανοιχτή, κι ακούω τη φωνή του νερού να μου λέει: μείνε, μη φύγεις.",
+     "Ο έρωτας ήρθε σαν καλοκαιρινό κύμα, απρόσμενος, αλμυρός και γλυκός. Μου πήρε τα όνειρα στα χέρια του και τα έκανε αφρό.",
+     "Κι όταν το φθινόπωρο έρθει, θα κρατήσω στην παλάμη μου ένα κοχύλι, για να θυμάμαι πάντα πως η θάλασσα τραγουδάει ακόμα.",
+     "Γιατί η θάλασσα δεν ξεχνάει ποτέ όσους την αγάπησαν αληθινά. Τους κρατάει στην αγκαλιά της σαν πολύτιμα μυστικά."
+    ],
+    "title": "Κεφάλαιο 1 — Πρώτα κύματα"
+   }
+  ],
+  "createdAt": 1791206796450,
+  "description": "Μια συλλογή ποιημάτων για τη θάλασσα, τον έρωτα και τη νοσταλγία — στίχοι που μυρίζουν αλάτι και καλοκαίρι.",
+  "id": "ELN4",
+  "language": "el",
+  "price": 0,
+  "sales": 0,
+  "status": "approved",
+  "title": "Τραγούδια της θάλασσας"
+ },
+ {
+  "id": "ARN1",
+  "title": "همسات القمر",
+  "author": "ليلى حداد",
+  "description": "قصة حب تبدأ برسائل مجهولة تصل كل ليلة مقمرة، لتقود سلمى إلى اكتشاف أن كاتبها أقرب إليها مما كانت تظن.",
+  "price": 0,
+  "createdAt": 1791206804026,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "ar",
+  "chapters": [
+   {
+    "title": "الفصل الأول — رسالة بلا توقيع",
+    "paragraphs": [
+     "في الليلة الأولى من اكتمال القمر، وجدت سلمى ظرفًا صغيرًا على عتبة بابها، مكتوبًا عليه اسمها بخطٍّ جميل لم تره من قبل. فتحته بيدين مرتعشتين، فقرأت كلمات تتحدث عن ضحكتها التي سمعها الكاتب في السوق صباح ذلك اليوم. لم يوقّع الرسالة أحد، لكنها شعرت بدفء غريب يسري في قلبها.",
+     "في الليالي التالية، استمرت الرسائل تصل واحدة تلو الأخرى، كل واحدة أجمل من سابقتها. كان الكاتب يصف تفاصيل صغيرة من يومها: زهرة الياسمين التي وضعتها في شعرها، والكتاب الذي كانت تقرؤه تحت شجرة الزيتون. بدأت سلمى تنتظر الليل بشوق، وتتساءل: من يعرف عنها كل هذا؟",
+     "قررت سلمى ذات مساء أن تكمن خلف النافذة لترى من يضع الرسالة. رأت ظلًّا يتحرك بخفة في ضوء القمر، يضع الظرف ويمضي سريعًا نحو زقاق الحرفيين. لم تستطع رؤية وجهه، لكنها لاحظت شيئًا يلمع في يده: قلمًا فضيًّا يشبه القلم الذي كان يملكه يوسف، جارها الخطاط الصامت.",
+     "في صباح اليوم التالي، مرّت سلمى أمام دكان يوسف متظاهرة بشراء الحبر. كان منهمكًا في كتابة لوحة، ويده تمسك قلمًا فضيًّا يلمع. رفع عينيه إليها وابتسم ابتسامة خجولة، ثم عاد إلى عمله. خرجت سلمى وقلبها يخفق بقوة، فقد بدأت الخيوط تتجمع في ذهنها.",
+     "تلك الليلة، وجدت رسالة مختلفة: «غدًا عند اكتمال القمر، سأنتظرك تحت شجرة الزيتون، وسأحمل القلم الفضي بيدي». ضحكت سلمى ودموع الفرح في عينيها، وأدركت أن أجمل قصص الحب تبدأ أحيانًا بكلمات مجهولة في ليلة مقمرة."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ARN2",
+  "title": "الظل في زقاق الياسمين",
+  "author": "كريم المنصور",
+  "description": "عندما تختفي ساعة أثرية ثمينة من متحف المدينة القديم، يبدأ المحقق رامي رحلة في الأزقة العتيقة لكشف سرٍّ دُفن منذ أجيال.",
+  "price": 0,
+  "createdAt": 1791206804026,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "ar",
+  "chapters": [
+   {
+    "title": "الفصل الأول — الساعة المفقودة",
+    "paragraphs": [
+     "استيقظت المدينة القديمة على خبر هزّ أركانها: الساعة الذهبية الأثرية، أثمن قطعة في متحف التراث، اختفت من خزانتها الزجاجية في ليلة واحدة. لم يُكسر زجاج، ولم تُفتح الأبواب بالقوة، وكأن الساعة تبخّرت في الهواء. استُدعي المحقق رامي على عجل، فهو الوحيد الذي يفهم لغة الأزقة القديمة وأسرارها.",
+     "وقف رامي أمام الخزانة الفارغة يتأمل الغبار المتراكم حولها. لاحظ شيئًا غريبًا: آثار أقدام صغيرة تتجه نحو الحائط الخلفي ثم تختفي. مرّر يده على الحائط فشعر بتيار هواء بارد يتسلل من شقٍّ خفي. ابتسم رامي، فقد عرف أن المتحف يخفي ممرًّا سريًّا لم يعرفه أحد منذ عقود.",
+     "في تلك الليلة، عاد رامي إلى المتحف متنكرًا في زي حارس ليلي. جلس في الظلام يراقب القاعة بصبر الصيادين. عند منتصف الليل، سمع صوت حجر يتحرك، فرأى جزءًا من الحائط ينزلق جانبًا ليكشف عن ممر ضيق. خرج منه رجل ملثّم يحمل مصباحًا صغيرًا، واتجه مباشرة نحو الخزانة الفارغة وكأنه يبحث عن شيء نسيه.",
+     "خرج رامي من مخبئه وأضاء مصباحه في وجه الرجل. تجمّد الملثّم في مكانه، ثم أسقط لثامه ليكشف عن وجه عجوز مألوف: إنه الحاج محمود، أمين المتحف السابق الذي تقاعد قبل عشرين عامًا. قال بصوت مرتجف: «الساعة ليست مسروقة يا بني، بل عادت إلى صاحبها الحقيقي».",
+     "روى الحاج محمود أن الساعة كانت ملكًا لجدّه صانع الساعات، وأنها سُرقت من عائلته قبل مئة عام وبيعت للمتحف. أخرج من جيبه ورقة صفراء قديمة تثبت ملكية العائلة. نظر رامي إلى الورقة ثم إلى عيني العجوز الدامعتين، وأدرك أن هذه القضية ليست سرقة عادية، بل قصة عدالة مؤجلة منذ قرن كامل."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ARN3",
+  "title": "سفينة النجوم الأخيرة",
+  "author": "نورة القحطاني",
+  "description": "في مستقبل بعيد، تقود المهندسة زينب آخر سفينة فضائية في رحلة يائسة لإنقاذ ما تبقى من البشرية والوصول إلى الكوكب الموعود.",
+  "price": 0,
+  "createdAt": 1791206804026,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "ar",
+  "chapters": [
+   {
+    "title": "الفصل الأول — الإقلاع الأخير",
+    "paragraphs": [
+     "وقفت المهندسة زينب على سطح محطة الإطلاق تنظر إلى سفينة «الأمل» العملاقة، آخر ما بنته البشرية قبل أن تختنق الأرض بدخان مصانعها. كانت السفينة تحمل خمسة آلاف نائم في غرف التجميد، وذكريات حضارة كاملة مخزّنة في حواسيبها. قالت زينب لنفسها: إما أن نصل إلى كوكب «نورا» الجديد، أو نضيع في الظلام إلى الأبد.",
+     "دوّت صافرات الإنذار في أرجاء المحطة، فقد بدأت العواصف الترابية الأخيرة تجتاح ما تبقى من المدن. صعدت زينب إلى قمرة القيادة حيث كان طاقمها الصغير في انتظارها: الطبيب سامي، والملاحة لينا، والفني عادل. تبادلوا نظرات صامتة تعني الشيء نفسه: لا عودة بعد هذه اللحظة.",
+     "بدأ العد التنازلي، واهتزت السفينة العملاقة وهي تتحرر من جاذبية الأرض ببطء مهيب. من نافذة القمرة، شاهدت زينب الكوكب الأزرق يصغر شيئًا فشيئًا حتى صار نقطة باهتة في السواد. شعرت بغصّة في حلقها، لكنها تذكرت وجوه النائمين في غرف التجميد، فاستجمعت قواها وضغطت زر تفعيل محرك النجوم.",
+     "بعد ساعات من الإقلاع، أضاءت شاشات القمرة بلون أحمر منذر: خلل في نظام التبريد في القسم الخلفي. لو ارتفعت الحرارة أكثر، لاستيقظ النائمون قبل الأوان وماتوا. أمسكت زينب بأدواتها وارتدت بدلة الفضاء، وقررت الخروج إلى الفراغ لإصلاح العطل بنفسها رغم اعتراض طاقمها.",
+     "علّقت زينب نفسها بحبل الأمان وسبحت في الفراغ الصامت نحو القسم المتضرر، والنجوم تتلألأ حولها كأنها تراقبها. وجدت الخلل: صمام متجمد يعيق تدفق سائل التبريد. بيدين ثابتتين رغم برودة الفضاء، أصلحت الصمام وعادت إلى الداخل. تنفس الطاقم الصعداء، وواصلت سفينة النجوم الأخيرة رحلتها نحو المجهول."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "ARN4",
+  "title": "حكاية النخلة العجوز",
+  "author": "سليم الحكواتي",
+  "description": "حكاية شعبية أصيلة عن نخلة عجوز تحكي لأطفال القرية أسرار الصحراء وحكمة الأجداد، في ليالٍ يملؤها السحر والعبر.",
+  "price": 0,
+  "createdAt": 1791206804026,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "ar",
+  "chapters": [
+   {
+    "title": "الفصل الأول — تحت ظل النخلة",
+    "paragraphs": [
+     "كان يا ما كان، في قرية صغيرة على حافة الصحراء الذهبية، نخلة عجوز واقفة منذ مئات السنين، جذعها متعرج كأنه يحمل خرائط الزمن. كان أطفال القرية يجتمعون تحت ظلها كل مساء، فيحكون لها أحلامهم، وهي تهمس لهم بأوراقها حكايات لا تنتهي. قالوا إن من ينصت جيدًا يسمع صوتها يحكي بلغة الريح.",
+     "في إحدى الليالي المقمرة، سألها الطفل حسن: يا نخلتنا العجوز، ما أغرب ما رأيتِ في حياتك الطويلة؟ تمايلت أغصانها وقالت: رأيت قافلة ضائعة في الصحراء منذ مئة عام، كان رجالها يبكون من العطش. دللتهم على بئر مدفونة تحت الرمال بأن أسقطت تمراتي في اتجاهها، فشربوا ونجوا، ومن يومها يزورني أحفادهم كل عام.",
+     "سألتها الطفلة مريم: وهل تخافين من العواصف يا جدة النخيل؟ ضحكت النخلة بحفيف أوراقها وقالت: العاصفة تعلّمني الرقص يا صغيرتي. جذوري عميقة تمسك بالأرض كما يتمسك الحكيم بمبادئه، وأغصاني تنحني ولا تنكسر. من يتشبث بجذوره لا تخيفه الرياح مهما اشتدت.",
+     "ثم حكت لهم عن النجمة التي سقطت قرب القرية في زمن الأجداد، وكيف حملها شيخ القرية إلى بيته فأضاءت داره أربعين ليلة. قال الأطفال بدهشة: وأين ذهبت النجمة؟ أجابت النخلة: ذابت في قلوب أهل القرية الطيبين، ولهذا ترون النور في عيونكم كلما فعلتم خيرًا.",
+     "نام الأطفال واحدًا تلو الآخر تحت ظلها الوارف، وغطتهم أوراقها المتساقطة كأنها لحاف من الحكايات. همست النخلة العجوز للريح: احفظيهم يا ريح الصحراء، فهم حكايتي القادمة. وهكذا تنتهي حكاية الليلة، لكن حكايات النخلة العجوز لا تنتهي أبدًا."
+    ]
+   }
+  ]
+ },
+ {
+  "id": "JAN1",
+  "title": "桜舞う駅で",
+  "author": "佐藤美咲",
+  "description": "毎年春、同じ駅のホームで偶然出会う二人の、十年越しの静かな恋の物語。桜の花びらが運ぶ運命の再会を描く。",
+  "price": 0,
+  "createdAt": 1791206804026,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "ja",
+  "chapters": [
+   {
+    "title": "第一章 — 桜のホーム",
+    "paragraphs": [
+     "四月の朝、桜の花びらが舞う小さな駅のホームで、陽子は一冊の文庫本を落とした。拾い上げてくれたのは、見覚えのある横顔の青年だった。彼は微笑んで本を差し出し、「去年もここで落としましたね」と言った。陽子の胸が高鳴った。確かに、去年の春も同じことがあったのだ。",
+     "青年の名は健太といった。二人は電車が来るまでの短い時間、桜のこと、本のこと、他愛のない話をした。別れ際、健太は「来年の春も、ここで」と言って電車に乗り込んだ。陽子はホームに残り、遠ざかる電車を見送りながら、なぜか涙が出そうになった。",
+     "それから陽子は、一年のうちで春だけが特別な季節になった。仕事の合間に駅のベンチに座り、桜の開花予想を心待ちにした。友人たちは「ただの偶然の出会いでしょ」と笑ったが、陽子にとっては違った。あの短い時間が、一年を生きる力になっていたのだ。",
+     "三年目の春、健太は少し遅れて現れた。スーツ姿で、少し疲れた顔をしていた。「転勤で遠くに行っていたんです。でも、どうしても今日は来たかった」と彼は言った。二人は無言で桜を見上げた。言葉はいらなかった。花びらが二人の間に静かに舞い落ちた。",
+     "十年目の春、陽子は白いワンピースを着てホームに立った。健太が小さな箱を取り出し、桜の花びらの中で跪いた。「毎年ここで会う約束を、来年からは毎日会う約束に変えませんか」。陽子は涙を流しながら頷いた。桜舞う駅で始まった恋が、ようやく永遠の形になった瞬間だった。"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "JAN2",
+  "title": "霧の館の秘密",
+  "author": "田中健一",
+  "description": "山奥の洋館で起きた密室事件に、若き探偵・黒川が挑む本格ミステリー。霧の向こうに隠された真実とは。",
+  "price": 0,
+  "createdAt": 1791206804026,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "ja",
+  "chapters": [
+   {
+    "title": "第一章 — 消えた主人",
+    "paragraphs": [
+     "深い霧に包まれた山奥に、黒川探偵は古い洋館の前に立っていた。依頼主は館の女主人・森田夫人で、「主人が書斎から忽然と姿を消した」という。書斎は内側から鍵がかかった密室で、窓もすべて閉ざされていた。まさに不可能犯罪の幕開けだった。",
+     "書斎を調べた黒川は、奇妙な点に気づいた。机の上のコーヒーカップはまだ温かく、読みかけの本は伏せて置かれていた。主人が「いた」痕跡はあるのに、人の姿だけがない。暖炉の灰の中には、燃えかけた手紙の切れ端が残っていた。「約束の時間に…」とだけ読み取れた。",
+     "使用人たちの証言は一致していた。夜十時に主人が書斎に入り、十一時に夫人がノックしても返事がなかったという。その間、廊下を通った者はいない。黒川は書斎の床を叩き、天井を調べ、壁の本棚を一冊ずつ動かしてみた。すると、一冊の分厚い事典の裏から、冷たい風が吹いてきた。",
+     "本棚の裏には、細い隠し階段があった。黒川が懐中電灯を手に降りていくと、地下の小部屋にたどり着いた。そこには、怯えた顔の館の主人が座っていた。「誰にも言わないでくれ。私は…借金取りから隠れていたんだ」。密室の謎は、意外なほど人間的な理由で解けたかに見えた。",
+     "しかし黒川の目は、部屋の隅に置かれた古いトランクに釘付けになった。トランクの中には、燃えた手紙と同じ筆跡の脅迫状が何通も入っていた。主人は借金取りから隠れていたのではない。何者かに脅され、自ら姿を消すしかなかったのだ。霧の館の秘密は、まだ始まったばかりだった。"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "JAN3",
+  "title": "月光の守り竜",
+  "author": "高橋優子",
+  "description": "月の光を集める竜と少女の出会いが、滅びゆく王国に希望をもたらすファンタジー。心温まる冒険の物語。",
+  "price": 0,
+  "createdAt": 1791206804026,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "ja",
+  "chapters": [
+   {
+    "title": "第一章 — 竜の谷",
+    "paragraphs": [
+     "王国の北に広がる深い谷には、古い言い伝えがあった。「満月の夜、谷の奥で銀色の竜が月光を集める」というものだ。少女リナは、病に伏す祖母のために薬草を求めて、恐れを知らずにその谷へ足を踏み入れた。月明かりに照らされた谷は、昼間とは別世界のように美しかった。",
+     "谷の奥の湖のほとりで、リナは息をのんだ。巨大な銀色の竜が、湖面に映る月をじっと見つめ、その光を鱗に集めていたのだ。竜はリナに気づくと、深い声で言った。「人の子よ、なぜここへ来た」。リナは震える声で祖母の病のことを話した。",
+     "竜はしばらく黙って月を見上げていたが、やがて一枚の銀色の鱗をはがしてリナに差し出した。「この鱗を月の光にかざし、その雫を祖母に飲ませなさい」。リナが礼を言って帰ろうとすると、竜は付け加えた。「ただし、願いは一度きりだ。何を願うか、よく考えなさい」。",
+     "村に戻ったリナは、祖母の枕元で鱗を月光にかざした。鱗からこぼれた銀の雫を祖母が飲むと、祖母の顔に血の気が戻り、静かに目を開けた。村中が奇跡だと騒いだが、リナの心は晴れなかった。王国全体が長い日照りに苦しんでいることを、彼女は知っていたからだ。",
+     "その夜、リナは鱗を握りしめて再び谷へ向かった。竜は彼女を待っていたかのように湖畔にいた。「願いを変えたいのですね」と竜は言った。リナは頷いた。「祖母は助かりました。でも、王国中の人が水を求めています」。竜は静かに微笑み、大きな翼を広げて夜空へ舞い上がった。銀色の鱗が雨となって王国に降り注いだのは、その直後のことだった。"
+    ]
+   }
+  ]
+ },
+ {
+  "id": "JAN4",
+  "title": "朝露のうた",
+  "author": "小林静",
+  "description": "四季の移ろいと心の機微を詠んだ、短歌と散文詩の小さな詩集。朝露のように儚く美しい言葉の雫。",
+  "price": 0,
+  "createdAt": 1791206804026,
+  "sales": 0,
+  "status": "approved",
+  "ageRating": "all",
+  "language": "ja",
+  "chapters": [
+   {
+    "title": "第一章 — 春のあわい",
+    "paragraphs": [
+     "朝露に　濡れる若葉の　ひかりかな　春の訪れを　指先に知る。庭先の小さな草花が、夜のうちに降りた露を抱いて光っている。その一粒一粒が、冬を越えた命の証のように見えた。",
+     "桜の花びらが風に舞い、川面に淡い影を落とす。散ることを恐れず、ただ美しく咲き誇る花々に、私はいつも勇気をもらう。今年の春も、あなたとこの景色を見られたことが、何よりの幸せだ。",
+     "うぐいすの初音が谷に響き、山全体が目覚めていく。長い冬の眠りから覚めた大地は、柔らかな息を吐いている。新しい季節の匂いが、胸の奥まで染み込んでくる。",
+     "夕暮れ時、西の空が茜色に染まる。帰り道、ふと振り返ると、一日の終わりを告げる鳥の声が聞こえた。明日もまた、同じ空の下で生きていける。その当たり前のことが、今はただありがたい。",
+     "春の夜、月明かりに照らされた庭で一人佇む。昼間の賑わいが嘘のように静まり返り、虫の声だけが満ちている。この静けさの中で、私は自分の心の音を初めて聞いた気がした。"
     ]
    }
   ]
