@@ -2220,3 +2220,23 @@ body.in-room .samplenote { margin-top: 10px; }
   border-radius: 8px;
   background: #fafafa;
 }
+
+/* v107: Sala solo con pizarra — ocultar toda la sección de texto/párrafos en la sala en vivo.
+   Los libros se leen desde la biblioteca; en la sala solo queda la pizarra + participantes + chat/notas. */
+body.in-room #paraBar,
+body.in-room #chapterTitle,
+body.in-room #bookLine,
+body.in-room #sampleNote,
+body.in-room #paras,
+body.in-room #pageNav,
+body.in-room article.chapter > p.hint,
+body.in-room #creatorStats {
+  display: none !important;
+}
+/* La pizarra ocupa el espacio que deja el texto */
+body.in-room #boardWrap {
+  margin-bottom: 0;
+}
+body.in-room #boardView {
+  min-height: 40vh;
+}
