@@ -401,12 +401,7 @@ app.post('/api/payments/intent', async (req, res) => {
     const body = req.body || {};
     const type = String(body.type || '');
     let amount = 0, description = '', data = {};
-    if (type === 'buy') {
-      const b = books.get(String(body.bookId || '').toUpperCase());
-      if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
-      amount = b.price; description = `Compra "${b.title}"`;
-      data = { type, bookId: b.id };
-    } else if (type === 'feature') {
+    if (type === 'feature') {
       const b = books.get(String(body.bookId || '').toUpperCase());
       if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
       const plan = String(body.plan || '');
@@ -500,7 +495,7 @@ app.get('/api/books', (req, res) => {
 app.post('/api/books', requireLogin, (req, res) => {
   const title = String((req.body && req.body.title) || '').trim().slice(0, 120);
   const author = String((req.body && req.body.author) || '').trim().slice(0, 60) || 'Anónimo';
-  const price = Math.max(0, Math.floor(Number((req.body && req.body.price)) || 0));
+  const price = 0; // todos los libros son gratis — no se vende
   if (price > 0 && price < MIN_BOOK_PRICE) return res.status(400).json({ ok: false, error: 'min-price', minPrice: MIN_BOOK_PRICE });
   const text = String((req.body && req.body.text) || '').trim();
   if (!title || !text) return res.status(400).json({ ok: false, error: 'bad-book' });
@@ -710,23 +705,10 @@ app.post('/api/admin/feedback/:id/status', (req, res) => {
 });
 /* Registrar una compra. Con Stripe activo exige sessionId de Checkout verificado;
  * sin Stripe (o gratis) mantiene el flujo anterior. Suma 1 venta al libro. */
+/* Endpoint de compra de libros ELIMINADO: todos los libros son gratis.
+ * Se mantiene el endpoint devolviendo 410 Gone por compatibilidad. */
 app.post('/api/books/:id/buy', requireLogin, async (req, res) => {
-  const bid = String(req.params.id || '').toUpperCase();
-  const b = books.get(bid);
-  if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
-  let paidId = '';
-  if (stripePay.isEnabled() && b.price > 0) {
-    // El cliente envía el id de la Checkout Session (sessionId) tras pagar en Stripe
-    paidId = String((req.body && (req.body.sessionId || req.body.paymentIntentId)) || '');
-    const ok = await verifyStripeFor(paidId, b.price);
-    if (!ok) return res.status(402).json({ ok: false, error: 'payment-required' });
-  }
-  // Idempotencia: si el webhook ya aplicó este pago, no sumar la venta de nuevo
-  if (!paidId || claimPayment(paidId)) {
-    b.sales = (typeof b.sales === 'number' ? b.sales : 0) + 1;
-    saveBooks();
-  }
-  res.json({ ok: true, sales: b.sales });
+  return res.status(410).json({ ok: false, error: 'books-are-free' });
 });
 /* Idempotencia de pagos: un mismo pago (sessionId o paymentIntentId) solo se
  * aplica UNA vez, aunque lleguen el webhook de Stripe y la confirmación del
@@ -760,10 +742,7 @@ function completeStripePayment(paymentIntentId, metadata) {
   // Idempotencia: si el cliente ya lo confirmó (?pago=ok), no aplicar de nuevo
   if (!claimPayment(paymentIntentId)) return true;
   try {
-    if (p.type === 'buy') {
-      const b = books.get(p.bookId);
-      if (b) { b.sales = (b.sales || 0) + 1; saveBooks(); }
-    } else if (p.type === 'feature') {
+    if (p.type === 'feature') {
       const b = books.get(p.bookId);
       if (b && b.author === p.author) {
         const now = Date.now();
@@ -797,44 +776,29 @@ function completeStripePayment(paymentIntentId, metadata) {
     return false;
   }
 }
-/* ------------------- 🏆 niveles y logros de creador ------------------- */
-const LEVELS = [
-  { min: 100, emoji: '💎', name: 'Diamante' },
-  { min: 50,  emoji: '🥇', name: 'Oro' },
-  { min: 10,  emoji: '🥈', name: 'Plata' },
-  { min: 1,   emoji: '🥉', name: 'Bronce' },
-  { min: 0,   emoji: '🌱', name: 'Nuevo' },
-];
+/* ------------------- 🏆 logros de creador ------------------- */
+/* Los libros son gratis: los logros se basan en publicar y en la comunidad,
+ * no en ventas. */
 const ACH_DEFS = [
   { id: 'first-book',  emoji: '📖', name: 'Primera publicación' },
-  { id: 'first-sale',  emoji: '💰', name: 'Primera venta' },
-  { id: 'sales-10',    emoji: '🔥', name: '10 ventas' },
-  { id: 'sales-50',    emoji: '🚀', name: '50 ventas' },
+  { id: 'books-5',     emoji: '📚', name: '5 libros publicados' },
   { id: 'rated-4',     emoji: '⭐', name: '4+ estrellas promedio' },
   { id: 'notes-100',   emoji: '💬', name: '100 notas recibidas' },
 ];
 function creatorLevel(name) {
   const aname = String(name || '').trim();
-  // Los clásicos gratis no tienen creador: no cuentan para niveles ni comisiones
+  // Los clásicos gratis no tienen creador: no cuentan
   const mine = [...books.values()].filter((b) => b.author === aname && !b.classic);
-  const sales = mine.reduce((a, b) => a + (typeof b.sales === 'number' ? b.sales : 0), 0);
   const notes = mine.reduce((a, b) => a + getRoom(b.id).notes.length, 0);
   const rated4 = mine.some((b) => { const r = reviewSummary(b.id); return r.count >= 5 && r.avg >= 4; });
-  const level = LEVELS.find((l) => sales >= l.min) || LEVELS[LEVELS.length - 1];
-  const nextIdx = LEVELS.findIndex((l) => sales >= l.min) - 1;
-  const next = nextIdx >= 0 ? LEVELS[nextIdx] : null;
   const unlocked = {
     'first-book': mine.length >= 1,
-    'first-sale': sales >= 1,
-    'sales-10': sales >= 10,
-    'sales-50': sales >= 50,
+    'books-5': mine.length >= 5,
     'rated-4': rated4,
     'notes-100': notes >= 100,
   };
   return {
-    name: aname, books: mine.length, sales, notes,
-    level: { emoji: level.emoji, name: level.name },
-    next: next ? { emoji: next.emoji, name: next.name, need: next.min - sales } : null,
+    name: aname, books: mine.length, notes,
     achievements: ACH_DEFS.map((d) => ({ ...d, unlocked: !!unlocked[d.id] })),
   };
 }
@@ -864,7 +828,7 @@ app.get('/api/creators/:name/profile', (req, res) => {
     .filter((b) => b.author === c.name && b.status !== 'pending')
     .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
     .map((b) => ({ id: b.id, title: b.title, coverUrl: b.coverUrl || null,
-      price: b.price || 0, sales: b.sales || 0 }));
+      price: 0 }));
   let since = c.since || 0;
   if (!since) {
     const all = [...books.values()].filter((b) => b.author === c.name);
@@ -873,7 +837,7 @@ app.get('/api/creators/:name/profile', (req, res) => {
   const can = creatorCanEdit(req, c);
   res.json({ ok: true, profile: {
     name: c.name, verified: !!c.verified,
-    level: lvl.level, books: lvl.books, sales: lvl.sales, notes: lvl.notes,
+    books: lvl.books, notes: lvl.notes,
     bio: c.bio || '', photo: c.photo || '', location: c.location || '',
     website: c.website || '', socials: Object.assign(
       { instagram: '', x: '', youtube: '', tiktok: '', facebook: '' }, c.socials || {}),

@@ -1956,7 +1956,7 @@ async function initAds() {
 }
 /* Orden de la lista: popularidad | titulo | precio */
 let libSort = 'popularidad';
-let libPill = localStorage.getItem('tj_pill') || 'todos'; // todos|gratis|destacados|nuevos|populares
+let libPill = localStorage.getItem('tj_pill') || 'todos'; // todos|destacados|nuevos|populares
 let libLang = localStorage.getItem('tj_lang') || ''; // '' = todos los idiomas
 const LANG_FLAGS = { es: '🇪🇸', en: '🇬🇧', fr: '🇫🇷', pt: '🇵🇹', ar: '🇸🇦', it: '🇮🇹', de: '🇩🇪', ru: '🇷🇺', ja: '🇯🇵', el: '🇬🇷' };
 function langBadge(b) {
@@ -1970,7 +1970,7 @@ let libBooksCache = []; // todos los libros cargados (para filtrar sin recargar)
    Estrellas + contador en tarjetas e inmersiva; modal para dejar reseña. */
 function ratingText(b) {
   const r = b.rating || { avg: 0, count: 0 };
-  return r.count > 0 ? `⭐ ${r.avg} (${r.count})` : '☆ Sin reseñas';
+  return r.count > 0 ? `⭐ ${r.avg} (${r.count})` : t('noReviews');
 }
 /* ------------------- 🏆 niveles y logros de creador ------------------- */
 const levelCache = new Map();
@@ -1997,16 +1997,16 @@ function levelSpan(author) {
 async function showAchievements() {
   const name = displayName();
   const body = $('achBody');
-  $('achSub').textContent = name && name !== t('joinDefaultName') ? name + ' · tus logros como creador.' : 'Tus logros como creador.';
-  body.innerHTML = '<p class="join-note">Cargando…</p>';
+  $('achSub').textContent = name && name !== t('joinDefaultName') ? t('achSubName', { name }) : t('achSubPlain');
+  body.innerHTML = '<p class="join-note">' + t('loading') + '</p>';
   $('achPop').classList.remove('hidden');
   $('achClose').onclick = () => $('achPop').classList.add('hidden');
   const d = await fetchLevel(name);
-  if (!d) { body.innerHTML = '<p class="join-note">No se pudo cargar. Revisa tu conexión.</p>'; return; }
+  if (!d) { body.innerHTML = '<p class="join-note">' + t('loadErr') + '</p>'; return; }
   body.innerHTML =
     `<div class="ach-level"><span style="font-size:44px">📖</span>` +
-    `<div><div style="font-size:18px;font-weight:700">Creador</div>` +
-    `<div class="join-note" style="margin:4px 0">${d.books} libro(s) · 💬 ${d.notes} notas</div></div></div>` +
+    `<div><div style="font-size:18px;font-weight:700">${t('lvlCreator')}</div>` +
+    `<div class="join-note" style="margin:4px 0">${t('achBooksNotes', { books: d.books, ps: d.books === 1 ? '' : 's', notes: d.notes })}</div></div></div>` +
     `<div class="ach-grid">` + d.achievements.map((a) =>
       `<div class="ach-item${a.unlocked ? '' : ' locked'}"><span>${a.unlocked ? a.emoji : '🔒'}</span><span>${esc(a.name)}</span></div>`
     ).join('') + `</div>`;
@@ -2027,18 +2027,18 @@ function kpInitial(name) {
   return esc(s.charAt(0).toUpperCase() || '?');
 }
 function creatorPanelHtml(p) {
-  const vBadge = p.verified ? '<span class="kp-verified" title="Creador verificado">✓</span>' : '';
+  const vBadge = p.verified ? '<span class="kp-verified" title="' + t('kpVerified') + '">✓</span>' : '';
   const avatar = p.photo
     ? `<div class="kp-avatar"><img src="${esc(p.photo)}" alt="Foto de ${esc(p.name)}"></div>`
     : `<div class="kp-avatar">${kpInitial(p.name)}</div>`;
-  const role = `Autor · ${p.books} libro${p.books === 1 ? '' : 's'}`;
+  const role = t('kpAuthor', { n: p.books, ps: p.books === 1 ? '' : 's' });
   const since = p.since ? new Date(p.since).toLocaleDateString('es', { month: 'long', year: 'numeric' }) : '';
   const facts =
-    (p.location ? `<div class="kp-fact"><b>Ubicación</b><span>📍 ${esc(p.location)}</span></div>` : '') +
-    (p.website ? `<div class="kp-fact"><b>Sitio web</b><a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website.replace(/^https?:\/\//i, ''))}</a></div>` : '') +
-    (since ? `<div class="kp-fact"><b>Publicando desde</b><span>📅 ${esc(since)}</span></div>` : '');
+    (p.location ? `<div class="kp-fact"><b>${t('kpLocation')}</b><span>📍 ${esc(p.location)}</span></div>` : '') +
+    (p.website ? `<div class="kp-fact"><b>${t('kpWebsite')}</b><a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website.replace(/^https?:\/\//i, ''))}</a></div>` : '') +
+    (since ? `<div class="kp-fact"><b>${t('kpSince')}</b><span>📅 ${esc(since)}</span></div>` : '');
   const links = [];
-  if (p.website) links.push(`<a class="kp-link" href="${esc(p.website)}" target="_blank" rel="noopener">🌐 Sitio oficial</a>`);
+  if (p.website) links.push(`<a class="kp-link" href="${esc(p.website)}" target="_blank" rel="noopener">${t('kpSiteOfficial')}</a>`);
   (SOCIAL_DEFS || []).forEach((s) => {
     const url = p.socials && p.socials[s.key];
     if (url) links.push(`<a class="kp-link" href="${esc(url)}" target="_blank" rel="noopener">${s.emoji} ${s.label}</a>`);
@@ -2046,11 +2046,11 @@ function creatorPanelHtml(p) {
   const booksHtml = (p.booksList && p.booksList.length)
     ? `<div class="kp-books">` + p.booksList.map((b) =>
         `<div class="kp-book" data-book="${esc(b.id)}">` +
-        (b.coverUrl ? `<img src="${esc(b.coverUrl)}" alt="Portada de ${esc(b.title)}" loading="lazy">`
+        (b.coverUrl ? `<img src="${esc(b.coverUrl)}" alt="${t('kpCoverAlt', { title: esc(b.title) })}" loading="lazy">`
           : `<div style="aspect-ratio:2/3;${coverStyle(b.id)};position:relative"><div class="cover-title" style="font-size:13px">${esc(b.title)}</div></div>`) +
         `<div class="kp-book-t">${esc(b.title)}</div></div>`
       ).join('') + `</div>`
-    : `<p class="join-note" style="margin:6px 0">Aún no tiene libros publicados.</p>`;
+    : `<p class="join-note" style="margin:6px 0">${t('kpNoBooks')}</p>`;
   return `<div class="kp">` +
     `<div class="kp-head">${avatar}<div><h3 class="kp-name">${esc(p.name)}${vBadge}</h3><div class="kp-role">${esc(role)}</div></div></div>` +
     (p.bio ? `<p class="kp-bio">${esc(p.bio)}</p>` : '') +
@@ -2058,18 +2058,18 @@ function creatorPanelHtml(p) {
     (links.length ? `<div class="kp-links">${links.join('')}</div>` : '') +
     (p.about ? `<div class="kp-sec">Acerca de</div><p class="kp-about">${esc(p.about)}</p>` : '') +
     `<div class="kp-stats">` +
-    `<div class="kp-stat"><b>${p.books}</b><span>Libros</span></div>` +
-    `<div class="kp-stat"><b>${p.notes}</b><span>Notas</span></div>` +
+    `<div class="kp-stat"><b>${p.books}</b><span>${t('kpBooks')}</span></div>` +
+    `<div class="kp-stat"><b>${p.notes}</b><span>${t('kpNotes')}</span></div>` +
     `</div>` +
-    `<div class="kp-sec">Libros de ${esc(p.name)}</div>${booksHtml}` +
-    (p.canEdit ? `<button class="btn btn-primary kp-edit" id="kpEditBtn">✏️ Editar mi perfil</button>` : '') +
+    `<div class="kp-sec">${t('kpBooksOf', { name: esc(p.name) })}</div>${booksHtml}` +
+    (p.canEdit ? `<button class="btn btn-primary kp-edit" id="kpEditBtn">${t('kpEdit')}</button>` : '') +
     `</div>`;
 }
 async function showCreatorProfile(name) {
   name = String(name || '').trim();
   if (!name) return;
   const body = $('creatorBody');
-  body.innerHTML = '<p class="join-note">Cargando perfil…</p>';
+  body.innerHTML = '<p class="join-note">' + t('kpLoading') + '</p>';
   $('creatorPop').classList.remove('hidden');
   $('creatorClose').onclick = () => $('creatorPop').classList.add('hidden');
   let p = null;
@@ -2078,7 +2078,7 @@ async function showCreatorProfile(name) {
     const d = await r.json();
     if (d && d.ok) p = d.profile;
   } catch (e) { /* sin conexión */ }
-  if (!p) { body.innerHTML = '<p class="join-note">No se pudo cargar el perfil. Revisa tu conexión.</p>'; return; }
+  if (!p) { body.innerHTML = '<p class="join-note">' + t('kpErr') + '</p>'; return; }
   body.innerHTML = creatorPanelHtml(p);
   // Libros tocables -> abrir el libro
   body.querySelectorAll('[data-book]').forEach((el) => {
@@ -2662,8 +2662,7 @@ function visibleBooks(list) {
   let l = q
     ? list.filter((b) => (b.title + ' ' + b.author).toLowerCase().includes(q))
     : [...list];
-  if (libPill === 'gratis') l = l.filter((b) => b.price === 0);
-  else if (libPill === 'destacados') l = l.filter((b) => b.featured);
+  if (libPill === 'destacados') l = l.filter((b) => b.featured);
   else if (libPill === 'nuevos') l = l.filter(isNewBook);
   else if (libPill === 'populares') l = l.filter((b) => popularity(b) > 0);
   if (libLang) l = l.filter((b) => (b.language || 'es') === libLang);
@@ -2682,7 +2681,7 @@ function coverTile(b, opts) {
     ? `<div class="age-badge">${b.ageRating === '18' ? '🔞 +18' : '🔞 +13'}</div>` : '';
   const pendBadge = b.status === 'pending' ? '<div class="feat-badge" style="background:#b45309">⏳ En revisión</div>' : '';
   const cover = b.coverUrl
-    ? `<img src="${esc(b.coverUrl)}" alt="Portada de ${esc(b.title)}" loading="lazy">`
+    ? `<img src="${esc(b.coverUrl)}" alt="${t('kpCoverAlt', { title: esc(b.title) })}" loading="lazy">`
     : `<div style="position:absolute;inset:0;${coverStyle(b.id)}"></div>`;
   t.innerHTML =
     `<div class="tile-cover">${cover}` +
@@ -2939,7 +2938,7 @@ function showImmersiveBestOffer() {
 /* Libro destacado en inmersiva: portada grande, título, autor, precio, Leer */
 function showImmersiveBook(b) {
   const visual = b.coverUrl
-    ? `<img src="${esc(b.coverUrl)}" alt="Portada de ${esc(b.title)}">`
+    ? `<img src="${esc(b.coverUrl)}" alt="${t('kpCoverAlt', { title: esc(b.title) })}">`
     : `<div style="width:100%;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:22px;${coverStyle(b.id)}"><div class="cover-title" style="font-size:24px">${esc(b.title)}</div><div class="cover-author">${esc(b.author)}</div></div>`;
   openImmersive({
     visual,
@@ -3164,7 +3163,7 @@ function renderHeroSkeleton() {
 /* Portada: si el creador subió una imagen se usa; si no, la automática. */
 function coverInner(b, small) {
   if (b.coverUrl) {
-    return `<img src="${esc(b.coverUrl)}" alt="Portada de ${esc(b.title)}" class="cover-img" loading="lazy">`;
+    return `<img src="${esc(b.coverUrl)}" alt="${t('kpCoverAlt', { title: esc(b.title) })}" class="cover-img" loading="lazy">`;
   }
   if (small) return `<span>${esc(b.title.slice(0, 2).toUpperCase())}</span>`;
   return `<div class="cover-title">${esc(b.title)}</div><div class="cover-author">${esc(b.author)}</div><div class="cover-imprint">TINTAJUNTA</div>`;
@@ -3400,18 +3399,6 @@ async function showFeature(b) {
   });
   $('featurePop').classList.remove('hidden');
 }
-/* v71 — 📖 Muestra gratis: primeros 3 párrafos en solo lectura (patrón "Look Inside").
- * Vista previa del libro antes de leerlo completo. */
-function showSample(book) {
-  const ch = (book.chapters && book.chapters[0]) || {};
-  const paras = (ch.paragraphs || []).slice(0, 3);
-  $('sampleBookLine').textContent = book.title + ' — ' + book.author;
-  $('sampleText').innerHTML = paras.length
-    ? paras.map(p => `<p>${esc(p)}</p>`).join('')
-    : '<p><i>El creador aún no agregó texto de muestra.</i></p>';
-  $('samplePop').classList.remove('hidden');
-  $('samplePop').scrollTop = 0;
-}
 /* v71 — 📤 Compartir libro: Web Share API con respaldo a portapapeles.
  * El link lleva ?libro=ID para abrir el libro directo al entrar. */
 async function shareBook(book) {
@@ -3645,9 +3632,6 @@ function initLibrary() {
     } catch (e) { toast('No se pudo publicar el libro'); }
     $('pubSave').disabled = false;
   };
-  // v71 — muestra gratis y compartir
-  $('sampleClose').onclick = () => $('samplePop').classList.add('hidden');
-  $('sampleRead').onclick = () => { $('samplePop').classList.add('hidden'); };
   /* Destacar libro en portada (anuncio pagado del creador) */
   $('featureCancel').onclick = () => { $('featurePop').classList.add('hidden'); featurePending = null; };
   $('featureConfirm').onclick = async () => {
