@@ -1770,12 +1770,12 @@ function syncNameFromLib() {
 const AD_BADGE_LABEL = { 'mas-vendido': t('adBadgeBest'), 'famoso': '⭐ Famoso' };
 /* Afiliados: recomendados por TintaJunta. Prototipo: los links reales van aquí al activar cuentas de afiliado. */
 const AFFILIATES = [
-  { emoji: '👓', img: 'img/ads/lentes.jpg', name: 'Lentes luz azul', store: 'Amazon', price: '~$25', hue: 210, url: 'https://www.amazon.com/dp/B0HC11K9C1/ref=cm_sw_r_as_gl_api_gl_i_XQ5REAJQBVWYNPKKKF8G?linkCode=ml1&tag=lenynalopez-20&linkId=3136a4a8563b0fa762bd257308a205ea&gaOptInStatus=true' },
-  { emoji: '🎧', img: 'img/ads/audifonos.jpg', name: 'Audífonos bluetooth', store: 'Amazon', price: '~$40', hue: 270, url: 'https://www.amazon.com/dp/B0H7WXNBNV/ref=cm_sw_r_as_gl_api_gl_i_RC1X2MW0SBJ9DJEK0SX8?linkCode=ml1&tag=lenynalopez-20&linkId=6c2fdb71aebaa7f63fe127c69b9ee6f0&gaOptInStatus=true' },
-  { emoji: '💡', img: 'img/ads/lampara.jpg', name: 'Lámpara de lectura', store: 'Amazon', price: '~$30', hue: 45, url: 'https://www.amazon.com/dp/B0H6YB4GN7/ref=cm_sw_r_as_gl_api_gl_i_SDGYJ51ATCR9NS1SN7D6?linkCode=ml1&tag=lenynalopez-20&linkId=46fe3a3c2f7473ed3625d2322f55b470&gaOptInStatus=true' },
-  { emoji: '📱', img: 'img/ads/ereader.jpg', name: 'E-reader', store: 'Amazon', price: '~$150', hue: 160, url: 'https://www.amazon.com/dp/B0FJ32FWKS/ref=cm_sw_r_as_gl_api_gl_i_HDYB0VVM5GG3MNXQ7NS3?linkCode=ml1&tag=lenynalopez-20&linkId=2ecd0e45383c549ae5b06621aff2f15e&gaOptInStatus=true' },
-  { emoji: '☕', img: 'img/ads/taza.jpg', name: 'Taza térmica', store: 'Amazon', price: '~$20', hue: 20, url: 'https://link.amazon/B03uHrImb' },
-  { emoji: '🪑', img: 'img/ads/cojin.jpg', name: 'Cojín de lectura', store: 'Amazon', price: '~$35', hue: 120, url: 'https://www.amazon.com/dp/B0DTBKYSHX/ref=cm_sw_r_as_gl_api_gl_i_GSX2NQ5P16XA944E76K9?linkCode=ml1&tag=lenynalopez-20&linkId=3b4379a8eadd66d35e3e00d35f012f84&gaOptInStatus=true' },
+  { emoji: '👓', img: 'img/ads/lentes.jpg', name: 'Lentes luz azul', descKey: 'affDescLentes', store: 'Amazon', price: '~$25', hue: 210, url: 'https://www.amazon.com/dp/B0HC11K9C1/ref=cm_sw_r_as_gl_api_gl_i_XQ5REAJQBVWYNPKKKF8G?linkCode=ml1&tag=lenynalopez-20&linkId=3136a4a8563b0fa762bd257308a205ea&gaOptInStatus=true' },
+  { emoji: '🎧', img: 'img/ads/audifonos.jpg', name: 'Audífonos bluetooth', descKey: 'affDescAudifonos', store: 'Amazon', price: '~$40', hue: 270, url: 'https://www.amazon.com/dp/B0H7WXNBNV/ref=cm_sw_r_as_gl_api_gl_i_RC1X2MW0SBJ9DJEK0SX8?linkCode=ml1&tag=lenynalopez-20&linkId=6c2fdb71aebaa7f63fe127c69b9ee6f0&gaOptInStatus=true' },
+  { emoji: '💡', img: 'img/ads/lampara.jpg', name: 'Lámpara de lectura', descKey: 'affDescLampara', store: 'Amazon', price: '~$30', hue: 45, url: 'https://www.amazon.com/dp/B0H6YB4GN7/ref=cm_sw_r_as_gl_api_gl_i_SDGYJ51ATCR9NS1SN7D6?linkCode=ml1&tag=lenynalopez-20&linkId=46fe3a3c2f7473ed3625d2322f55b470&gaOptInStatus=true' },
+  { emoji: '📱', img: 'img/ads/ereader.jpg', name: 'E-reader', descKey: 'affDescEreader', store: 'Amazon', price: '~$150', hue: 160, url: 'https://www.amazon.com/dp/B0FJ32FWKS/ref=cm_sw_r_as_gl_api_gl_i_HDYB0VVM5GG3MNXQ7NS3?linkCode=ml1&tag=lenynalopez-20&linkId=2ecd0e45383c549ae5b06621aff2f15e&gaOptInStatus=true' },
+  { emoji: '☕', img: 'img/ads/taza.jpg', name: 'Taza térmica', descKey: 'affDescTaza', store: 'Amazon', price: '~$20', hue: 20, url: 'https://link.amazon/B03uHrImb' },
+  { emoji: '🪑', img: 'img/ads/cojin.jpg', name: 'Cojín de lectura', descKey: 'affDescCojin', store: 'Amazon', price: '~$35', hue: 120, url: 'https://www.amazon.com/dp/B0DTBKYSHX/ref=cm_sw_r_as_gl_api_gl_i_GSX2NQ5P16XA944E76K9?linkCode=ml1&tag=lenynalopez-20&linkId=3b4379a8eadd66d35e3e00d35f012f84&gaOptInStatus=true' },
 ];
 function renderAffiliates() {
   const row = document.getElementById('rowAff');
@@ -1783,12 +1783,17 @@ function renderAffiliates() {
   row.innerHTML = '';
   AFFILIATES.forEach((a) => {
     const card = document.createElement('div');
-    card.className = 'ad-card';
+    card.className = 'aff-card';
     card.innerHTML =
-      adCardVisual(a.emoji, a.hue, a.img) +
-      `<div class="ad-badge">🔗 ${esc(a.store)}</div>` +
-      `<div class="ad-name">${esc(a.name)}</div>` +
-      `<div class="ad-note">${t('adAffNote', { price: esc(a.price) })}</div>`;
+      `<div class="aff-photo">` +
+        (a.img ? `<img src="${esc(a.img)}" alt="${esc(a.name)}" loading="lazy" decoding="async" onerror="this.remove()">` : '') +
+        `<span class="aff-emoji">${esc(a.emoji)}</span>` +
+        `<div class="aff-price">${esc(a.price)}</div>` +
+      `</div>` +
+      `<div class="aff-badge">🔗 ${esc(a.store)}</div>` +
+      `<div class="aff-name">${esc(a.name)}</div>` +
+      `<div class="aff-desc">${esc(t(a.descKey))}</div>` +
+      `<button class="aff-cta" type="button">${esc(t('adAffCta'))}</button>`;
     card.onclick = () => {
       if (a.url) window.open(a.url, '_blank', 'noopener');
       else toast(t('adAffNoCfg'));
