@@ -1254,7 +1254,7 @@ function openSwitchBookModal() {
   list.innerHTML = '';
   const books = libBooksCache || [];
   if (!books.length) {
-    list.innerHTML = '<p class="join-note">No hay libros en la biblioteca todavía.</p>';
+    list.innerHTML = '<p class="join-note">' + t('noBooksYet') + '</p>';
   }
   books.forEach((b) => {
     const isCur = currentBook && currentBook.id === b.id;
@@ -1765,7 +1765,7 @@ function syncNameFromLib() {
 }
 
 /* Solo anuncios REALES: los pagados vigentes + Best Offer. Nada de relleno. */
-const AD_BADGE_LABEL = { 'mas-vendido': '🔥 Más vendido', 'famoso': '⭐ Famoso' };
+const AD_BADGE_LABEL = { 'mas-vendido': t('adBadgeBest'), 'famoso': '⭐ Famoso' };
 /* Afiliados: recomendados por TintaJunta. Prototipo: los links reales van aquí al activar cuentas de afiliado. */
 const AFFILIATES = [
   { emoji: '👓', img: 'img/ads/lentes.jpg', name: 'Lentes luz azul', store: 'Amazon', price: '~$25', hue: 210, url: 'https://www.amazon.com/dp/B0HC11K9C1/ref=cm_sw_r_as_gl_api_gl_i_XQ5REAJQBVWYNPKKKF8G?linkCode=ml1&tag=lenynalopez-20&linkId=3136a4a8563b0fa762bd257308a205ea&gaOptInStatus=true' },
@@ -1992,7 +1992,7 @@ function paintLevelBadges(root) {
   });
 }
 function levelSpan(author) {
-  return `<span class="lvl-badge" data-level-for="${esc(author)}" title="Nivel de creador"></span>`;
+  return `<span class="lvl-badge" data-level-for="${esc(author)}" title="${t('levelTitle')}"></span>`;
 }
 async function showAchievements() {
   const name = displayName();
@@ -2647,18 +2647,18 @@ async function renderCreatorStats(book) {
   const mine = book && book.author === myName && myName && myName !== t('joinDefaultName');
   if (!mine) { el.classList.add('hidden'); el.innerHTML = ''; return; }
   el.classList.remove('hidden');
-  el.innerHTML = '<span class="cs-title">📊 Tu libro</span><span class="cs-loading">Cargando…</span>';
+  el.innerHTML = '<span class="cs-title">' + t('csTitle') + '</span><span class="cs-loading">' + t('csLoading') + '</span>';
   try {
     const r = await fetch('/api/books/' + encodeURIComponent(book.id) + '/stats', { cache: 'no-store' });
     const d = await r.json();
     if (!d.ok || !d.stats) throw 0;
     const s = d.stats;
     el.innerHTML = `<span class="cs-title">📊 Tu libro</span>` +
-      `<span class="cs-num">🎨 <b>${s.marks}</b> marcas</span>` +
-      `<span class="cs-num">💬 <b>${s.notes}</b> notas</span>` +
+      `<span class="cs-num">🎨 <b>${s.marks}</b> ${t('csMarks')}</span>` +
+      `<span class="cs-num">💬 <b>${s.notes}</b> ${t('csNotes')}</span>` +
       `<span class="cs-num">⭐ <b>${s.avg || '—'}</b> (${s.reviews})</span>`;
   } catch (e) {
-    el.innerHTML = '<span class="cs-title">📊 Tu libro</span><span class="cs-loading">Sin conexión</span>';
+    el.innerHTML = '<span class="cs-title">' + t('csTitle') + '</span><span class="cs-loading">' + t('csOffline') + '</span>';
   }
 }
 function visibleBooks(list) {
@@ -2679,11 +2679,11 @@ function coverTile(b, opts) {
   const t = document.createElement('div');
   t.className = 'tile';
   const mine = b.author === displayName() && myName !== t('joinDefaultName');
-  const vBadge = b.verifiedAuthor ? '<span class="vbadge" title="Creador verificado">✔️</span>' : '';
-  const classicBadge = b.classic ? '<div class="classic-badge">📜 Dominio público</div>' : '';
+  const vBadge = b.verifiedAuthor ? '<span class="vbadge" title="' + t('creatorVerifiedTitle') + '">✔️</span>' : '';
+  const classicBadge = b.classic ? '<div class="classic-badge">' + t('classicBadge') + '</div>' : '';
   const ageBadge = b.ageRating && b.ageRating !== 'all'
     ? `<div class="age-badge">${b.ageRating === '18' ? '🔞 +18' : '🔞 +13'}</div>` : '';
-  const pendBadge = b.status === 'pending' ? '<div class="feat-badge" style="background:#b45309">⏳ En revisión</div>' : '';
+  const pendBadge = b.status === 'pending' ? '<div class="feat-badge" style="background:#b45309">' + t('reviewBadge') + '</div>' : '';
   const cover = b.coverUrl
     ? `<img src="${esc(b.coverUrl)}" alt="${t('kpCoverAlt', { title: esc(b.title) })}" loading="lazy">`
     : `<div style="position:absolute;inset:0;${coverStyle(b.id)}"></div>`;
@@ -2691,7 +2691,7 @@ function coverTile(b, opts) {
     `<div class="tile-cover">${cover}` +
     (opts.badge ? `<div class="feat-badge">${opts.badge}</div>` : '') +
     pendBadge + classicBadge + ageBadge + langBadge(b) +
-    (getProgress(b.id) > 120 ? `<div class="prog-badge">📖 Continuar</div>` : '') +
+    (getProgress(b.id) > 120 ? `<div class="prog-badge">${t('tileContinue')}</div>` : '') +
     reportBadge(b) +
     (b.coverUrl ? '' : `<div class="cover-title">${esc(b.title)}</div><div class="cover-author creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</div>`) +
     `</div>` +
@@ -2758,9 +2758,9 @@ function renderContinueReading() {
         ? `<img src="${esc(meta.cover)}" alt="" loading="lazy">`
         : `<span class="continue-cover-ph">📖</span>`}</span>
       <span class="continue-info">
-        <b>${esc(meta.title || 'Libro')}</b>
+        <b>${esc(meta.title || t('libBookWord'))}</b>
         <i>${esc(meta.author || '')}</i>
-        <span class="continue-cta">Seguir leyendo →</span>
+        <span class="continue-cta">${t('contCta')}</span>
       </span>
     </button>`).join('');
   row.querySelectorAll('.continue-card').forEach((c) =>
@@ -2777,7 +2777,7 @@ function renderRows() {
   const rec = visibleBooks(libBooksCache.filter((b) => !b.featured && !b.classic));
   fillRow('rowRecomendados',
     rec.map((b) => coverTile(b, {})),
-    libQuery ? 'Sin resultados para tu búsqueda. Prueba con otro título.' : 'Aún no hay libros aquí — ¡publica el primero con ＋ Publicar libro!');
+    libQuery ? t('noResults') : t('publishFirst'));
   // 📜 Clásicos gratis: dominio público, sin creador
   const cls = libBooksCache.filter((b) => b.classic);
   const secC = document.getElementById('secClassics');
@@ -2912,8 +2912,8 @@ function showImmersiveAd(a, paid) {
     bg: a.photoUrl ? '' : `linear-gradient(150deg,hsl(${hue},60%,50%),hsl(${(hue + 40) % 360},55%,30%))`,
     badge,
     title: a.name,
-    sub: paid ? `⏳ ${a.daysLeft} día${a.daysLeft === 1 ? '' : 's'} en portada` : 'Lo más famoso y más vendido para tu momento de lectura.',
-    cta: mine ? '🔄 Renovar anuncio' : (paid ? 'Comprar' : 'Anunciar aquí'),
+    sub: paid ? t('adDaysLeft', { n: a.daysLeft, ps: a.daysLeft === 1 ? '' : 's' }) : t('adFeatSub'),
+    cta: mine ? t('adRenew') : (paid ? t('adBuyNow') : t('adHere')),
     tag: 'ANUNCIO',
     onCta: mine
       ? () => { closeImmersive(); showAdModal(a); }
@@ -2931,9 +2931,9 @@ const BEST_OFFER_URL = 'https://facebook.com/groups/1620696721546400/';
 function showImmersiveBestOffer() {
   openImmersive({
     visual: `<img src="img/best-offer-logo.jpg" alt="Best Offer" loading="lazy" decoding="async">`,
-    badge: '⭐ Comunidad',
+    badge: t('adCommunity'),
     title: 'Best Offer',
-    sub: 'Compra y vende con más de 8,400 miembros. El grupo de nuestra comunidad.',
+    sub: t('adBestOfferSub'),
     cta: 'Abrir grupo',
     tag: 'COMUNIDAD',
     onCta: () => { window.open(BEST_OFFER_URL, '_blank', 'noopener'); },
@@ -2950,7 +2950,7 @@ function showImmersiveBook(b) {
     title: b.title,
     sub: `${b.author}`,
     subHtml: `<span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> · <span class="tile-rating" id="immRating">${ratingText(b)}</span>`,
-    cta: 'Leer ahora',
+    cta: t('tileReadNow'),
     tag: 'TINTAJUNTA',
     onCta: () => { closeImmersive(); openBook(b.id); },
   });
@@ -2963,7 +2963,7 @@ function showImmersiveBook(b) {
     rb = document.createElement('button');
     rb.id = 'immReport';
     rb.className = 'imm-report';
-    rb.title = 'Reportar este libro';
+    rb.title = t('repBtnTitle');
     rb.textContent = '🚩';
     imm.appendChild(rb);
   }
@@ -2975,7 +2975,7 @@ function showImmersiveBook(b) {
     sb = document.createElement('button');
     sb.id = 'immShare';
     sb.className = 'imm-share';
-    sb.title = 'Compartir este libro';
+    sb.title = t('buyShareTitle');
     sb.textContent = '📤';
     imm.appendChild(sb);
   }
@@ -2994,7 +2994,7 @@ function heroSlideBook(b) {
     (isNewBook(b) ? `<span class="hero-tag">🆕 NUEVO</span>` : '') + `</div>`;
   const meta = `<span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0}`;
   const desc = (b.marks || b.notes)
-    ? `La comunidad ya dejó ${b.marks || 0} marcas y ${b.notes || 0} notas en este libro.`
+    ? t('communityMarks', { marks: b.marks || 0, notes: b.notes || 0 })
     : `Sé de los primeros en leerlo y marcarlo con tu tinta.`;
   return `<div class="hero-slide" style="${bg}">
     ${bgDiv}
@@ -3185,9 +3185,9 @@ function bookRow(b, rank) {
       `<div class="row-meta"><span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0}` +
       `</div>` +
     `</div>` +
-    `<button class="info-btn" data-act="info" title="Ver ficha">i</button>` +
-    `<button class="btn row-btn" data-act="open">Leer</button>` +
-    (mine ? `<button class="linklike" data-act="feature" title="Destacar en portada">⭐</button>` : '');
+    `<button class="info-btn" data-act="info" title="${t('libViewRecord')}">i</button>` +
+    `<button class="btn row-btn" data-act="open">${t('libReadBtn')}</button>` +
+    (mine ? `<button class="linklike" data-act="feature" title="${t('tileFeatureTitle')}">⭐</button>` : '');
   row.querySelector('[data-act="open"]').onclick = () => openBook(b.id);
   row.querySelector('[data-act="info"]').onclick = () => openBook(b.id);
   const fbtn = row.querySelector('[data-act="feature"]');
@@ -3228,7 +3228,7 @@ function bookCard(b, isFeat) {
     coverInner(b, false) + `</div>` +
     `<div class="book-info">` +
     `<div class="book-foot">${activity}</div>` +
-    `<button class="btn" data-act="open">Leer</button>` +
+    `<button class="btn" data-act="open">${t('libReadBtn')}</button>` +
     (mine && !isFeat ? `<button class="linklike" data-act="feature">⭐ Destacar</button>` : '') +
     `</div>`;
   card.querySelector('[data-act="open"]').onclick = () => openBook(b.id);
@@ -3248,11 +3248,11 @@ async function openBook(id, push) {
     const d = await r.json();
     if (!d.ok) throw 0;
     book = d.book;
-  } catch (e) { toast('No se pudo abrir el libro — revisa tu conexión e intenta de nuevo'); return; }
+  } catch (e) { toast(t('buyLoadErr')); return; }
   // Todos los libros son gratis: se abren directo
   // Advertencia de contenido adulto
   if (book.ageRating === '18' && !sessionStorage.getItem('tj_age_ok_' + book.id)) {
-    $('ageText').textContent = `"${book.title}" está clasificado +18 (contenido para adultos).`;
+    $('ageText').textContent = t('buyRated18', { title: book.title });
     $('agePop').classList.remove('hidden');
     $('ageCancel').onclick = () => $('agePop').classList.add('hidden');
     $('ageConfirm').onclick = () => {
@@ -3371,7 +3371,7 @@ async function finalizeAd(params, sessionId) {
       await fetch('/api/ads/' + encodeURIComponent(adId) + '/photo', { method: 'POST', body: fd });
     } catch (e) { /* la foto es opcional */ }
   }
-  toast(params.id ? '🔄 ¡Anuncio renovado!' : '📢 ¡Tu anuncio está en portada!');
+  toast(params.id ? t('adRenewed') : t('adOk'));
   try { renderAds(); } catch (e) {}
 }
 /* Modal para destacar un libro propio en portada */
@@ -3408,7 +3408,7 @@ async function showFeature(b) {
 async function shareBook(book) {
   if (!book) return;
   const url = location.origin + '/?libro=' + encodeURIComponent(book.id);
-  const text = `📚 "${book.title}" de ${book.author} — léelo conmigo en TintaJunta`;
+  const text = t('shareText', { title: book.title, author: book.author });
   try {
     if (navigator.share) {
       await navigator.share({ title: book.title, text, url });
@@ -3429,12 +3429,12 @@ async function shareBook(book) {
  * Paletas editoriales + textura + vista previa en vivo → render a canvas → blob para subir. */
 let generatedCoverBlob = null;
 const COVER_PALETTES = [
-  { name: 'Azul tinta',  c: ['#1e3a5f', '#142a45', '#0f2033'] },
-  { name: 'Carbón',      c: ['#2b2b2b', '#1a1a1a', '#0f0f0f'] },
-  { name: 'Dorado',      c: ['#8a5a1e', '#6e4715', '#54360f'] },
-  { name: 'Bosque',      c: ['#3d4a3d', '#2c362c', '#1e251e'] },
-  { name: 'Tierra',      c: ['#5a4a3a', '#453a2e', '#33291f'] },
-  { name: 'Pizarra',     c: ['#4a4a5a', '#383844', '#282832'] },
+  { name: t('palInkBlue'),  c: ['#1e3a5f', '#142a45', '#0f2033'] },
+  { name: t('palCharcoal'),      c: ['#2b2b2b', '#1a1a1a', '#0f0f0f'] },
+  { name: t('palGold'),      c: ['#8a5a1e', '#6e4715', '#54360f'] },
+  { name: t('palForest'),      c: ['#3d4a3d', '#2c362c', '#1e251e'] },
+  { name: t('palEarth'),      c: ['#5a4a3a', '#453a2e', '#33291f'] },
+  { name: t('palSlate'),     c: ['#4a4a5a', '#383844', '#282832'] },
 ];
 let coverMakerState = { pal: 0, pat: 'dots' };
 function coverMakerCSS(pal, pat) {
@@ -3527,12 +3527,12 @@ function initCoverMaker() {
   // usar portada generada
   $('coverUseBtn').onclick = async () => {
     const st = $('coverMakerStatus');
-    st.textContent = '⏳ Generando portada…';
+    st.textContent = t('pubCoverGen');
     try {
       const blob = await renderCoverToBlob();
       if (!blob) { st.textContent = '❌ No se pudo generar'; return; }
       generatedCoverBlob = new File([blob], 'portada.jpg', { type: 'image/jpeg' });
-      st.textContent = '✅ Portada lista — se usará al publicar';
+      st.textContent = t('pubCoverOk');
       toast('✅ Portada creada — lista para publicar');
     } catch (e) { st.textContent = '❌ Error al generar'; }
   };
@@ -3554,7 +3554,7 @@ function initLibrary() {
       renderFollow();
       renderSwitchBookBtn();
       renderHands();
-      toast(isTeacher ? '🎓 Modo profesor: tinta negra' : 'Modo estudiante');
+      toast(isTeacher ? t('teacherMode') : t('studentMode'));
     };
   }
   $('liveRoomBtn').onclick = goLiveRoom;
@@ -3682,13 +3682,13 @@ async function checkAuth() {
     if (btn) {
       btn.onclick = () => {
         closeDrawer();
-        if (tjUser) { if (confirm('¿Cerrar sesión de ' + (tjUser.name || tjUser.email) + '?')) googleLogout(); }
+        if (tjUser) { if (confirm(t('logoutOf') + (tjUser.name || tjUser.email) + '?')) googleLogout(); }
         else googleLogin();
       };
       if (tjUser) {
-        btn.innerHTML = '👤 ' + esc(tjUser.name || tjUser.email || 'Mi cuenta');
+        btn.innerHTML = '👤 ' + esc(tjUser.name || tjUser.email || t('myAccount'));
       } else if (tjGoogleEnabled) {
-        btn.innerHTML = '🔐 Entrar con Google';
+        btn.innerHTML = t('googleLogin');
       } else {
         btn.style.display = 'none';
       }
@@ -3734,7 +3734,7 @@ async function refreshAdminBadge() {
     const d = await r.json();
     if (d && d.ok) {
       const n = (d.pendingFeedback || 0) + d.pendingBooks.length + d.pendingIdentity.length + d.pendingBank.length;
-      ab.textContent = n > 0 ? `🛡️ Revisión (${n})` : '🛡️ Revisión';
+      ab.textContent = n > 0 ? t('dwAdminN', { n }) : t('dwAdmin');
     }
   } catch (e) {}
 }
@@ -3795,6 +3795,16 @@ function initImdbBar() {
   if (ff) ff.onclick = (e) => { e.preventDefault(); showFeedbackModal(); };
   /* v77 — Login Google visible en header */
   initHeaderAuth();
+  /* i18n — selector de idioma ES/EN */
+  try { initLangUI(); } catch (e) {}
+  window.addEventListener('uilang', () => {
+    try { renderRows(); } catch (e) {}
+    try { if (typeof renderAds === 'function') renderAds(); } catch (e) {}
+    try { if (typeof renderHero === 'function') renderHero(); } catch (e) {}
+    try { if (typeof updateRoomLabel === 'function') updateRoomLabel(); } catch (e) {}
+    try { if (typeof renderTools === 'function') renderTools(); } catch (e) {}
+    try { if (typeof showLibrary === 'function' && !document.getElementById('library').classList.contains('hidden')) showLibrary(false); } catch (e) {}
+  });
   // vista inmersiva
   $('immClose').onclick = closeImmersive;
   $('immCta').onclick = () => { if (immCtaFn) immCtaFn(); };
@@ -3808,7 +3818,7 @@ function toggleTheme() {
   localStorage.setItem('tj_theme', cur === 'dark' ? 'light' : 'dark');
   applyTheme();
   const tb = document.querySelector('#drawer button[data-go="theme"]');
-  if (tb) tb.textContent = (localStorage.getItem('tj_theme') === 'dark' ? '☀️' : '🌙') + ' Tema';
+  if (tb) tb.textContent = (localStorage.getItem('tj_theme') === 'dark' ? '☀️' : '🌙') + t('themeLabel');
 }
 
 /* ---------- ✍️ Escribir ---------- */
@@ -3829,7 +3839,7 @@ async function renderWritings() {
     const r = await fetch('/api/writings');
     const d = await r.json();
     const list = d.writings || [];
-    if (!list.length) { box.innerHTML = '<p class="join-sub">Aún no tienes escritos.</p>'; return; }
+    if (!list.length) { box.innerHTML = '<p class="join-sub">' + t('wrEmpty') + '</p>'; return; }
     box.innerHTML = '';
     list.forEach((w, i) => {
       const row = document.createElement('div');
@@ -3838,7 +3848,7 @@ async function renderWritings() {
         `<div class="rank-badge">#${i + 1}</div>` +
         `<div class="row-main"><div class="row-title">✍️ ${esc(w.title)}</div>` +
         `<div class="row-meta">${esc(w.author)} · ${esc(w.preview)}${w.preview.length >= 140 ? '…' : ''}</div></div>` +
-        `<button class="btn row-btn">Leer</button>`;
+        `<button class="btn row-btn">${t('libReadBtn')}</button>`;
       row.querySelector('button').onclick = () => openWriting(w.id);
       row.querySelector('.row-main').onclick = () => openWriting(w.id);
       box.appendChild(row);

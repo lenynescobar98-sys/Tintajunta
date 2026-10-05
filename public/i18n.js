@@ -861,6 +861,7 @@ I18N.es.creatorVerified = '✔️';
 I18N.es.creatorVerifiedTitle = 'Creador verificado';
 I18N.es.blackInk = 'Negro — reservado para el profesor 🎓';
 I18N.es.teacherMode = '🎓 Modo profesor: tinta negra';
+I18N.es.studentMode = 'Modo estudiante';
 /* ---------- hero ---------- */
 I18N.es.heroCtaRead = 'Leer ahora';
 I18N.es.heroCtaView = 'Ver libro';
@@ -1045,6 +1046,7 @@ I18N.en.creatorVerified = '✔️';
 I18N.en.creatorVerifiedTitle = 'Verified creator';
 I18N.en.blackInk = 'Black — reserved for the teacher 🎓';
 I18N.en.teacherMode = '🎓 Teacher mode: black ink';
+I18N.en.studentMode = 'Student mode';
 I18N.en.heroCtaRead = 'Read now';
 I18N.en.heroCtaView = 'View book';
 I18N.en.immClose = 'Close';
@@ -1231,6 +1233,16 @@ I18N.en.palGold = 'Gold';
 I18N.en.palForest = 'Forest';
 I18N.en.palEarth = 'Earth';
 I18N.en.palSlate = 'Slate';
+
+
+I18N.es.contCta = 'Seguir leyendo →';
+I18N.es.buyLoadErr = 'No se pudo abrir el libro — revisa tu conexión e intenta de nuevo';
+I18N.es.themeLabel = ' Tema';
+
+
+I18N.en.contCta = 'Keep reading →';
+I18N.en.buyLoadErr = "Couldn't open the book — check your connection and try again";
+I18N.en.themeLabel = ' Theme';
 
 /* ================= motor i18n ================= */
 let UI_LANG = 'es';
