@@ -1645,6 +1645,19 @@ main.layout article.chapter .paras p {
   background: #faf8f3; border: 1px solid #e8e0cf; border-radius: 10px;
 }
 .para-label { font-weight: 700; font-size: 14px; color: #8a5a1e; letter-spacing: .3px; }
+/* 📄 Paginación inferior: Anterior / Siguiente — siempre visible al final de la lectura */
+.page-nav { display: flex; gap: 12px; margin: 24px 0 12px; }
+.page-nav-btn {
+  flex: 1; min-height: 54px; padding: 12px 16px;
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 17px; font-weight: 700;
+  background: var(--accent); color: #fff;
+  border: 2px solid var(--accent); border-radius: 14px;
+  cursor: pointer; touch-action: manipulation;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+.page-nav-btn:active { transform: translateY(1px); }
+.page-nav-btn:disabled { opacity: .35; cursor: default; box-shadow: none; }
 /* Párrafo enfocado por el profesor: se destaca para todos */
 #paras p.para-focus {
   background: #fff8e8; border-left: 4px solid #c9962e;
