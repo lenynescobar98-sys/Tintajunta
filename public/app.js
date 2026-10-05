@@ -1015,6 +1015,7 @@ function initBoard() {
 /* El profesor activa "Sígueme" y la pantalla de todos sigue su scroll. */
 let follow = { active: false, pos: 0, ts: 0, name: '' };
 let iFollow = false;          // yo (estudiante) estoy siguiendo ahora
+let iUnfollowed = false;      // yo dejé de seguir manualmente (no re-activar solo)
 let followScrolling = false;  // scroll programático en curso (no cuenta como manual)
 let followInitDone = false;
 
@@ -1047,16 +1048,37 @@ function renderFollow() {
   if (isTeacher) { if (pill) pill.classList.add('hidden'); return; }
   if (!follow.active || currentView !== 'room') {
     iFollow = false;
+    iUnfollowed = false; // reset: la próxima activación sí sigue
     if (pill) pill.classList.add('hidden');
     return;
   }
-  if (!iFollow) iFollow = true; // el profesor lo activó → empiezo a seguir
-  if (pill) pill.classList.remove('hidden');
+  // Solo auto-activo si el usuario no dejó de seguir manualmente
+  if (!iFollow && !iUnfollowed) iFollow = true; // el profesor lo activó → empiezo a seguir
+  if (pill) {
+    pill.classList.remove('hidden');
+    // Texto según estado: siguiendo o no
+    pill.innerHTML = iFollow
+      ? '👀 Siguiendo al profesor'
+      : '👀 Toca para seguir al profesor';
+  }
   followScrollTo();
 }
 
 function initFollow() {
   const btn = $('followBtn');
+  const pill = $('followPill');
+  // Tocar la píldora vuelve a seguir al profesor
+  if (pill && !pill.dataset.followBound) {
+    pill.dataset.followBound = '1';
+    pill.onclick = () => {
+      if (follow.active && !iFollow && currentView === 'room') {
+        iFollow = true;
+        iUnfollowed = false;
+        toast('👀 Siguiendo al profesor de nuevo');
+        renderFollow();
+      }
+    };
+  }
   if (btn) btn.onclick = () => {
     if (!isTeacher) return;
     const activating = !follow.active;
@@ -1083,8 +1105,9 @@ function initFollow() {
           }
         }, 500);
       } else if (iFollow && !followScrolling && currentView === 'room') {
-        // el estudiante se movió por su cuenta → deja de seguir
+        // el estudiante se movió por su cuenta → deja de seguir (una sola vez)
         iFollow = false;
+        iUnfollowed = true; // no re-activar automáticamente
         toast('Dejaste de seguir al profesor');
         renderFollow();
       }
