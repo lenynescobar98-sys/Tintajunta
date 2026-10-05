@@ -44,6 +44,31 @@ async function createPaymentIntent(amount, currency = 'usd', description = '', m
   return { ok: true, simulated: false, clientSecret: pi.client_secret, id: pi.id };
 }
 
+/* Crea una Checkout Session de Stripe. Devuelve { ok, url, id }
+ * Funciona con llaves restringidas que tengan permiso 'checkout_session_write'. */
+async function createCheckoutSession(amount, description = '', metadata = {}, successUrl = '', cancelUrl = '') {
+  const s = getStripe();
+  if (!s) return { ok: false, error: 'stripe-disabled' };
+  try {
+    const session = await s.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: { name: String(description).slice(0, 200) || 'TintaJunta' },
+          unit_amount: Math.round(amount),
+        },
+        quantity: 1,
+      }],
+      metadata,
+      success_url: successUrl || 'https://tintajunta.com/?pago=ok',
+      cancel_url: cancelUrl || 'https://tintajunta.com/?pago=cancelado',
+    });
+    return { ok: true, simulated: false, url: session.url, id: session.id };
+  } catch (e) {
+    return { ok: false, error: 'stripe-error', detail: String(e.message || e).slice(0, 200) };
+  }
+}
 /* Verifica un PaymentIntent contra la API de Stripe (lado servidor).
  * Devuelve { ok:true, status, amount } si existe. */
 async function verifyPaymentIntent(paymentIntentId) {
@@ -72,6 +97,6 @@ function verifyWebhook(req) {
 }
 
 module.exports = {
-  isEnabled, getStripe, createPaymentIntent, verifyPaymentIntent, verifyWebhook,
+  isEnabled, getStripe, createPaymentIntent, createCheckoutSession, verifyPaymentIntent, verifyWebhook,
   publishableKey: STRIPE_PUBLISHABLE_KEY,
 };

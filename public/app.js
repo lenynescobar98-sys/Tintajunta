@@ -3217,13 +3217,10 @@ async function getStripeJs() {
   return stripeJs;
 }
 /* Flujo de pago: crea el PaymentIntent en el servidor, cobra con la tarjeta,
- * devuelve el paymentIntentId verificado. Lanza Error si falla o se cancela. */
+ * Redirige a Stripe Checkout. Devuelve el sessionId. */
 function payWithStripe({ type, intentParams, description, amountCents }) {
   return new Promise(async (resolve, reject) => {
-    let stripe;
-    try { stripe = await getStripeJs(); }
-    catch (e) { reject(new Error('stripe-no-disponible')); return; }
-    // 1. Crear el PaymentIntent en el servidor
+    // 1. Crear la Checkout Session en el servidor
     let intent;
     try {
       const r = await fetch('/api/payments/intent', {
@@ -3231,38 +3228,17 @@ function payWithStripe({ type, intentParams, description, amountCents }) {
         body: JSON.stringify({ type, ...intentParams }),
       });
       intent = await r.json();
-      if (!intent.ok || !intent.clientSecret) throw new Error(intent.error || 'intent-failed');
+      if (!intent.ok || !intent.checkoutUrl) throw new Error(intent.error || 'intent-failed');
     } catch (e) { reject(e); return; }
-    // 2. Mostrar el modal de tarjeta
-    $('payDesc').textContent = description;
-    $('payAmount').textContent = fmtPrice(intent.amount != null ? intent.amount : amountCents);
-    $('payPop').classList.remove('hidden');
-    const elements = stripe.elements();
-    if (stripeCard) { try { stripeCard.unmount(); } catch (e) {} }
-    stripeCard = elements.create('card', { style: { base: { fontSize: '16px' } } });
-    stripeCard.mount('#payCard');
-    const done = (ok, val) => {
-      $('payPop').classList.add('hidden');
-      try { stripeCard.unmount(); } catch (e) {}
-      stripeCard = null;
-      ok ? resolve(val) : reject(val instanceof Error ? val : new Error(String(val || 'cancelado')));
-    };
-    $('payCancel').onclick = () => done(false, 'cancelado');
-    $('payConfirm').onclick = async () => {
-      $('payConfirm').disabled = true;
-      $('payConfirm').textContent = 'Procesando…';
-      try {
-        const cr = await stripe.confirmCardPayment(intent.clientSecret, {
-          payment_method: { card: stripeCard },
-        });
-        if (cr.error) throw new Error(cr.error.message || 'pago-rechazado');
-        done(true, intent.paymentIntentId);
-      } catch (e) { done(false, e); }
-      $('payConfirm').disabled = false;
-      $('payConfirm').textContent = 'Pagar';
-    };
+    // 2. Redirigir a Stripe Checkout (página segura de Stripe)
+    // Guarda el sessionId para verificar al volver
+    try { localStorage.setItem('tj_pending_session', intent.sessionId); } catch (e) {}
+    window.location.href = intent.checkoutUrl;
+    // La promesa se resuelve al volver de Stripe (ver initCheckoutReturn)
+    setTimeout(() => resolve(intent.sessionId), 1000);
   });
 }
+/* Al volver de Stripe Checkout (?pago=ok), verifica la sesión pendiente */
 /* Modal para destacar un libro propio en portada */
 async function showFeature(b) {
   syncNameFromLib();

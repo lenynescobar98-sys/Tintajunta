@@ -409,12 +409,12 @@ app.post('/api/payments/intent', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'bad-type' });
     }
     if (!(amount > 0)) return res.status(400).json({ ok: false, error: 'free' });
-    const pi = await stripePay.createPaymentIntent(amount, 'usd', description, { tj_type: type });
-    if (!pi.ok) return res.status(500).json({ ok: false, error: pi.error || 'stripe-error' });
-    pendingStripe.set(pi.id, { ...data, amount, ts: Date.now() });
+    const cs = await stripePay.createCheckoutSession(amount, description, { tj_type: type, ...data });
+    if (!cs.ok) return res.status(500).json({ ok: false, error: cs.error || 'stripe-error' });
+    pendingStripe.set(cs.id, { ...data, amount, ts: Date.now() });
     // limpieza de pendientes viejos (1h)
     for (const [k, v] of pendingStripe) if (Date.now() - v.ts > 3600e3) pendingStripe.delete(k);
-    res.json({ ok: true, clientSecret: pi.clientSecret, paymentIntentId: pi.id, amount });
+    res.json({ ok: true, checkoutUrl: cs.url, sessionId: cs.id, amount });
   } catch (e) {
     console.error('[tintajunta] intent error:', e.message);
     res.status(500).json({ ok: false, error: 'stripe-error' });
