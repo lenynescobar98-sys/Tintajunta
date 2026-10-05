@@ -18,44 +18,46 @@
 <div id="library" class="join">
   <!-- Barra superior estilo IMDb -->
   <header id="imdbBar" class="imdb-bar">
-    <button id="menuBtn" class="imdb-icon" title="Menú">☰</button>
+    <button id="menuBtn" class="imdb-icon" data-i18n-title="menuTitle" title="Menú">☰</button>
     <div class="imdb-logo">TintaJunta</div>
     <div class="imdb-spacer"></div>
-    <button id="searchToggle" class="imdb-icon" title="Buscar">🔍</button>
-    <button id="enterBtn" class="imdb-enter">⚡<span class="enter-long"> Sala en vivo</span><span class="enter-short"> Sala</span></button>
-    <button id="loginBtn" class="imdb-login" title="Entrar con Google">🔐<span class="login-long"> Entrar</span></button>
+    <button id="searchToggle" class="imdb-icon" data-i18n-title="searchTitle" title="Buscar">🔍</button>
+    <button id="langBtn" class="imdb-icon lang-btn" data-i18n-title="langBtnTitle" title="Idioma · Language"><span id="langBtnLbl">EN</span></button>
+    <button id="enterBtn" class="imdb-enter">⚡<span class="enter-long" data-i18n="liveLong"> Sala en vivo</span><span class="enter-short" data-i18n="liveShort"> Sala</span></button>
+    <button id="loginBtn" class="imdb-login" data-i18n-title="loginTitle" title="Entrar con Google">🔐<span class="login-long" data-i18n="loginLong"> Entrar</span></button>
     <div id="userChip" class="user-chip hidden" hidden>
       <img id="userAvatar" class="user-avatar" alt="">
       <span id="userName" class="user-name"></span>
       <div id="userMenu" class="user-menu hidden" hidden>
-        <button id="userProfileBtn">👤 Mi perfil</button>
-        <button id="logoutBtn">↩ Salir</button>
+        <button id="userProfileBtn" data-i18n="myProfile">👤 Mi perfil</button>
+        <button id="logoutBtn" data-i18n="logoutBtn">↩ Salir</button>
       </div>
     </div>
   </header>
   <div id="searchBar" class="search-bar hidden">
-    <input id="searchInput" type="search" placeholder="Buscar por título o autor…" autocomplete="off">
+    <input id="searchInput" type="search" data-i18n-ph="searchPh" placeholder="Buscar por título o autor…" autocomplete="off">
   </div>
   <nav id="drawer" class="drawer hidden" hidden aria-label="Menú">
     <div class="drawer-head">TintaJunta</div>
-    <button data-go="library">📚 Biblioteca</button>
-    <button data-go="write">✍️ Escribir</button>
-    <button data-go="live">⚡ Sala en vivo</button>
-    <button data-go="publish">＋ Publicar libro</button>
-    <button data-go="ad">📢 Anunciar</button>
-    <button data-go="achievements">🏆 Mis logros</button>
-    <button data-go="profile">👤 Mi perfil</button>
-    <button id="googleLoginBtn" data-go="google-login">🔐 Entrar con Google</button>
-    <button data-go="verify">✅ Verificaciones</button>
-    <button data-go="admin" id="adminBtn" class="hidden">🛡️ Revisión</button>
-    <button data-go="feedback">🐛 Reportar problema</button>
-    <button data-go="theme">🌙 Tema</button>
+    <button data-go="library" data-i18n="dwLibrary">📚 Biblioteca</button>
+    <button data-go="write" data-i18n="dwWrite">✍️ Escribir</button>
+    <button data-go="live" data-i18n="dwLive">⚡ Sala en vivo</button>
+    <button data-go="publish" data-i18n="dwPublish">＋ Publicar libro</button>
+    <button data-go="ad" data-i18n="dwAd">📢 Anunciar</button>
+    <button data-go="achievements" data-i18n="dwAch">🏆 Mis logros</button>
+    <button data-go="profile" data-i18n="dwProfile">👤 Mi perfil</button>
+    <button id="googleLoginBtn" data-go="google-login" data-i18n="dwGoogle">🔐 Entrar con Google</button>
+    <button data-go="verify" data-i18n="dwVerify">✅ Verificaciones</button>
+    <button data-go="admin" id="adminBtn" class="hidden" data-i18n="dwAdmin">🛡️ Revisión</button>
+    <button data-go="feedback" data-i18n="dwFeedback">🐛 Reportar problema</button>
+    <button data-go="theme" id="themeDrawerBtn">🌙 Tema</button>
+    <button data-go="lang" id="langDrawerBtn">🌐 English</button>
   </nav>
   <div id="drawerScrim" class="drawer-scrim hidden" hidden></div>
   <div class="join-card lib-card lib-stream">
     <!-- v68: Seguir leyendo (patrón Goodreads) — lo primero que ve quien vuelve -->
     <section id="secContinue" class="continue-sec hidden">
-      <h2 class="row-h2">📖 Seguir leyendo</h2>
+      <h2 class="row-h2" data-i18n="secContinue">📖 Seguir leyendo</h2>
       <div id="continueRow" class="hrow continue-row"></div>
     </section>
     <div id="heroCarousel" class="hero-carousel hero-big hidden">
@@ -63,13 +65,13 @@
       <div id="heroDots" class="hero-dots"></div>
     </div>
     <div id="pillsRow" class="pills-row">
-      <button class="pill on" data-pill="todos">Todos</button>
-      <button class="pill" data-pill="gratis">Gratis</button>
-      <button class="pill" data-pill="destacados">Destacados</button>
-      <button class="pill" data-pill="nuevos">Nuevos</button>
-      <button class="pill" data-pill="populares">Populares</button>
+      <button class="pill on" data-pill="todos" data-i18n="pillTodos">Todos</button>
+      <button class="pill" data-pill="gratis" data-i18n="pillGratis">Gratis</button>
+      <button class="pill" data-pill="destacados" data-i18n="pillDestacados">Destacados</button>
+      <button class="pill" data-pill="nuevos" data-i18n="pillNuevos">Nuevos</button>
+      <button class="pill" data-pill="populares" data-i18n="pillPopulares">Populares</button>
       <select id="langFilter" class="lang-filter" title="Filtrar por idioma">
-        <option value="">🌍 Idioma: Todos</option>
+        <option value="" data-i18n="langFilterAll">🌍 Idioma: Todos</option>
         <option value="es">🇪🇸 Español</option>
         <option value="en">🇬🇧 English</option>
         <option value="fr">🇫🇷 Français</option>
@@ -83,63 +85,67 @@
       </select>
     </div>
     <section class="row-sec" id="secDestacados">
-      <h2 class="row-h2">⭐ Destacados <span class="row-more">›</span></h2>
-      <p class="row-sub">Los libros más visibles de la portada.</p>
+      <h2 class="row-h2"><span data-i18n="secDestacados">⭐ Destacados</span> <span class="row-more">›</span></h2>
+      <p class="row-sub" data-i18n="secDestacadosSub">Los libros más visibles de la portada.</p>
       <div id="rowDestacados" class="hrow"></div>
     </section>
     <section class="row-sec">
-      <h2 class="row-h2">📚 Recomendados <span class="row-more">›</span></h2>
+      <h2 class="row-h2"><span data-i18n="secRecomendados">📚 Recomendados</span> <span class="row-more">›</span></h2>
       <div id="rowRecomendados" class="hrow"></div>
     </section>
+    <!-- Google AdSense: slot 1 — después de Recomendados -->
+    <div class="adsense-slot" id="adsenseSlot1" data-slot="1" aria-label="Publicidad"></div>
     <section class="row-sec" id="secClassics">
-      <h2 class="row-h2">📜 Clásicos gratis <span class="row-more">›</span></h2>
-      <p class="row-sub">Obras de dominio público — gratis para todos, sin creador.</p>
+      <h2 class="row-h2"><span data-i18n="secClassics">📜 Clásicos gratis</span> <span class="row-more">›</span></h2>
+      <p class="row-sub" data-i18n="secClassicsSub">Obras de dominio público — gratis para todos, sin creador.</p>
       <div id="rowClassics" class="hrow"></div>
     </section>
+    <!-- Google AdSense: slot 2 — después de Clásicos -->
+    <div class="adsense-slot" id="adsenseSlot2" data-slot="2" aria-label="Publicidad"></div>
     <section class="marquee-sec" id="secMarquee">
       <div class="marquee-head">
-        <h2 class="row-h2">La biblioteca en movimiento</h2>
-        <button id="marqueePause" class="chip-btn" title="Pausar / seguir">⏸</button>
+        <h2 class="row-h2" data-i18n="secMarquee">La biblioteca en movimiento</h2>
+        <button id="marqueePause" class="chip-btn" data-i18n-title="marqueeTitle" title="Pausar / seguir">⏸</button>
       </div>
       <div class="marquee"><div id="marqueeTrack" class="marquee-track"></div></div>
     </section>
     <section class="row-sec" id="secAds">
-      <h2 class="row-h2">🛍️ Para leer mejor <span class="ads-tag">Anuncios</span> <span class="row-more">›</span></h2>
-      <p class="row-sub">Anuncios pagados: solo aparecen en este espacio, nunca interrumpen tu lectura.</p>
+      <h2 class="row-h2"><span data-i18n="secAds">🛍️ Para leer mejor</span> <span class="ads-tag" data-i18n="adsTag">Anuncios</span> <span class="row-more">›</span></h2>
+      <p class="row-sub" data-i18n="secAdsSub">Anuncios pagados: solo aparecen en este espacio, nunca interrumpen tu lectura.</p>
       <div id="rowAds" class="hrow"></div>
     </section>
     <section class="row-sec" id="secAff">
-      <h2 class="row-h2">🔗 Recomendados <span class="ads-tag">Afiliados</span> <span class="row-more">›</span></h2>
-      <p class="row-sub">Lo que usamos y recomendamos para leer mejor. Si compras, nos apoyas sin pagar de más.</p>
+      <h2 class="row-h2"><span data-i18n="secAff">🔗 Recomendados</span> <span class="ads-tag" data-i18n="affTag">Afiliados</span> <span class="row-more">›</span></h2>
+      <p class="row-sub" data-i18n="secAffSub">Lo que usamos y recomendamos para leer mejor. Si compras, nos apoyas sin pagar de más.</p>
       <div id="rowAff" class="hrow"></div>
     </section>
     <div class="stream-join">
-    <h2 class="row-h2">⚡ Sala en vivo</h2>
-    <p class="row-sub">Entra con tu nombre, sin cuenta. Lee y marca junto a otros en tiempo real.</p>
+    <h2 class="row-h2" data-i18n="liveH">⚡ Sala en vivo</h2>
+    <p class="row-sub" data-i18n="liveSub">Entra con tu nombre, sin cuenta. Lee y marca junto a otros en tiempo real.</p>
     <label class="field">
-      <span>Tu nombre</span>
-      <input id="libNameInput" type="text" maxlength="24" placeholder="¿Cómo te llamas?" autocomplete="off">
+      <span data-i18n="yourName">Tu nombre</span>
+      <input id="libNameInput" type="text" maxlength="24" data-i18n-ph="yourNamePh" placeholder="¿Cómo te llamas?" autocomplete="off">
     </label>
     <div class="field" id="colorField">
-      <span>Tu color de tinta</span>
+      <span data-i18n="yourInk">Tu color de tinta</span>
       <div id="libSwatches" class="swatches"><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span><span class="swatch skel-swatch"></span></div>
     </div>
     <label class="teacher-check">
       <input type="checkbox" id="teacherCheck">
-      <span>🎓 Soy el profesor — mi tinta siempre es <b>negra</b></span>
+      <span data-i18n-html="teacherCheck">🎓 Soy el profesor — mi tinta siempre es <b>negra</b></span>
     </label>
-    <button id="liveRoomBtn" class="btn-primary">⚡ Entrar a la sala en vivo</button>
+    <button id="liveRoomBtn" class="btn-primary" data-i18n="enterLive">⚡ Entrar a la sala en vivo</button>
     </div>
     <div class="cta-row">
-      <button id="publishBtn" class="btn-cta" type="button">＋ Publicar un libro</button>
-      <button id="advertiseBtn" class="btn-cta btn-cta-alt" type="button">📢 Anunciar producto</button>
+      <button id="publishBtn" class="btn-cta" type="button" data-i18n="publishCta">＋ Publicar un libro</button>
+      <button id="advertiseBtn" class="btn-cta btn-cta-alt" type="button" data-i18n="advertiseCta">📢 Anunciar producto</button>
     </div>
-    <p class="join-note">Sin cuenta para leer. Los libros que publiques los verá todo el que entre.</p>
+    <p class="join-note" data-i18n="noAccountNote">Sin cuenta para leer. Los libros que publiques los verá todo el que entre.</p>
     <footer class="credits">
       <div class="credits-brand">📚 TintaJunta</div>
-      <p>Lee juntos, marca con tu tinta.</p>
-      <p class="credits-small">Creado por <b>Lenyn Escobar</b> · CEO de TintaJunta</p>
-      <p class="credits-small">© 2026 TintaJunta · <a href="#" id="footerFeedback" class="credits-link">🐛 Reportar problema</a></p>
+      <p data-i18n="footTag">Lee juntos, marca con tu tinta.</p>
+      <p class="credits-small" data-i18n-html="footBy">Creado por <b>Lenyn Escobar</b> · CEO de TintaJunta</p>
+      <p class="credits-small">© 2026 TintaJunta · <a href="#" id="footerFeedback" class="credits-link" data-i18n="footReport">🐛 Reportar problema</a></p>
     </footer>
   </div>
 </div>
@@ -147,14 +153,14 @@
 <!-- Escribir -->
 <div id="writing" class="join hidden">
   <div class="join-card lib-card">
-    <div class="kicker">TINTAJUNTA · ESCRIBE</div>
-    <h1 class="write-h1">✍️ Escribir</h1>
-    <p class="join-sub">Tu página en blanco. Guarda tus textos y léelos cuando quieras.</p>
-    <label class="field"><span>Título</span><input id="wrTitle" type="text" maxlength="120" placeholder="Título de tu escrito"></label>
-    <label class="field"><span>Tu texto</span><textarea id="wrText" rows="10" placeholder="Escribe aquí…"></textarea></label>
-    <button id="wrSave" class="btn-primary">Guardar escrito</button>
-    <h2 class="lib-h2" style="margin-top:28px">Mis escritos</h2>
-    <div id="wrList" class="book-list"><p class="join-sub">Aún no tienes escritos.</p></div>
+    <div class="kicker" data-i18n="wrKicker">TINTAJUNTA · ESCRIBE</div>
+    <h1 class="write-h1" data-i18n="wrH1">✍️ Escribir</h1>
+    <p class="join-sub" data-i18n="wrSub">Tu página en blanco. Guarda tus textos y léelos cuando quieras.</p>
+    <label class="field"><span data-i18n="wrTitle">Título</span><input id="wrTitle" type="text" maxlength="120" data-i18n-ph="wrTitlePh" placeholder="Título de tu escrito"></label>
+    <label class="field"><span data-i18n="wrText">Tu texto</span><textarea id="wrText" rows="10" data-i18n-ph="wrTextPh" placeholder="Escribe aquí…"></textarea></label>
+    <button id="wrSave" class="btn-primary" data-i18n="wrSave">Guardar escrito</button>
+    <h2 class="lib-h2" style="margin-top:28px" data-i18n="wrMine">Mis escritos</h2>
+    <div id="wrList" class="book-list"><p class="join-sub" data-i18n="wrEmpty">Aún no tienes escritos.</p></div>
   </div>
 </div>
 
@@ -164,185 +170,163 @@
   <p class="join-sub" style="margin:0 0 12px" id="readAuthor"></p>
   <div id="readText" class="read-text"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-    <button id="readClose" class="btn">Cerrar</button>
+    <button id="readClose" class="btn" data-i18n="readClose">Cerrar</button>
   </div>
 </div>
 
 <!-- Vista inmersiva: anuncio o destacado a pantalla completa -->
 <div id="immersive" class="immersive hidden" hidden>
-  <button id="immClose" class="imm-close" title="Cerrar" aria-label="Cerrar">✕</button>
+  <button id="immClose" class="imm-close" data-i18n-title="immClose" title="Cerrar" aria-label="Cerrar">✕</button>
   <div class="imm-brand">📚 TintaJunta</div>
   <div id="immVisual" class="imm-visual"></div>
   <div id="immBadge" class="imm-badge"></div>
   <div id="immTitle" class="imm-title"></div>
   <div id="immSub" class="imm-sub"></div>
-  <button id="immCta" class="imm-cta">Ver</button>
+  <button id="immCta" class="imm-cta" data-i18n="immCtaDefault">Ver</button>
 </div>
 
 <!-- Publicar libro -->
 <div id="publishPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 10px">Publicar un libro</h3>
-  <label class="field"><span>Título</span><input id="pubTitle" type="text" maxlength="120" placeholder="El título de tu libro"></label>
-  <label class="field"><span>Precio (USD, 0 = gratis · mínimo $1.99)</span><input id="pubPrice" type="number" min="0" step="0.01" placeholder="0.00"></label>
-  <label class="field"><span>Clasificación de edad</span><select id="pubAge">
-    <option value="all">Todos los públicos</option>
-    <option value="13">+13 años</option>
-    <option value="18">+18 años (contenido adulto)</option>
+  <h3 style="margin:0 0 10px" data-i18n="pubTitle">Publicar un libro</h3>
+  <label class="field"><span data-i18n="pubTitleLbl">Título</span><input id="pubTitle" type="text" maxlength="120" data-i18n-ph="pubTitlePh" placeholder="El título de tu libro"></label>
+  <label class="field"><span data-i18n="pubPriceLbl">Precio (USD, 0 = gratis · mínimo $1.99)</span><input id="pubPrice" type="number" min="0" step="0.01" placeholder="0.00"></label>
+  <label class="field"><span data-i18n="pubAgeLbl">Clasificación de edad</span><select id="pubAge">
+    <option value="all" data-i18n="pubAgeAll">Todos los públicos</option>
+    <option value="13" data-i18n="pubAge13">+13 años</option>
+    <option value="18" data-i18n="pubAge18">+18 años (contenido adulto)</option>
   </select></label>
-  <label class="field"><span>Texto del libro</span><textarea id="pubText" rows="8" placeholder="Pega aquí el texto. Separa los párrafos con una línea en blanco."></textarea></label>
-  <label class="field"><span>Portada * (obligatoria, imagen máx 2MB)</span><input id="pubCover" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+  <label class="field"><span data-i18n="pubTextLbl">Texto del libro</span><textarea id="pubText" rows="8" data-i18n-ph="pubTextPh" placeholder="Pega aquí el texto. Separa los párrafos con una línea en blanco."></textarea></label>
+  <label class="field"><span data-i18n="pubCoverLbl">Portada * (obligatoria, imagen máx 2MB)</span><input id="pubCover" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
   <!-- v79 — creador de portadas -->
   <div class="cover-maker">
-    <button type="button" id="coverMakerToggle" class="cover-maker-toggle">🎨 O crea tu portada aquí</button>
+    <button type="button" id="coverMakerToggle" class="cover-maker-toggle" data-i18n="pubCoverToggle">🎨 O crea tu portada aquí</button>
     <div id="coverMakerPanel" class="cover-maker-panel hidden">
       <div class="cover-maker-grid">
         <div class="cover-maker-preview">
           <div id="coverPreview" class="cover-preview">
-            <div class="cover-preview-title" id="coverPreviewTitle">Tu título</div>
-            <div class="cover-preview-author" id="coverPreviewAuthor">Tu nombre</div>
+            <div class="cover-preview-title" id="coverPreviewTitle" data-i18n="pubYourTitle">Tu título</div>
+            <div class="cover-preview-author" id="coverPreviewAuthor" data-i18n="pubYourName">Tu nombre</div>
           </div>
-          <p class="cover-maker-hint">Vista previa — así se verá en la biblioteca</p>
+          <p class="cover-maker-hint" data-i18n="pubCoverHint">Vista previa — así se verá en la biblioteca</p>
         </div>
         <div class="cover-maker-controls">
-          <p class="cover-maker-label">Paleta de colores</p>
+          <p class="cover-maker-label" data-i18n="pubPalette">Paleta de colores</p>
           <div id="coverPalettes" class="cover-palettes"></div>
-          <p class="cover-maker-label">Textura</p>
+          <p class="cover-maker-label" data-i18n="pubTexture">Textura</p>
           <div id="coverPatterns" class="cover-patterns">
-            <button type="button" data-pat="dots" class="pat-btn on">· Puntos</button>
-            <button type="button" data-pat="lines" class="pat-btn">≡ Líneas</button>
-            <button type="button" data-pat="none" class="pat-btn">— Lisa</button>
+            <button type="button" data-pat="dots" class="pat-btn on" data-i18n="patDots">· Puntos</button>
+            <button type="button" data-pat="lines" class="pat-btn" data-i18n="patLines">≡ Líneas</button>
+            <button type="button" data-pat="none" class="pat-btn" data-i18n="patPlain">— Lisa</button>
           </div>
-          <button type="button" id="coverUseBtn" class="cover-use-btn">✅ Usar esta portada</button>
+          <button type="button" id="coverUseBtn" class="cover-use-btn" data-i18n="pubCoverUse">✅ Usar esta portada</button>
           <p class="cover-maker-hint" id="coverMakerStatus"></p>
         </div>
       </div>
     </div>
   </div>
-  <label class="field"><span>Fotos del libro (opcional, JPG/PNG/WebP máx 2MB c/u)</span><input id="pubImages" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
+  <label class="field"><span data-i18n="pubPhotosLbl">Fotos del libro (opcional, JPG/PNG/WebP máx 2MB c/u)</span><input id="pubImages" type="file" accept="image/jpeg,image/png,image/webp" multiple></label>
   <div class="rules-box">
-    <b>⚠️ Antes de publicar, recuerda lo que NO puedes hacer:</b>
+    <b data-i18n="pubRulesTitle">⚠️ Antes de publicar, recuerda lo que NO puedes hacer:</b>
     <ul>
-      <li>❌ Publicar libros que no sean tuyos</li>
-      <li>❌ Subir libros comerciales o con derechos de autor</li>
-      <li>❌ Subir libros de dominio público como si fueran tuyos</li>
-      <li>❌ Publicar sin portada (es obligatoria)</li>
-      <li>❌ Copiar el contenido de otro creador</li>
+      <li data-i18n="pubRule1">❌ Publicar libros que no sean tuyos</li>
+      <li data-i18n="pubRule2">❌ Subir libros comerciales o con derechos de autor</li>
+      <li data-i18n="pubRule3">❌ Subir libros de dominio público como si fueran tuyos</li>
+      <li data-i18n="pubRule4">❌ Publicar sin portada (es obligatoria)</li>
+      <li data-i18n="pubRule5">❌ Copiar el contenido de otro creador</li>
     </ul>
-    <p>Solo puedes publicar tus propios libros originales. Si rompes estas reglas, tu libro será eliminado.</p>
+    <p data-i18n="pubRulesNote">Solo puedes publicar tus propios libros originales. Si rompes estas reglas, tu libro será eliminado.</p>
   </div>
   <label class="contract-check">
     <input type="checkbox" id="pubContract">
-    <span><b>📝 Contrato de publicación:</b> Declaro que este libro es de mi autoría original y estoy consciente de todas las prohibiciones anteriores. Acepto que si cometo alguna falta, <b>pierdo mi cuenta</b> y mis libros serán eliminados sin reembolso.</span>
+    <span data-i18n-html="pubContract"><b>📝 Contrato de publicación:</b> Declaro que este libro es de mi autoría original y estoy consciente de todas las prohibiciones anteriores. Acepto que si cometo alguna falta, <b>pierdo mi cuenta</b> y mis libros serán eliminados sin reembolso.</span>
   </label>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-    <button id="pubCancel" class="btn">Cancelar</button>
-    <button id="pubSave" class="btn btn-primary">Publicar</button>
+    <button id="pubCancel" class="btn" data-i18n="btnCancel">Cancelar</button>
+    <button id="pubSave" class="btn btn-primary" data-i18n="pubBtn">Publicar</button>
   </div>
 </div>
 
 <!-- Destacar libro (anuncio pagado) -->
 <div id="featurePop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 6px">⭐ Destacar en portada</h3>
+  <h3 style="margin:0 0 6px" data-i18n="featTitle">⭐ Destacar en portada</h3>
   <p class="join-sub" id="featureBookTitle" style="margin:0 0 12px"></p>
-  <p style="font-size:15px;margin:0 0 12px">Tu libro aparece primero en la portada, en la sección Destacados.</p>
+  <p style="font-size:15px;margin:0 0 12px" data-i18n="featDesc">Tu libro aparece primero en la portada, en la sección Destacados.</p>
   <div id="featurePlans" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
-  <p class="join-note">Pago seguro con tarjeta (Stripe).</p>
+  <p class="join-note" data-i18n="paySecure">Pago seguro con tarjeta (Stripe).</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-    <button id="featureCancel" class="btn">Cancelar</button>
-    <button id="featureConfirm" class="btn btn-primary">Pagar y destacar</button>
+    <button id="featureCancel" class="btn" data-i18n="btnCancel">Cancelar</button>
+    <button id="featureConfirm" class="btn btn-primary" data-i18n="featPay">Pagar y destacar</button>
   </div>
 </div>
 
 <!-- Anunciar producto -->
 <div id="adPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 6px">📢 Anunciar producto</h3>
-  <p style="font-size:15px;margin:0 0 12px">Tu producto aparece en la fila "🛍️ Para leer mejor" de la portada.</p>
-  <label class="field"><span>Nombre del producto</span><input id="adName" type="text" maxlength="60" placeholder="Ej. Lentes filtro luz azul"></label>
-  <label class="field"><span>Enlace de tu tienda (donde compran)</span><input id="adUrl" type="url" maxlength="300" placeholder="https://tutienda.com/producto"></label>
-  <label class="field"><span>Foto del producto (JPG/PNG/WebP, máx 2MB)</span><input id="adPhoto" type="file" accept="image/jpeg,image/png,image/webp"></label>
-  <div class="field"><span>Emoji</span><div id="adEmojis" class="swatches" style="max-height:none"></div></div>
-  <div class="field"><span>Insignia</span>
-    <label class="plan-row"><input type="radio" name="abadge" value="mas-vendido" checked><span><b>🔥 Más vendido</b></span></label>
-    <label class="plan-row"><input type="radio" name="abadge" value="famoso"><span><b>⭐ Famoso</b></span></label>
+  <h3 style="margin:0 0 6px" data-i18n="adTitle">📢 Anunciar producto</h3>
+  <p style="font-size:15px;margin:0 0 12px" data-i18n="adDesc">Tu producto aparece en la fila "🛍️ Para leer mejor" de la portada.</p>
+  <label class="field"><span data-i18n="adNameLbl">Nombre del producto</span><input id="adName" type="text" maxlength="60" data-i18n-ph="adNamePh" placeholder="Ej. Lentes filtro luz azul"></label>
+  <label class="field"><span data-i18n="adUrlLbl">Enlace de tu tienda (donde compran)</span><input id="adUrl" type="url" maxlength="300" data-i18n-ph="adUrlPh" placeholder="https://tutienda.com/producto"></label>
+  <label class="field"><span data-i18n="adPhotoLbl">Foto del producto (JPG/PNG/WebP, máx 2MB)</span><input id="adPhoto" type="file" accept="image/jpeg,image/png,image/webp"></label>
+  <div class="field"><span data-i18n="adEmojiLbl">Emoji</span><div id="adEmojis" class="swatches" style="max-height:none"></div></div>
+  <div class="field"><span data-i18n="adBadgeLbl">Insignia</span>
+    <label class="plan-row"><input type="radio" name="abadge" value="mas-vendido" checked><span><b data-i18n="adBadgeBest">🔥 Más vendido</b></span></label>
+    <label class="plan-row"><input type="radio" name="abadge" value="famoso"><span><b data-i18n="adBadgeFamous">⭐ Famoso</b></span></label>
   </div>
-  <div class="field"><span>Plan</span><div id="adPlans" style="display:flex;flex-direction:column;gap:8px"></div></div>
-  <p class="join-note">Pago seguro con tarjeta (Stripe).</p>
+  <div class="field"><span data-i18n="adPlanLbl">Plan</span><div id="adPlans" style="display:flex;flex-direction:column;gap:8px"></div></div>
+  <p class="join-note" data-i18n="paySecure">Pago seguro con tarjeta (Stripe).</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-    <button id="adCancel" class="btn">Cancelar</button>
-    <button id="adConfirm" class="btn btn-primary">Pagar y publicar</button>
+    <button id="adCancel" class="btn" data-i18n="btnCancel">Cancelar</button>
+    <button id="adConfirm" class="btn btn-primary" data-i18n="adPay">Pagar y publicar</button>
   </div>
 </div>
 
 <!-- Bienvenida (solo primera visita) -->
 <div id="welcomePop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 10px">👋 Bienvenido a TintaJunta</h3>
-  <p style="font-size:15px;margin:0 0 8px">Lee libros <b>junto a otros, en vivo</b>.</p>
+  <h3 style="margin:0 0 10px" data-i18n="welTitle">👋 Bienvenido a TintaJunta</h3>
+  <p style="font-size:15px;margin:0 0 8px" data-i18n-html="welSub">Lee libros <b>junto a otros, en vivo</b>.</p>
   <div class="welcome-list">
-    <p>📚 <b>Lee</b> — abre un libro y léelo a tu ritmo.</p>
-    <p>🎨 <b>Marca</b> — subraya con tu tinta y deja notas que todos ven.</p>
-    <p>✍️ <b>Escribe</b> — guarda tus propios textos.</p>
-    <p>⚡ <b>Sala en vivo</b> — escribe tu nombre abajo y toca "⚡ Sala en vivo" arriba. Sin cuenta.</p>
+    <p data-i18n-html="wel1">📚 <b>Lee</b> — abre un libro y léelo a tu ritmo.</p>
+    <p data-i18n-html="wel2">🎨 <b>Marca</b> — subraya con tu tinta y deja notas que todos ven.</p>
+    <p data-i18n-html="wel3">✍️ <b>Escribe</b> — guarda tus propios textos.</p>
+    <p data-i18n-html="wel4">⚡ <b>Sala en vivo</b> — escribe tu nombre abajo y toca "⚡ Sala en vivo" arriba. Sin cuenta.</p>
   </div>
   <div style="display:flex;justify-content:flex-end;margin-top:14px">
-    <button id="welcomeOk" class="btn btn-primary">Entendido</button>
+    <button id="welcomeOk" class="btn btn-primary" data-i18n="welOk">Entendido</button>
   </div>
 </div>
 
-<!-- Comprar libro -->
-<div id="buyPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 6px" id="buyTitle"></h3>
-  <p class="join-sub" id="buyAuthor" style="margin:0 0 12px"></p>
-  <p style="font-size:28px;margin:0 0 12px" id="buyPrice"></p>
-  <p class="join-note">Pago seguro con tarjeta (Stripe). El creador recibe su parte.</p>
-  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap">
-    <button id="buySample" class="btn">📖 Muestra gratis</button>
-    <button id="buyShare" class="btn" title="Compartir este libro">📤</button>
-    <button id="buyCancel" class="btn">Cancelar</button>
-    <button id="buyConfirm" class="btn btn-primary">Comprar</button>
-  </div>
-</div>
+<!-- Muestra gratis del libro -->
 <div id="samplePop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 4px">📖 Muestra gratis</h3>
+  <h3 style="margin:0 0 4px" data-i18n="sampleTitle">📖 Muestra gratis</h3>
   <p class="join-sub" id="sampleBookLine" style="margin:0 0 12px"></p>
   <div id="sampleText" class="sample-text"></div>
-  <p class="join-note" style="margin-top:12px">¿Te gustó? El libro completo te espera.</p>
+  <p class="join-note" style="margin-top:12px" data-i18n="sampleLiked">¿Te gustó? El libro completo te espera.</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-    <button id="sampleClose" class="btn">Cerrar</button>
-    <button id="sampleBuy" class="btn btn-primary">Comprar libro</button>
-  </div>
-</div>
-<div id="boughtPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 6px">🎉 ¡Libro adquirido!</h3>
-  <p class="join-sub" id="boughtBookLine" style="margin:0 0 12px"></p>
-  <p class="join-note">Lo mejor de TintaJunta es leer <b>juntos</b>: cada quien marca con su tinta y todos ven las ideas en vivo.</p>
-  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap">
-    <button id="boughtShare" class="btn">📤 Invitar amigos</button>
-    <button id="boughtRead" class="btn">Leer ahora</button>
-    <button id="boughtRoom" class="btn btn-primary">🔴 Crear sala en vivo</button>
+    <button id="sampleClose" class="btn" data-i18n="btnCancel">Cerrar</button>
+    <button id="sampleRead" class="btn btn-primary" data-i18n="sampleRead">Leer libro</button>
   </div>
 </div>
 </div>
 
 <!-- Pagar con tarjeta (Stripe) -->
 <div id="payPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 6px">💳 Pagar con tarjeta</h3>
+  <h3 style="margin:0 0 6px" data-i18n="payTitle">💳 Pagar con tarjeta</h3>
   <p class="join-sub" id="payDesc" style="margin:0 0 12px"></p>
   <p style="font-size:22px;margin:0 0 12px" id="payAmount"></p>
   <div id="payCard" style="padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:12px;background:#fff"></div>
-  <p class="join-note" id="payNote">Pago seguro con Stripe. Modo de prueba: usa la tarjeta 4242 4242 4242 4242.</p>
+  <p class="join-note" id="payNote" data-i18n="payNote">Pago seguro con Stripe. Modo de prueba: usa la tarjeta 4242 4242 4242 4242.</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-    <button id="payCancel" class="btn">Cancelar</button>
-    <button id="payConfirm" class="btn btn-primary">Pagar</button>
+    <button id="payCancel" class="btn" data-i18n="btnCancel">Cancelar</button>
+    <button id="payConfirm" class="btn btn-primary" data-i18n="payBtn">Pagar</button>
   </div>
 </div>
 
 <!-- 🏆 Mis logros -->
 <div id="achPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 4px">🏆 Mis logros</h3>
-  <p class="join-sub" id="achSub" style="margin:0 0 12px">Tu nivel sube con cada libro vendido.</p>
+  <h3 style="margin:0 0 4px" data-i18n="achTitle">🏆 Mis logros</h3>
+  <p class="join-sub" id="achSub" style="margin:0 0 12px" data-i18n="achSub">Tu nivel sube con cada libro vendido.</p>
   <div id="achBody"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-    <button id="achClose" class="btn btn-primary">Cerrar</button>
+    <button id="achClose" class="btn btn-primary" data-i18n="btnCancel">Cerrar</button>
   </div>
 </div>
 
@@ -350,93 +334,93 @@
 <div id="creatorPop" class="notepop modal-pop hidden">
   <div id="creatorBody"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-    <button id="creatorClose" class="btn btn-primary">Cerrar</button>
+    <button id="creatorClose" class="btn btn-primary" data-i18n="btnCancel">Cerrar</button>
   </div>
 </div>
 
 <!-- ✅ Verificaciones del creador -->
 <div id="verifPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 4px">✅ Mis verificaciones</h3>
-  <p class="join-sub" style="margin:0 0 12px">Completa tus verificaciones para generar confianza con tus lectores.</p>
+  <h3 style="margin:0 0 4px" data-i18n="verifTitle">✅ Mis verificaciones</h3>
+  <p class="join-sub" style="margin:0 0 12px" data-i18n="verifSub">Completa tus verificaciones para generar confianza con tus lectores.</p>
   <div id="verifBody"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-    <button id="verifClose" class="btn btn-primary">Cerrar</button>
+    <button id="verifClose" class="btn btn-primary" data-i18n="btnCancel">Cerrar</button>
   </div>
 </div>
 
 <!-- 🛡️ Panel de revisión (admin) -->
 <div id="adminPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 4px">🛡️ Revisión</h3>
-  <p class="join-sub" style="margin:0 0 12px">Pendientes de aprobación.</p>
+  <h3 style="margin:0 0 4px" data-i18n="admTitle">🛡️ Revisión</h3>
+  <p class="join-sub" style="margin:0 0 12px" data-i18n="admSub">Pendientes de aprobación.</p>
   <div id="adminBody"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-    <button id="adminClose" class="btn btn-primary">Cerrar</button>
+    <button id="adminClose" class="btn btn-primary" data-i18n="btnCancel">Cerrar</button>
   </div>
 </div>
 <div id="feedbackPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 4px">🐛 Reportar problema</h3>
-  <p class="join-sub" style="margin:0 0 12px">Cuéntanos qué no funciona bien y lo arreglamos.</p>
+  <h3 style="margin:0 0 4px" data-i18n="fbTitle">🐛 Reportar problema</h3>
+  <p class="join-sub" style="margin:0 0 12px" data-i18n="fbSub">Cuéntanos qué no funciona bien y lo arreglamos.</p>
   <div class="fb-form">
-    <label class="fb-label">¿Qué no funciona?
-      <textarea id="fbMessage" rows="4" maxlength="1000" placeholder="Describe el problema…"></textarea>
+    <label class="fb-label"><span data-i18n="fbWhat">¿Qué no funciona?</span>
+      <textarea id="fbMessage" rows="4" maxlength="1000" data-i18n-ph="fbWhatPh" placeholder="Describe el problema…"></textarea>
     </label>
-    <label class="fb-label">¿En qué página estabas?
+    <label class="fb-label"><span data-i18n="fbPage">¿En qué página estabas?</span>
       <input id="fbPage" maxlength="60" readonly>
     </label>
-    <label class="fb-label">Tu nombre (opcional)
-      <input id="fbName" maxlength="40" placeholder="Anónimo">
+    <label class="fb-label"><span data-i18n="fbName">Tu nombre (opcional)</span>
+      <input id="fbName" maxlength="40" data-i18n-ph="fbNamePh" placeholder="Anónimo">
     </label>
   </div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-    <button id="fbCancel" class="btn">Cancelar</button>
-    <button id="fbSend" class="btn btn-primary">Enviar reporte</button>
+    <button id="fbCancel" class="btn" data-i18n="btnCancel">Cancelar</button>
+    <button id="fbSend" class="btn btn-primary" data-i18n="fbSend">Enviar reporte</button>
   </div>
 </div>
 
 <!-- 🔞 Advertencia de contenido adulto -->
 <div id="agePop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 8px">🔞 Contenido para adultos</h3>
-  <p class="join-sub" id="ageText" style="margin:0 0 12px">Este libro está clasificado +18.</p>
+  <h3 style="margin:0 0 8px" data-i18n="ageTitle">🔞 Contenido para adultos</h3>
+  <p class="join-sub" id="ageText" style="margin:0 0 12px" data-i18n="ageText">Este libro está clasificado +18.</p>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-    <button id="ageCancel" class="btn">Volver</button>
-    <button id="ageConfirm" class="btn btn-primary">Soy mayor de edad — continuar</button>
+    <button id="ageCancel" class="btn" data-i18n="ageBack">Volver</button>
+    <button id="ageConfirm" class="btn btn-primary" data-i18n="ageConfirm">Soy mayor de edad — continuar</button>
   </div>
 </div>
 
 <!-- 📚 Cambiar libro en la sala (solo profesor) -->
 <div id="switchBookPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 4px">📚 Cambiar libro</h3>
-  <p class="join-sub" style="margin:0 0 12px">Elige el texto que leerán todos en la sala.</p>
+  <h3 style="margin:0 0 4px" data-i18n="sbTitle">📚 Cambiar libro</h3>
+  <p class="join-sub" style="margin:0 0 12px" data-i18n="sbSub">Elige el texto que leerán todos en la sala.</p>
   <div id="switchBookList" class="switchbook-list"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-    <button id="switchBookClose" class="btn">Cancelar</button>
+    <button id="switchBookClose" class="btn" data-i18n="btnCancel">Cancelar</button>
   </div>
 </div>
 
 <!-- Dejar reseña -->
 <div id="reviewPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 6px">⭐ Dejar reseña</h3>
+  <h3 style="margin:0 0 6px" data-i18n="revTitle">⭐ Dejar reseña</h3>
   <p class="join-sub" id="reviewBookTitle" style="margin:0 0 12px"></p>
   <div id="reviewStars" class="review-stars"></div>
-  <textarea id="reviewComment" rows="3" maxlength="300" placeholder="Tu opinión (opcional)…" style="width:100%;margin:10px 0"></textarea>
+  <textarea id="reviewComment" rows="3" maxlength="300" data-i18n-ph="revPh" placeholder="Tu opinión (opcional)…" style="width:100%;margin:10px 0"></textarea>
   <div id="reviewList" class="review-list"></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
-    <button id="reviewCancel" class="btn">Cancelar</button>
-    <button id="reviewSave" class="btn btn-primary">Publicar reseña</button>
+    <button id="reviewCancel" class="btn" data-i18n="btnCancel">Cancelar</button>
+    <button id="reviewSave" class="btn btn-primary" data-i18n="revSave">Publicar reseña</button>
   </div>
 </div>
 
 <div id="reportPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 6px">🚩 Reportar libro</h3>
+  <h3 style="margin:0 0 6px" data-i18n="repTitle">🚩 Reportar libro</h3>
   <p class="join-sub" id="reportBookTitle" style="margin:0 0 12px"></p>
-  <p class="join-note" style="margin:0 0 8px">¿Por qué rompe las reglas?</p>
+  <p class="join-note" style="margin:0 0 8px" data-i18n="repWhy">¿Por qué rompe las reglas?</p>
   <div id="reportReasons"></div>
   <div id="reportOtherWrap" class="hidden" style="margin-top:10px">
-    <textarea id="reportOther" rows="2" maxlength="200" placeholder="Describe el motivo…" style="width:100%"></textarea>
+    <textarea id="reportOther" rows="2" maxlength="200" data-i18n-ph="repOtherPh" placeholder="Describe el motivo…" style="width:100%"></textarea>
   </div>
   <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-    <button id="reportCancel" class="btn">Cancelar</button>
-    <button id="reportSave" class="btn btn-primary">Enviar reporte</button>
+    <button id="reportCancel" class="btn" data-i18n="btnCancel">Cancelar</button>
+    <button id="reportSave" class="btn btn-primary" data-i18n="repSend">Enviar reporte</button>
   </div>
 </div>
 
@@ -444,46 +428,46 @@
 <div id="join" class="join hidden">
   <div class="join-card">
     <div class="brand">TintaJunta</div>
-    <h1>Entrar a la sala</h1>
-    <p class="join-sub">Leemos juntos, en vivo. Elige cómo firmarás tus marcas.</p>
+    <h1 data-i18n="joinTitle">Entrar a la sala</h1>
+    <p class="join-sub" data-i18n="joinSub">Leemos juntos, en vivo. Elige cómo firmarás tus marcas.</p>
     <label class="field">
-      <span>Tu nombre</span>
-      <input id="nameInput" type="text" maxlength="24" placeholder="¿Cómo te llamas?" autocomplete="off">
+      <span data-i18n="joinNameLbl">Tu nombre</span>
+      <input id="nameInput" type="text" maxlength="24" data-i18n-ph="joinNamePh" placeholder="¿Cómo te llamas?" autocomplete="off">
     </label>
     <div class="field">
-      <span>Tu color de tinta</span>
+      <span data-i18n="joinInkLbl">Tu color de tinta</span>
       <div id="swatches" class="swatches"></div>
     </div>
     <label class="field">
-      <span>Código de sala (opcional)</span>
-      <input id="roomInput" type="text" maxlength="12" placeholder="Vacío = sala principal" autocomplete="off" autocapitalize="characters" spellcheck="false">
+      <span data-i18n="joinCodeLbl">Código de sala (opcional)</span>
+      <input id="roomInput" type="text" maxlength="12" data-i18n-ph="joinCodePh" placeholder="Vacío = sala principal" autocomplete="off" autocapitalize="characters" spellcheck="false">
     </label>
-    <button id="joinBtn" class="btn-primary">Entrar a la sala</button>
-    <button id="createRoomBtn" class="linklike" type="button">+ Crear una sala nueva con código</button>
-    <p class="join-note">Sin cuenta ni contraseña. Comparte el código con quien quieras que lea contigo.</p>
+    <button id="joinBtn" class="btn-primary" data-i18n="joinBtn">Entrar a la sala</button>
+    <button id="createRoomBtn" class="linklike" type="button" data-i18n="joinCreate">+ Crear una sala nueva con código</button>
+    <p class="join-note" data-i18n="joinNote">Sin cuenta ni contraseña. Comparte el código con quien quieras que lea contigo.</p>
   </div>
 </div>
 
 <!-- Sala · encabezado de la sala en vivo (rediseño premium) -->
 <header class="topbar room-head">
   <div class="room-head-row">
-    <button id="backBtn" class="btn-chip hidden" title="Volver a la biblioteca">←</button>
+    <button id="backBtn" class="btn-chip hidden" data-i18n-title="backLibTitle" title="Volver a la biblioteca">←</button>
     <div class="room-identity">
-      <span class="room-live" title="Estás dentro de una sala de lectura en vivo"><span class="live-dot"></span>En vivo</span>
+      <span class="room-live" data-i18n-title="liveBadgeTitle" title="Estás dentro de una sala de lectura en vivo"><span class="live-dot"></span><span data-i18n="liveBadge">En vivo</span></span>
       <span class="topbar-room room-title"><span id="roomLabel">Sala <b id="roomCode">SALA</b></span></span>
     </div>
     <div class="room-tools" role="toolbar" aria-label="Herramientas de la sala">
-      <button id="copyRoom" class="btn-chip" title="Copiar el código de esta sala">⧉ copiar código</button>
+      <button id="copyRoom" class="btn-chip" data-i18n-title="copyCodeTitle" title="Copiar el código de esta sala" data-i18n="copyCode">⧉ copiar código</button>
       <span class="tools-sep"></span>
-      <button id="pencilBtn" class="pencil-btn" title="Lápiz: marcar directo con tu tinta">✏️</button>
-      <button id="themeBtn" class="pencil-btn" title="Cambiar tema: claro / oscuro">🌙</button>
-      <button id="followBtn" class="pencil-btn hidden" title="👀 Sígueme: la pantalla de todos sigue tu lectura">👀</button>
-      <button id="handBtn" class="pencil-btn hidden" title="✋ Levantar la mano">✋</button>
-      <button id="switchBookBtn" class="pencil-btn hidden" title="📚 Cambiar libro: todos pasan a otro texto">📚</button>
-      <button id="boardModeBtn" class="pencil-btn" title="🖥️ Modo pizarra: solo se ve la pizarra con el párrafo actual">🖥️</button>
-      <button id="typoBtn" class="pencil-btn" title="Aa: tamaño de letra y espaciado">Aa</button>
+      <button id="pencilBtn" class="pencil-btn" data-i18n-title="pencilTitle" title="Lápiz: marcar directo con tu tinta">✏️</button>
+      <button id="themeBtn" class="pencil-btn" data-i18n-title="themeTitle" title="Cambiar tema: claro / oscuro">🌙</button>
+      <button id="followBtn" class="pencil-btn hidden" data-i18n-title="followTitle" title="👀 Sígueme: la pantalla de todos sigue tu lectura">👀</button>
+      <button id="handBtn" class="pencil-btn hidden" data-i18n-title="handTitle" title="✋ Levantar la mano">✋</button>
+      <button id="switchBookBtn" class="pencil-btn hidden" data-i18n-title="switchBookTitle" title="📚 Cambiar libro: todos pasan a otro texto">📚</button>
+      <button id="boardModeBtn" class="pencil-btn" data-i18n-title="boardModeTitle" title="🖥️ Modo pizarra: solo se ve la pizarra con el párrafo actual">🖥️</button>
+      <button id="typoBtn" class="pencil-btn" data-i18n-title="typoTitle" title="Aa: tamaño de letra y espaciado">Aa</button>
       <span class="tools-sep"></span>
-      <button id="exitRoomBtn" class="pencil-btn" title="🚪 Salir de la sala">🚪</button>
+      <button id="exitRoomBtn" class="pencil-btn" data-i18n-title="exitTitle" title="🚪 Salir de la sala">🚪</button>
     </div>
   </div>
   <div class="room-head-sub">
@@ -498,20 +482,20 @@
     <div id="creatorStats" class="creator-stats hidden"></div>
     <section id="boardWrap" class="board-wrap">
       <div class="board-head">
-        <span class="board-title">📝 Pizarra</span>
+        <span class="board-title" data-i18n="boardTitle">📝 Pizarra</span>
         <span id="boardMeta" class="board-meta"></span>
         <span class="board-spacer"></span>
-        <button id="boardClear" class="btn-chip hidden" title="Limpiar la pizarra">🧹 Limpiar</button>
+        <button id="boardClear" class="btn-chip hidden" data-i18n-title="boardClearTitle" data-i18n="boardClear" title="Limpiar la pizarra">🧹 Limpiar</button>
       </div>
-      <textarea id="boardEdit" class="board-edit" rows="3" maxlength="500" placeholder="Escribe algo en la pizarra con tu color… (Enter para enviar)"></textarea>
-      <button id="boardSend" class="board-send" title="Escribir en la pizarra">✏️ Escribir</button>
+      <textarea id="boardEdit" class="board-edit" rows="3" maxlength="500" data-i18n-ph="boardPh" placeholder="Escribe algo en la pizarra con tu color… (Enter para enviar)"></textarea>
+      <button id="boardSend" class="board-send" data-i18n-title="boardSendTitle" data-i18n="boardSend" title="Escribir en la pizarra">✏️ Escribir</button>
       <div id="boardView" class="board-view"></div>
     </section>
     <!-- v81: párrafo de clase — el profesor lo mueve, todos lo siguen -->
     <div id="paraBar" class="para-bar hidden">
-      <button id="paraPrev" class="btn-chip hidden" title="Párrafo anterior">◀</button>
-      <span id="paraLabel" class="para-label">Párrafo —</span>
-      <button id="paraNext" class="btn-chip hidden" title="Párrafo siguiente">▶</button>
+      <button id="paraPrev" class="btn-chip hidden" data-i18n-title="paraPrevTitle" title="Párrafo anterior">◀</button>
+      <span id="paraLabel" class="para-label" data-i18n="paraDash">Párrafo —</span>
+      <button id="paraNext" class="btn-chip hidden" data-i18n-title="paraNextTitle" title="Párrafo siguiente">▶</button>
     </div>
     <h2 id="chapterTitle">Texto de muestra</h2>
     <p id="bookLine" class="bookline"></p>
@@ -521,15 +505,15 @@
   </article>
   <aside class="margin">
     <div class="margin-tabs">
-      <button id="tabNotes" class="margin-tab on">Notas <span id="notesCount" class="count"></span></button>
-      <button id="tabChat" class="margin-tab">💬 Chat <span id="chatCount" class="count"></span></button>
+      <button id="tabNotes" class="margin-tab on"><span data-i18n="tabNotes">Notas</span> <span id="notesCount" class="count"></span></button>
+      <button id="tabChat" class="margin-tab"><span data-i18n="tabChat">💬 Chat</span> <span id="chatCount" class="count"></span></button>
     </div>
     <div id="notes" class="notes"></div>
     <div id="chatPanel" class="chat-panel hidden">
       <div id="chatBox" class="chat-box"></div>
       <div class="chat-input-row">
-        <input id="chatInput" type="text" maxlength="300" placeholder="Escribe un mensaje…" autocomplete="off">
-        <button id="chatSend" class="btn-primary chat-send" title="Enviar">➤</button>
+        <input id="chatInput" type="text" maxlength="300" data-i18n-ph="chatPh" placeholder="Escribe un mensaje…" autocomplete="off">
+        <button id="chatSend" class="btn-primary chat-send" data-i18n-title="chatSendTitle" title="Enviar">➤</button>
       </div>
     </div>
   </aside>
@@ -539,14 +523,14 @@
 <div id="boardMode" class="board-mode hidden">
   <div class="board-mode-inner">
     <div class="board-mode-head">
-      <span class="board-title">📝 Pizarra de clase</span>
+      <span class="board-title" data-i18n="boardModeTitle">📝 Pizarra de clase</span>
       <span class="board-spacer"></span>
-      <button id="boardModeExit" class="btn-chip" title="Salir del modo pizarra">✖ Salir</button>
+      <button id="boardModeExit" class="btn-chip" data-i18n-title="boardModeExitTitle" data-i18n="boardModeExit" title="Salir del modo pizarra">✖ Salir</button>
     </div>
     <div class="board-mode-nav">
-      <button id="boardModePrev" class="btn-chip hidden" title="Párrafo anterior">◀</button>
-      <span id="boardModeLabel" class="para-label">Párrafo —</span>
-      <button id="boardModeNext" class="btn-chip hidden" title="Párrafo siguiente">▶</button>
+      <button id="boardModePrev" class="btn-chip hidden" data-i18n-title="paraPrevTitle" title="Párrafo anterior">◀</button>
+      <span id="boardModeLabel" class="para-label" data-i18n="paraDash">Párrafo —</span>
+      <button id="boardModeNext" class="btn-chip hidden" data-i18n-title="paraNextTitle" title="Párrafo siguiente">▶</button>
     </div>
     <div id="boardModeText" class="board-mode-text"></div>
   </div>
@@ -555,27 +539,27 @@
 <!-- v68: barra de progreso de lectura + controles tipográficos -->
 <div id="readProgress" class="read-progress hidden"><div id="readProgressFill" class="read-progress-fill"></div><span id="readProgressPct" class="read-progress-pct"></span></div>
 <div id="typoPop" class="notepop modal-pop hidden">
-  <h3 style="margin:0 0 12px">Aa &nbsp;Tu lectura, a tu medida</h3>
-  <div class="typo-row"><span>Tamaño de letra</span><div class="typo-ctl"><button id="typoMinus" class="btn-chip">A−</button><b id="typoSizeLbl">17</b><button id="typoPlus" class="btn-chip">A+</button></div></div>
-  <div class="typo-row"><span>Espaciado</span><div class="typo-ctl" id="typoLineBtns"><button class="btn-chip" data-lh="1.5">Compacto</button><button class="btn-chip on" data-lh="1.75">Normal</button><button class="btn-chip" data-lh="2.1">Amplio</button></div></div>
-  <div class="typo-row"><span>Ancho del texto</span><div class="typo-ctl" id="typoWidthBtns"><button class="btn-chip" data-w="narrow">Estrecho</button><button class="btn-chip on" data-w="normal">Normal</button><button class="btn-chip" data-w="wide">Ancho</button></div></div>
-  <div style="display:flex;justify-content:flex-end;margin-top:14px"><button id="typoClose" class="btn btn-primary">Listo</button></div>
+  <h3 style="margin:0 0 12px" data-i18n-html="typoTitle">Aa &nbsp;Tu lectura, a tu medida</h3>
+  <div class="typo-row"><span data-i18n="typoSize">Tamaño de letra</span><div class="typo-ctl"><button id="typoMinus" class="btn-chip">A−</button><b id="typoSizeLbl">17</b><button id="typoPlus" class="btn-chip">A+</button></div></div>
+  <div class="typo-row"><span data-i18n="typoSpacing">Espaciado</span><div class="typo-ctl" id="typoLineBtns"><button class="btn-chip" data-lh="1.5" data-i18n="typoCompact">Compacto</button><button class="btn-chip on" data-lh="1.75" data-i18n="typoNormal">Normal</button><button class="btn-chip" data-lh="2.1" data-i18n="typoWide">Amplio</button></div></div>
+  <div class="typo-row"><span data-i18n="typoWidth">Ancho del texto</span><div class="typo-ctl" id="typoWidthBtns"><button class="btn-chip" data-w="narrow" data-i18n="typoNarrow">Estrecho</button><button class="btn-chip on" data-w="normal" data-i18n="typoNormal">Normal</button><button class="btn-chip" data-w="wide" data-i18n="typoWideW">Ancho</button></div></div>
+  <div style="display:flex;justify-content:flex-end;margin-top:14px"><button id="typoClose" class="btn btn-primary" data-i18n="typoDone">Listo</button></div>
 </div>
 
 <!-- Barra flotante al seleccionar texto -->
 <div id="toolbar" class="toolbar hidden">
-  <button id="btnHighlight" class="btn">Subrayar</button>
-  <button id="btnNote" class="btn">Nota</button>
-  <button id="btnRemove" class="btn btn-danger hidden">Quitar subrayado</button>
+  <button id="btnHighlight" class="btn" data-i18n="toolbarHl">Subrayar</button>
+  <button id="btnNote" class="btn" data-i18n="toolbarNote">Nota</button>
+  <button id="btnRemove" class="btn btn-danger hidden" data-i18n="toolbarRemove">Quitar subrayado</button>
 </div>
 
 <!-- Editor de nota -->
 <div id="notepop" class="notepop hidden">
   <p class="notepop-quote" id="noteQuote"></p>
-  <textarea id="noteText" rows="3" maxlength="140" placeholder="Nota corta (máx. 140 caracteres)…"></textarea>
+  <textarea id="noteText" rows="3" maxlength="140" data-i18n-ph="notePh" placeholder="Nota corta (máx. 140 caracteres)…"></textarea>
   <p class="notepop-count"><span id="noteCount">0</span>/140</p>
   <div class="rx-row" id="rxRow">
-    <span class="rx-label">Reacciona:</span>
+    <span class="rx-label" data-i18n="noteReact">Reacciona:</span>
     <button class="rx-btn" data-emoji="❤️" title="Me encanta">❤️</button>
     <button class="rx-btn" data-emoji="😮" title="Me sorprende">😮</button>
     <button class="rx-btn" data-emoji="👏" title="Aplaudo">👏</button>
@@ -583,8 +567,8 @@
     <button class="rx-btn" data-emoji="⭐" title="Favorito">⭐</button>
   </div>
   <div class="notepop-actions">
-    <button id="noteCancel" class="btn btn-ghost">Cancelar</button>
-    <button id="noteSave" class="btn-primary">Guardar nota</button>
+    <button id="noteCancel" class="btn btn-ghost" data-i18n="noteCancel">Cancelar</button>
+    <button id="noteSave" class="btn-primary" data-i18n="noteSave">Guardar nota</button>
   </div>
 </div>
 
@@ -598,13 +582,14 @@
   <p class="vnote-text" id="vnoteText"></p>
   <p class="vnote-date" id="vnoteDate"></p>
   <div class="notepop-actions">
-    <button id="vnoteClose" class="btn-primary">Cerrar</button>
+    <button id="vnoteClose" class="btn-primary" data-i18n="readClose">Cerrar</button>
   </div>
 </div>
 
 <div id="toasts" class="toasts"></div>
 
 <script src="https://js.stripe.com/v3/"></script>
+<script src="i18n.js"></script>
 <script src="app.js?v=97"></script>
 </body>
 </html>

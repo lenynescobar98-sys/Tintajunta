@@ -1,6 +1,14 @@
 /* TintaJunta · prototipo — lógica de la sala en vivo (cliente) */
 'use strict';
 
+/* ============ Google AdSense ============
+ * Alejandro: pega aquí tu Publisher ID cuando Google apruebe la cuenta.
+ * Formato: 'ca-pub-XXXXXXXXXXXXXXXX'
+ * Vacío ('') = muestra placeholder "Espacio publicitario" en los slots.
+ * NO se muestran anuncios dentro de la sala de lectura (regla permanente).
+ */
+const ADSENSE_CLIENT = '';
+
 const COLORS = {
   azul:     '#1e40af',
   rojo:     '#b91c1c',
@@ -76,10 +84,10 @@ if (!localStorage.getItem('tj_theme_v2')) {
   localStorage.setItem('tj_theme_v2', '1');
 }
 function applyTheme() {
-  const t = localStorage.getItem('tj_theme') || 'light';
-  document.documentElement.dataset.theme = t === 'dark' ? 'dark' : '';
+  const th = localStorage.getItem('tj_theme') || 'light';
+  document.documentElement.dataset.theme = th === 'dark' ? 'dark' : '';
   const b = document.getElementById('themeBtn');
-  if (b) { b.textContent = t === 'dark' ? '☀️' : '🌙'; b.title = t === 'dark' ? 'Tema claro' : 'Tema oscuro cálido'; }
+  if (b) { b.textContent = th === 'dark' ? '☀️' : '🌙'; b.title = th === 'dark' ? t('themeLight') : t('themeDark'); }
 }
 applyTheme();
 
@@ -132,7 +140,7 @@ function buildSwatchesInto(box) {
     const reserved = key === 'negro' && !isTeacher; // el negro es solo del profesor
     b.className = 'swatch' + (key === myColor ? ' sel' : '') + (reserved ? ' reserved' : '');
     b.style.background = COLORS[key];
-    b.title = reserved ? 'Negro — reservado para el profesor 🎓' : COLOR_NAMES[key];
+    b.title = reserved ? t('blackInk') : colorName(key);
     b.setAttribute('aria-label', b.title);
     if (reserved) b.disabled = true;
     b.onclick = () => {
@@ -152,15 +160,15 @@ function renderTools() {
   const pb = $('pencilBtn');
   if (pb) {
     pb.classList.toggle('on', pencilMode);
-    pb.title = pencilMode ? 'Lápiz activado: marca directo con tu tinta' : 'Lápiz desactivado: solo lectura';
+    pb.title = pencilMode ? t('pencilOn') : t('pencilOff');
   }
   // Sin menús nativos mientras el lápiz maneja los toques
   document.body.classList.toggle('pencil-on', pencilMode);
   const hint = document.querySelector('.hint');
   if (hint) {
     hint.innerHTML = pencilMode
-      ? '✏️ <b>Lápiz activado:</b> <b>toca</b> una palabra para marcarla, o desliza para marcar varias. <b>Toca tu subrayado</b> para borrar todo el párrafo. Manténlo presionado para agregarle una nota.'
-      : '✏️ <b>Lápiz desactivado:</b> solo lectura — desliza para moverte por el texto sin marcar nada. Activa el lápiz para marcar.';
+      ? t('hintOn')
+      : t('hintOff');
   }
 }
 function renderPencilBtn() { renderTools(); } // compatibilidad
@@ -209,8 +217,8 @@ async function initHeaderAuth() {
   }
   // Aviso de login exitoso/fallido
   const q = new URLSearchParams(window.location.search);
-  if (q.get('login') === 'ok') { toast('✅ Sesión iniciada'); history.replaceState(null, '', '/'); }
-  else if (q.get('login') === 'error') { toast('⚠️ No se pudo iniciar sesión'); history.replaceState(null, '', '/'); }
+  if (q.get('login') === 'ok') { toast(t('sessionStarted')); history.replaceState(null, '', '/'); }
+  else if (q.get('login') === 'error') { toast(t('sessionErr')); history.replaceState(null, '', '/'); }
 }
 
 function initJoin() {
@@ -220,7 +228,7 @@ function initJoin() {
     pencilMode = !pencilMode;
     localStorage.setItem('tj_pencil', pencilMode ? 'on' : 'off');
     renderTools();
-    toast(pencilMode ? '✏️ Lápiz activado: marca directo' : 'Lápiz desactivado');
+    toast(pencilMode ? t('pencilOn') : t('pencilOff'));
   };
   $('themeBtn').onclick = () => {
     const cur = localStorage.getItem('tj_theme') || 'light';
@@ -230,10 +238,10 @@ function initJoin() {
   $('nameInput').value = myName;
   $('roomInput').value = myRoom === 'SALA' ? '' : myRoom;
   const doJoin = () => {
-    myName = $('nameInput').value.trim().slice(0, 24) || 'Lector';
+    myName = $('nameInput').value.trim().slice(0, 24) || t('joinDefaultName');
     const rc = normalizeRoomClient($('roomInput').value);
     if ($('roomInput').value.trim() && !rc) {
-      toast('El código debe tener de 4 a 12 letras o números');
+      toast(t('joinBadCode'));
       return;
     }
     myRoom = rc || 'SALA';
@@ -247,7 +255,7 @@ function initJoin() {
   };
   $('joinBtn').onclick = doJoin;
   $('createRoomBtn').onclick = async () => {
-    myName = $('nameInput').value.trim().slice(0, 24) || 'Lector';
+    myName = $('nameInput').value.trim().slice(0, 24) || t('joinDefaultName');
     let code = null;
     try {
       const r = await fetch('/api/room/new');
@@ -291,7 +299,7 @@ function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
     gal.className = 'book-gallery';
     images.forEach((src) => {
       const img = document.createElement('img');
-      img.src = src; img.loading = 'lazy'; img.alt = 'Foto del libro';
+      img.src = src; img.loading = 'lazy'; img.alt = t('photoAlt');
       gal.appendChild(img);
     });
     paras.appendChild(gal);
@@ -335,7 +343,7 @@ function paintHighlight(h) {
     if (!s) continue;
     s.style.background = hexA(COLORS[h.color] || COLORS.azul, 0.34);
     s.classList.add('mk');
-    s.title = `${capFor(h.color)}${h.name} · ${COLOR_NAMES[h.color] || h.color}`;
+    s.title = `${capFor(h.color)}${h.name} · ${colorName(h.color)}`;
   }
 }
 function repaintAll() {
@@ -366,7 +374,7 @@ function paintNoteBadges() {
     const b = document.createElement('button');
     b.className = 'note-badge';
     b.type = 'button';
-    b.title = 'Ver notas de este párrafo';
+    b.title = t('noteViewTitle');
     b.innerHTML = `💬 ${countByPara[pi]}`;
     b.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -406,7 +414,7 @@ function renderNotes() {
   const box = $('notes');
   $('notesCount').textContent = notes.length ? `(${notes.length})` : '';
   if (!notes.length) {
-    box.innerHTML = '<p class="notes-empty">Aún no hay notas. Selecciona un pasaje y deja la primera.</p>';
+    box.innerHTML = '<p class="notes-empty">' + t('notesEmpty') + '</p>';
     return;
   }
   box.innerHTML = '';
@@ -417,7 +425,7 @@ function renderNotes() {
     card.innerHTML =
       `<div class="note-head">
          <span class="note-author"><span class="dot" style="background:${COLORS[n.color] || COLORS.azul}"></span>${capFor(n.color)}${esc(n.name)}${n.code ? `<span class="note-code">${esc(n.code)}</span>` : ''}</span>
-         ${n.name === displayName() ? `<button class="note-del" data-id="${n.id}" title="Borrar mi nota">✕</button>` : ''}
+         ${n.name === displayName() ? `<button class="note-del" data-id="${n.id}" title="' + t('noteDelTitle') + '">✕</button>` : ''}
        </div>
        <p class="note-quote" data-start="${n.start}" data-end="${n.end}">“${esc(n.quote)}”</p>
        <p class="note-text">${esc(n.text)}</p>`;
@@ -427,7 +435,7 @@ function renderNotes() {
     b.onclick = () => {
       apiPost(roomBase() + '/del', { kind: 'note', id: b.dataset.id })
         .then(() => { notes = notes.filter((n) => n.id !== b.dataset.id); renderNotes(); paintNoteMarks(); })
-        .catch(() => toast('No se pudo borrar la nota'));
+        .catch(() => toast(t('noteDelErr')));
     };
   });
   box.querySelectorAll('.note-quote').forEach((q) => {
@@ -449,11 +457,11 @@ function renderNotes() {
    .chip / data-name, sin cambios de lógica. */
 function renderRoster(roster) {
   const box = $('presence');
-  box.innerHTML = `<span class="roster-count">${roster.length} en la sala</span>` +
+  box.innerHTML = `<span class="roster-count">${t('rosterInRoom', { n: roster.length })}</span>` +
     roster.map((p) => {
       const initial = esc((p.name || '?').trim().charAt(0).toUpperCase());
       const teacher = p.color === 'negro';
-      const label = esc(p.name) + (teacher ? ' · Profesor 🎓' : '');
+      const label = esc(p.name) + (teacher ? t('rosterTeacher') : '');
       return `<span class="chip avatar-chip${teacher ? ' is-teacher' : ''}" data-name="${esc(p.name)}" title="${label}"><span class="avatar" style="background:${COLORS[p.color] || COLORS.azul}">${initial}</span><span class="avatar-name">${esc(p.name)}</span></span>`;
     }).join('');
   paintHandsInRoster();
@@ -498,7 +506,7 @@ function renderParaPresence(roster) {
     const names = byPara[pi].slice(0, 3).map((p) =>
       `<span class="dot" style="background:${COLORS[p.color] || COLORS.azul}"></span>${esc(p.name)}`).join('');
     const more = byPara[pi].length > 3 ? ` <b>+${byPara[pi].length - 3}</b>` : '';
-    chip.innerHTML = `👁 ${names}${more} <i>lee aquí</i>`;
+    chip.innerHTML = t('presenceHere', { names, more });
     pEl.appendChild(chip);
   });
   // v68: aviso sutil cuando alguien llega a TU párrafo (máx 1 cada 45s, sin spam)
@@ -510,7 +518,7 @@ function renderParaPresence(roster) {
       if (!togetherSeen.has(key) && now - lastTogetherToast > 45000) {
         togetherSeen.add(key);
         lastTogetherToast = now;
-        toast(`📖 ${p.name} está leyendo este párrafo contigo`);
+        toast(t('presencePara', { name: p.name }));
       }
     });
     if (togetherSeen.size > 60) togetherSeen.clear(); // higiene de memoria
@@ -587,7 +595,7 @@ function hideViewNote() { $('viewNotePop').classList.add('hidden'); }
 /* Muestra una nota al tocar una palabra marcada: autor, color, código y fecha */
 function showViewNote(n, anchorRect) {
   $('vnoteDot').style.background = COLORS[n.color] || COLORS.azul;
-  $('vnoteName').textContent = n.name || 'Lector';
+  $('vnoteName').textContent = n.name || t('joinDefaultName');
   $('vnoteCode').textContent = n.code || '';
   $('vnoteCode').style.display = n.code ? '' : 'none';
   $('vnoteQuote').textContent = '“' + (n.quote || '') + '”';
@@ -786,7 +794,7 @@ function initSelection() {
       });
       if (navigator.vibrate) navigator.vibrate(30);
       eraseInRange({ start: ps, end: pe });
-      toast('Párrafo limpiado');
+      toast(t('paraCleaned'));
       return;
     }
     if (h) { // subrayado ajeno: ver sus notas si las hay
@@ -844,7 +852,7 @@ function initSelection() {
     if (hid) {
       apiPost(roomBase() + '/del', { kind: 'highlight', id: hid })
         .then(() => { highlights = highlights.filter((h) => h.id !== hid); repaintAll(); })
-        .catch(() => toast('No se pudo borrar el subrayado — revisa tu conexión'));
+        .catch(() => toast(t('hlEraseErr')));
     }
     window.getSelection().removeAllRanges();
     hideToolbar();
@@ -866,12 +874,12 @@ function initSelection() {
         renderNotes();
         paintNoteMarks();
         paintNoteBadges(); // v68
-        toast(s.note.code ? 'Nota ' + s.note.code + ' guardada' : 'Nota guardada al margen');
+        toast(s.note.code ? t('noteSaved', { code: s.note.code }) : t('noteSavedPlain'));
       }
       setOnline(true);
     } catch (e) {
       setOnline(false);
-      toast('No se pudo guardar la nota — revisa tu conexión');
+      toast(t('noteErr'));
     }
   };
 }
@@ -897,7 +905,7 @@ function setOnline(on) {
   const d = $('netdot');
   if (d) {
     d.classList.toggle('off', !on);
-    d.title = on ? 'Conectado a la sala' : 'Sin conexión — reintentando…';
+    d.title = on ? t('netOnlineTitle') : t('netOfflineTitle');
   }
 }
 
@@ -949,14 +957,15 @@ let board = [];
 function relTime(ts) {
   if (!ts) return '';
   const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 10) return 'ahora mismo';
-  if (s < 60) return 'hace ' + s + (s === 1 ? ' segundo' : ' segundos');
+  if (s < 10) return t('relNow');
+  const ps = (n) => (n === 1 ? '' : 's');
+  if (s < 60) return t('relSecs', { n: s, ps: ps(s) });
   const m = Math.floor(s / 60);
-  if (m < 60) return 'hace ' + m + (m === 1 ? ' minuto' : ' minutos');
+  if (m < 60) return t('relMins', { n: m, ps: ps(m) });
   const h = Math.floor(m / 60);
-  if (h < 24) return 'hace ' + h + (h === 1 ? ' hora' : ' horas');
+  if (h < 24) return t('relHours', { n: h, ps: ps(h) });
   const d = Math.floor(h / 24);
-  return 'hace ' + d + (d === 1 ? ' día' : ' días');
+  return t('relDays', { n: d, ps: ps(d) });
 }
 
 let boardSeenMaxTs = 0; // v87: para animar solo los mensajes nuevos
@@ -969,7 +978,7 @@ function renderBoard() {
   clear.classList.toggle('hidden', !isTeacher || !board.length);
   const entries = Array.isArray(board) ? board : [];
   if (!entries.length) {
-    view.innerHTML = '<span class="board-empty">La pizarra está limpia — sé el primero en escribir. ✍️</span>';
+    view.innerHTML = '<span class="board-empty">' + t('boardEmpty') + '</span>';
     boardSeenMaxTs = 0;
   } else {
     const firstLoad = boardSeenMaxTs === 0;
@@ -984,7 +993,7 @@ function renderBoard() {
     }).join('');
     boardSeenMaxTs = Math.max(...entries.map((e) => e.ts || 0));
   }
-  meta.textContent = entries.length ? `✏️ ${entries.length} mensaje${entries.length === 1 ? '' : 's'} en la pizarra` : '';
+  meta.textContent = entries.length ? t('boardCount', { n: entries.length, ps: entries.length === 1 ? '' : 's' }) : '';
 }
 
 /* v85: enviar como entrada discreta (botón o Enter) */
@@ -996,7 +1005,7 @@ function sendBoard() {
   edit.value = '';
   apiPost(roomBase() + '/board', { text })
     .then((s) => { if (s && s.ok && Array.isArray(s.board)) { board = s.board; renderBoard(); } })
-    .catch(() => toast('No se pudo escribir en la pizarra — revisa tu conexión'));
+    .catch(() => toast(t('boardErr')));
 }
 
 function initBoard() {
@@ -1009,10 +1018,10 @@ function initBoard() {
   });
   if (clear) clear.onclick = () => {
     if (!isTeacher) return;
-    if (!confirm('¿Limpiar la pizarra para todos?')) return;
+    if (!confirm(t('boardConfirm'))) return;
     apiPost(roomBase() + '/boardClear', {})
       .then((s) => { if (s && s.ok) { board = []; renderBoard(); } })
-      .catch(() => toast('No se pudo limpiar la pizarra'));
+      .catch(() => toast(t('boardCleanErr')));
   };
   renderBoard();
 }
@@ -1047,9 +1056,7 @@ function renderFollow() {
   if (btn) {
     btn.classList.toggle('hidden', !isTeacher);
     btn.classList.toggle('on', !!follow.active);
-    btn.title = follow.active
-      ? '👀 Sígueme ACTIVADO — tócalo para detener el seguimiento'
-      : '👀 Sígueme: la pantalla de todos sigue tu lectura';
+    btn.title = follow.active ? t('followOnTip') : t('followOffTip');
   }
   if (isTeacher) { if (pill) pill.classList.add('hidden'); return; }
   if (!follow.active || currentView !== 'room') {
@@ -1063,9 +1070,7 @@ function renderFollow() {
   if (pill) {
     pill.classList.remove('hidden');
     // Texto según estado: siguiendo o no
-    pill.innerHTML = iFollow
-      ? '👀 Siguiendo al profesor'
-      : '👀 Toca para seguir al profesor';
+    pill.innerHTML = iFollow ? t('followPillOn') : t('followPillOff');
   }
   followScrollTo();
 }
@@ -1080,7 +1085,7 @@ function initFollow() {
       if (follow.active && !iFollow && currentView === 'room') {
         iFollow = true;
         iUnfollowed = false;
-        toast('👀 Siguiendo al profesor de nuevo');
+        toast(t('followBack'));
         renderFollow();
       }
     };
@@ -1092,9 +1097,9 @@ function initFollow() {
     apiPost(roomBase() + '/follow', body)
       .then((s) => {
         if (s && s.ok && s.follow) { follow = s.follow; renderFollow(); }
-        if (activating) toast('👀 Sígueme activado — todos te siguen');
+        if (activating) toast(t('followActivated'));
       })
-      .catch(() => toast('No se pudo cambiar Sígueme — revisa tu conexión'));
+      .catch(() => toast(t('followErr')));
   };
   if (!followInitDone) {
     followInitDone = true;
@@ -1114,7 +1119,7 @@ function initFollow() {
         // el estudiante se movió por su cuenta → deja de seguir (una sola vez)
         iFollow = false;
         iUnfollowed = true; // no re-activar automáticamente
-        toast('Dejaste de seguir al profesor');
+        toast(t('followLeft'));
         renderFollow();
       }
     }, { passive: true });
@@ -1134,7 +1139,7 @@ function paraCount() {
 function paraLabel() {
   const n = paraCount();
   const i = Math.min(roomPara.idx, Math.max(0, n - 1));
-  return n > 0 ? `Párrafo ${i + 1} de ${n}` : 'Párrafo —';
+  return n > 0 ? t('paraOf', { i: i + 1, n }) : t('paraDash');
 }
 function renderParaBar() {
   const bar = $('paraBar');
@@ -1162,7 +1167,7 @@ function setRoomPara(idx) {
     .then((s) => {
       if (s && s.ok && s.para) { roomPara = s.para; lastParaTs = s.para.ts; focusPara(roomPara.idx, true); renderParaBar(); renderBoardMode(); }
     })
-    .catch(() => toast('No se pudo cambiar el párrafo — revisa tu conexión'));
+    .catch(() => toast(t('paraErr')));
 }
 /* Resalta el párrafo actual para todos y lo muestra en modo pizarra */
 function focusPara(idx, smooth) {
@@ -1184,7 +1189,7 @@ function checkPara(s) {
   roomPara = pa;
   renderParaBar();
   focusPara(pa.idx, true);
-  if (!isTeacher) toast('📖 El profesor pasó al ' + paraLabel().toLowerCase());
+  if (!isTeacher) toast(t('paraTeacherMoved') + paraLabel().toLowerCase());
 }
 function initParaBar() {
   const prev = $('paraPrev'), next = $('paraNext');
@@ -1287,7 +1292,7 @@ function checkSwitchTo(s) {
   if (sw.ts <= lastSwitchTs) return;
   if (sw.bookId === myRoom) return;
   lastSwitchTs = sw.ts;
-  toast('📚 El profesor cambió a "' + (sw.title || 'otro libro') + '"');
+  toast(t('paraTeacherBook') + (sw.title || t('otherBook')) + '"');
   openBook(sw.bookId, false);
 }
 
@@ -1302,7 +1307,7 @@ function renderChat() {
   const unread = chat.length - chatSeen;
   $('chatCount').textContent = (chatTab !== 'chat' && unread > 0) ? `(${unread})` : '';
   if (!chat.length) {
-    box.innerHTML = '<p class="chat-empty-board">El chat está vacío.<br>Sé el primero en escribir. 💬</p>';
+    box.innerHTML = '<p class="chat-empty-board">' + t('chatEmpty') + '</p>';
     return;
   }
   box.innerHTML = '';
@@ -1343,7 +1348,7 @@ function sendChat() {
       }
       setOnline(true);
     })
-    .catch(() => { setOnline(false); toast('No se pudo enviar — revisa tu conexión'); });
+    .catch(() => { setOnline(false); toast(t('chatErr')); });
 }
 
 function initChat() {
@@ -1385,7 +1390,7 @@ function renderReactions() {
 function toggleReaction(start, emoji) {
   apiPost(roomBase() + '/reaction', { start, emoji })
     .then((s) => { if (s && s.ok) pollState(); setOnline(true); })
-    .catch(() => { setOnline(false); toast('No se pudo reaccionar — revisa tu conexión'); });
+    .catch(() => { setOnline(false); toast(t('reactErr')); });
 }
 
 function initReactions() {
@@ -1415,7 +1420,7 @@ function renderHands() {
     const show = !isTeacher && currentView === 'room';
     btn.classList.toggle('hidden', !show);
     btn.classList.toggle('on', myHandUp());
-    btn.title = myHandUp() ? '✋ Mano levantada — tócalo para bajarla' : '✋ Levantar la mano';
+    btn.title = myHandUp() ? t('handUp') : t('handDown');
   }
 }
 
@@ -1426,10 +1431,10 @@ function initHands() {
     apiPost(roomBase() + '/hand', { up })
       .then((s) => {
         if (s && s.ok) { hands = s.hands || []; renderHands(); renderRoster(); }
-        toast(up ? '✋ Mano levantada' : 'Mano bajada');
+        toast(up ? t('handRaised') : t('handLowered'));
         setOnline(true);
       })
-      .catch(() => { setOnline(false); toast('No se pudo levantar la mano — revisa tu conexión'); });
+      .catch(() => { setOnline(false); toast(t('handErr')); });
   };
 }
 
@@ -1451,7 +1456,7 @@ function paintHandsInRoster() {
       }
       if (isTeacher) {
         chip.style.cursor = 'pointer';
-        chip.title = 'Tocar para bajar la mano de ' + name;
+        chip.title = t('handLower') + name;
         chip.onclick = () => {
           apiPost(roomBase() + '/hand', { up: false, target: name })
             .then((s) => { if (s && s.ok) { hands = s.hands || []; renderHands(); renderRoster(); } })
@@ -1487,7 +1492,7 @@ async function postHighlight(range) {
     return true;
   } catch (e) {
     setOnline(false);
-    toast('No se pudo guardar el subrayado — revisa tu conexión');
+    toast(t('hlSaveErr'));
     return false;
   }
 }
@@ -1510,7 +1515,7 @@ async function eraseInRange(range) {
     repaintAll();
     toast(deletedIds.size === 1 ? 'Subrayado borrado' : deletedIds.size + ' subrayados borrados');
   } else {
-    toast('No se pudo borrar — revisa tu conexión');
+    toast(t('hlDelErr'));
   }
   setOnline(deletedIds.size > 0);
 }
@@ -1532,9 +1537,9 @@ function initNet() {
       const link = location.origin + '/?sala=' + encodeURIComponent(myRoom);
       try {
         await navigator.clipboard.writeText(link);
-        toast('Enlace de la sala copiado');
+        toast(t('roomLinkCopied'));
       } catch (e) {
-        toast('Enlace de la sala: ' + link); // el lector lo puede dictar o escribir
+        toast(t('roomLinkManual') + link); // el lector lo puede dictar o escribir
       }
       clog('enlace copiado/mostrado: ' + link);
     };
@@ -1563,7 +1568,7 @@ function joinRoom() {
           isTeacher = false;
           try { localStorage.setItem('tj_teacher', '0'); } catch (e) {}
           if (typeof buildSwatches === 'function') buildSwatches();
-          toast('⚠️ Ya hay un profesor en esta sala');
+          toast(t('joinTeacherExists'));
         } else if (!isTeacher && serverTeacher) {
           isTeacher = true;
           try { localStorage.setItem('tj_teacher', '1'); } catch (e) {}
@@ -1573,14 +1578,14 @@ function joinRoom() {
       setOnline(true);
       clog('red: dentro de ' + myRoom);
     })
-    .catch(() => { setOnline(false); toast('No se pudo entrar, reintentando…'); });
+    .catch(() => { setOnline(false); toast(t('enterErr')); });
   pollState();
 }
 function updateRoomLabel() {
   // Indicador de QUÉ se está leyendo: 📝 libro de creador · 📜 clásico gratis · 📄 muestra
-  const typeBadge = readingType === 'classic' ? ' 📜 <span class="rtype">Clásico gratis</span>'
-    : readingType === 'book' ? ' 📝 <span class="rtype">Libro de creador</span>'
-    : ' 📄 <span class="rtype">Texto de muestra</span>';
+  const typeBadge = readingType === 'classic' ? t('tileClassic')
+    : readingType === 'book' ? t('tileCreatorBook')
+    : t('tileSample');
   if (currentBook) {
     $('roomLabel').innerHTML = esc(currentBook.title) + typeBadge;
     $('backBtn').classList.remove('hidden');
@@ -1588,10 +1593,10 @@ function updateRoomLabel() {
   } else {
     let code = $('roomCode');
     if (!code) {
-      $('roomLabel').innerHTML = 'Sala <b id="roomCode">SALA</b>' + typeBadge;
+      $('roomLabel').innerHTML = t('roomName') + ' <b id="roomCode">SALA</b>' + typeBadge;
       code = $('roomCode');
     } else {
-      $('roomLabel').innerHTML = 'Sala <b id="roomCode">' + esc(myRoom) + '</b>' + typeBadge;
+      $('roomLabel').innerHTML = t('roomName') + ' <b id="roomCode">' + esc(myRoom) + '</b>' + typeBadge;
     }
     $('backBtn').classList.remove('hidden'); // ← siempre visible en la sala: vuelve sin perder tu nombre/color
     $('copyRoom').classList.remove('hidden');
@@ -1625,8 +1630,8 @@ async function bootBook(book, push) {
   updateRoomLabel();
   const ch = book.chapters[0];
   const kindNote = book.classic
-    ? '📜 Clásico de dominio público — gratis para todos. Tus marcas son visibles para todos los lectores.'
-    : book.price > 0 ? 'Libro adquirido. Tus marcas son visibles para todos los lectores.' : 'Libro gratuito. Tus marcas son visibles para todos los lectores.';
+    ? t('classicInfo')
+    : book.price > 0 ? t('bookBoughtInfo') : t('bookFreeInfo');
   renderText(ch.paragraphs, ch.title, book.title + ' — ' + book.author, kindNote, ch.images || []);
   // v69: el nombre del creador es tocable (abre su perfil knowledge panel)
   $('bookLine').innerHTML = `${esc(book.title)} — <span class="creator-link" data-creator="${esc(book.author)}">${esc(book.author)}</span>`;
@@ -1673,7 +1678,7 @@ function reenterRoom(st) {
   closeDrawer();
   if (st && st.bookId) { openBook(st.bookId, false); return; }
   myRoom = (st && st.room) || localStorage.getItem('tj_room') || 'SALA';
-  myName = localStorage.getItem('tj_name') || myName || 'Lector'; // nombre plano: el 🎓 se pinta por color
+  myName = localStorage.getItem('tj_name') || myName || t('joinDefaultName'); // nombre plano: el 🎓 se pinta por color
   currentBook = null;
   updateRoomLabel();
   boot();
@@ -1685,7 +1690,7 @@ function exitRoom() {
     localStorage.removeItem('tj_inRoom');
     localStorage.removeItem('tj_lastBook');
   } catch (e) {}
-  toast('🚪 Saliste de la sala');
+  toast(t('exitedRoom'));
   showLibrary(true);
 }
 /* v94: Auto-reentrar a la sala si había sesión activa al recargar.
@@ -1696,7 +1701,7 @@ function initAutoRejoin() {
     if (q.get('sala') || q.get('libro')) return; // deep link tiene prioridad
     if (localStorage.getItem('tj_inRoom') !== '1') return;
     const savedName = localStorage.getItem('tj_name');
-    if (!savedName || savedName === 'Lector') return; // sin nombre real, no auto-entrar
+    if (!savedName || savedName === t('joinDefaultName')) return; // sin nombre real, no auto-entrar
     myName = savedName;
     myRoom = localStorage.getItem('tj_room') || 'SALA';
     const lastBook = localStorage.getItem('tj_lastBook');
@@ -1708,7 +1713,7 @@ function initAutoRejoin() {
       if (lastBook && window.__tjBooksReady && typeof openBook === 'function') {
         const books = (typeof libBooksCache !== 'undefined' && libBooksCache) || [];
         const b = books.find(x => x.id === lastBook);
-        if (b) { openBook(b.id, false); toast('📖 De vuelta en tu lectura'); return; }
+        if (b) { openBook(b.id, false); toast(t('backToReading')); return; }
       }
       // Sin libro: entrar directo a la sala (sin pantalla de "Entrar")
       $('library').classList.add('hidden');
@@ -1716,7 +1721,7 @@ function initAutoRejoin() {
       setViewState('room', false);
       updateRoomLabel();
       boot();
-      toast('👋 De vuelta en la sala');
+      toast(t('backToRoom'));
     };
     // Dar tiempo a que los inits terminen
     setTimeout(tryRejoin, 800);
@@ -1750,21 +1755,12 @@ window.addEventListener('popstate', (e) => {
 
 /* ------------------------------- biblioteca ---------------------------- */
 let currentBook = null;
-const ownedBooks = () => {
-  try { return JSON.parse(localStorage.getItem('tj_owned') || '[]'); }
-  catch { return []; }
-};
-const isOwned = (id) => ownedBooks().includes(id);
-const markOwned = (id) => {
-  const o = ownedBooks();
-  if (!o.includes(id)) { o.push(id); localStorage.setItem('tj_owned', JSON.stringify(o)); }
-};
-const fmtPrice = (cents) => '$' + (cents / 100).toFixed(2);
+const fmtPrice = (cents) => '$' + (cents / 100).toFixed(2); // usado para anuncios y destacados
 
 function syncNameFromLib() {
   const v = $('libNameInput').value.trim().slice(0, 24);
   if (v) { myName = v; localStorage.setItem('tj_name', myName); }
-  else if (!myName || myName === 'Lector') { myName = 'Lector'; }
+  else if (!myName || myName === t('joinDefaultName')) { myName = t('joinDefaultName'); }
   return myName;
 }
 
@@ -1790,10 +1786,10 @@ function renderAffiliates() {
       adCardVisual(a.emoji, a.hue, a.img) +
       `<div class="ad-badge">🔗 ${esc(a.store)}</div>` +
       `<div class="ad-name">${esc(a.name)}</div>` +
-      `<div class="ad-note">${esc(a.price)} · Enlace de afiliado · Toca para ver</div>`;
+      `<div class="ad-note">${t('adAffNote', { price: esc(a.price) })}</div>`;
     card.onclick = () => {
       if (a.url) window.open(a.url, '_blank', 'noopener');
-      else toast('Enlace de afiliado no configurado');
+      else toast(t('adAffNoCfg'));
     };
     row.appendChild(card);
   });
@@ -1827,7 +1823,7 @@ async function renderAds() {
   bo.innerHTML =
     `<div class="tile-cover"><img src="img/best-offer-logo.jpg" alt="Best Offer" loading="lazy" decoding="async"></div>` +
     `<div class="tile-title">Best Offer</div>` +
-    `<div class="tile-sub">⭐ Comunidad · 8,400+ miembros</div>`;
+    `<div class="tile-sub">${t('adCommunity')} · 8,400+ miembros</div>`;
   bo.onclick = () => showImmersiveBestOffer();
   tiles.push(bo);
   // 1. pagados primero (sin duplicados por id)
@@ -1853,7 +1849,7 @@ async function renderAds() {
     };
     tiles.push(t);
   });
-  if (!tiles.length) row.innerHTML = '<p class="hrow-empty">Pronto habrá anuncios aquí.</p>';
+  if (!tiles.length) row.innerHTML = '<p class="hrow-empty">' + t('adNone') + '</p>';
   else tiles.forEach((t) => row.appendChild(t));
   renderHero(lastFeat); // incluir anuncios pagados en el carrusel
 }
@@ -1895,7 +1891,7 @@ async function showAdModal(existing) {
   } catch { /* valores por defecto */ }
   const plans = $('adPlans');
   plans.innerHTML = '';
-  [['day', 'Por día', prices.day], ['week', 'Por semana', prices.week], ['month', 'Por mes', prices.month]].forEach(([key, label, cents]) => {
+  [['day', t('planDay'), prices.day], ['week', t('planWeek'), prices.week], ['month', t('planMonth'), prices.month]].forEach(([key, label, cents]) => {
     const row = document.createElement('label');
     row.className = 'plan-row' + (key === adPlan ? ' sel' : '');
     row.innerHTML = `<input type="radio" name="aplan" value="${key}" ${key === adPlan ? 'checked' : ''}>` +
@@ -1917,19 +1913,19 @@ async function initAds() {
   $('adCancel').onclick = () => { $('adPop').classList.add('hidden'); adPending = null; };
   $('adConfirm').onclick = async () => {
     const name = $('adName').value.trim().slice(0, 60);
-    if (!name && !adPending) { toast('Ponle un nombre a tu producto'); return; }
+    if (!name && !adPending) { toast(t('adNeedName')); return; }
     let adUrl = ($('adUrl').value || '').trim().slice(0, 300);
     if (adUrl && !/^https?:\/\//i.test(adUrl)) adUrl = 'https://' + adUrl;
     const badge = (document.querySelector('input[name="abadge"]:checked') || {}).value || 'mas-vendido';
     syncNameFromLib();
     const adv = displayName();
-    if (!adv || adv === 'Lector') { toast('Escribe tu nombre primero'); return; }
+    if (!adv || adv === t('joinDefaultName')) { toast(t('adNeedUser')); return; }
     // Validar la foto ANTES de cobrar (tras ir a Stripe el archivo ya no estará disponible)
     const photoFile = ($('adPhoto') && $('adPhoto').files[0]) || null;
     if (photoFile) {
       const okType = ['image/jpeg', 'image/png', 'image/webp'].includes(photoFile.type);
-      if (!okType) { toast('La foto debe ser JPG, PNG o WebP'); return; }
-      if (photoFile.size > 2 * 1024 * 1024) { toast('La foto no puede pasar de 2MB'); return; }
+      if (!okType) { toast(t('pubPhotoType')); return; }
+      if (photoFile.size > 2 * 1024 * 1024) { toast(t('pubPhotoSize')); return; }
       try {
         const dataUrl = await new Promise((res, rej) => {
           const fr = new FileReader();
@@ -1949,10 +1945,10 @@ async function initAds() {
         type: 'ad',
         intentParams: { name, emoji: adEmoji, badge, plan: adPlan, advertiser: adv, url: adUrl,
           ...(adPending ? { id: adPending.id } : {}) },
-        description: `Anunciar "${name || 'producto'}"`, amountCents: null,
+        description: t('adPayTitle', { name: name || t('productWord') }), amountCents: null,
       });
     } catch (e) {
-      if (String((e && e.message) || e) !== 'cancelado') toast('No se pudo completar el pago');
+      if (String((e && e.message) || e) !== 'cancelado') toast(t('adPayErr'));
     }
     $('adConfirm').disabled = false;
     $('adConfirm').textContent = 'Pagar y publicar';
@@ -2001,21 +1997,16 @@ function levelSpan(author) {
 async function showAchievements() {
   const name = displayName();
   const body = $('achBody');
-  $('achSub').textContent = name && name !== 'Lector' ? name + ' · tu nivel sube con cada libro vendido.' : 'Tu nivel sube con cada libro vendido.';
+  $('achSub').textContent = name && name !== t('joinDefaultName') ? name + ' · tus logros como creador.' : 'Tus logros como creador.';
   body.innerHTML = '<p class="join-note">Cargando…</p>';
   $('achPop').classList.remove('hidden');
   $('achClose').onclick = () => $('achPop').classList.add('hidden');
   const d = await fetchLevel(name);
   if (!d) { body.innerHTML = '<p class="join-note">No se pudo cargar. Revisa tu conexión.</p>'; return; }
-  const pct = d.next ? Math.min(100, Math.round((d.sales / (d.sales + d.next.need)) * 100)) : 100;
   body.innerHTML =
-    `<div class="ach-level"><span style="font-size:44px">${d.level.emoji}</span>` +
-    `<div><div style="font-size:18px;font-weight:700">${d.level.name}</div>` +
-    `<div class="join-note" style="margin:4px 0">${d.sales} venta(s) · ${d.books} libro(s) · 💬 ${d.notes} notas</div></div></div>` +
-    (d.next
-      ? `<div class="ach-next">A <b>${d.next.need}</b> venta(s) de <b>${d.next.emoji} ${d.next.name}</b></div>` +
-        `<div class="ach-bar"><div class="ach-fill" style="width:${pct}%"></div></div>`
-      : `<div class="ach-next">🏆 ¡Nivel máximo alcanzado!</div>`) +
+    `<div class="ach-level"><span style="font-size:44px">📖</span>` +
+    `<div><div style="font-size:18px;font-weight:700">Creador</div>` +
+    `<div class="join-note" style="margin:4px 0">${d.books} libro(s) · 💬 ${d.notes} notas</div></div></div>` +
     `<div class="ach-grid">` + d.achievements.map((a) =>
       `<div class="ach-item${a.unlocked ? '' : ' locked'}"><span>${a.unlocked ? a.emoji : '🔒'}</span><span>${esc(a.name)}</span></div>`
     ).join('') + `</div>`;
@@ -2037,7 +2028,6 @@ function kpInitial(name) {
 }
 function creatorPanelHtml(p) {
   const vBadge = p.verified ? '<span class="kp-verified" title="Creador verificado">✓</span>' : '';
-  const lvl = p.level ? `<span class="kp-level" title="Nivel ${esc(p.level.name)}">${p.level.emoji}</span>` : '';
   const avatar = p.photo
     ? `<div class="kp-avatar"><img src="${esc(p.photo)}" alt="Foto de ${esc(p.name)}"></div>`
     : `<div class="kp-avatar">${kpInitial(p.name)}</div>`;
@@ -2058,21 +2048,18 @@ function creatorPanelHtml(p) {
         `<div class="kp-book" data-book="${esc(b.id)}">` +
         (b.coverUrl ? `<img src="${esc(b.coverUrl)}" alt="Portada de ${esc(b.title)}" loading="lazy">`
           : `<div style="aspect-ratio:2/3;${coverStyle(b.id)};position:relative"><div class="cover-title" style="font-size:13px">${esc(b.title)}</div></div>`) +
-        `<div class="kp-book-t">${esc(b.title)}</div>` +
-        `<div class="kp-book-p">${b.price === 0 ? 'Gratis' : fmtPrice(b.price)}</div></div>`
+        `<div class="kp-book-t">${esc(b.title)}</div></div>`
       ).join('') + `</div>`
     : `<p class="join-note" style="margin:6px 0">Aún no tiene libros publicados.</p>`;
   return `<div class="kp">` +
-    `<div class="kp-head">${avatar}<div><h3 class="kp-name">${esc(p.name)}${vBadge}${lvl}</h3><div class="kp-role">${esc(role)}</div></div></div>` +
+    `<div class="kp-head">${avatar}<div><h3 class="kp-name">${esc(p.name)}${vBadge}</h3><div class="kp-role">${esc(role)}</div></div></div>` +
     (p.bio ? `<p class="kp-bio">${esc(p.bio)}</p>` : '') +
     (facts ? `<div class="kp-facts">${facts}</div>` : '') +
     (links.length ? `<div class="kp-links">${links.join('')}</div>` : '') +
     (p.about ? `<div class="kp-sec">Acerca de</div><p class="kp-about">${esc(p.about)}</p>` : '') +
     `<div class="kp-stats">` +
     `<div class="kp-stat"><b>${p.books}</b><span>Libros</span></div>` +
-    `<div class="kp-stat"><b>${p.sales}</b><span>Lectores</span></div>` +
     `<div class="kp-stat"><b>${p.notes}</b><span>Notas</span></div>` +
-    (p.level ? `<div class="kp-stat"><b>${p.level.emoji}</b><span>${esc(p.level.name)}</span></div>` : '') +
     `</div>` +
     `<div class="kp-sec">Libros de ${esc(p.name)}</div>${booksHtml}` +
     (p.canEdit ? `<button class="btn btn-primary kp-edit" id="kpEditBtn">✏️ Editar mi perfil</button>` : '') +
@@ -2293,7 +2280,7 @@ function showFeedbackModal() {
   const viewName = VIEW_LABELS[currentView] || currentView || 'Biblioteca';
   $('fbPage').value = viewName;
   $('fbMessage').value = '';
-  $('fbName').value = (displayName() && displayName() !== 'Lector') ? displayName() : '';
+  $('fbName').value = (displayName() && displayName() !== t('joinDefaultName')) ? displayName() : '';
   $('feedbackPop').classList.remove('hidden');
   $('fbCancel').onclick = () => $('feedbackPop').classList.add('hidden');
   $('fbSend').onclick = async () => {
@@ -2333,7 +2320,7 @@ async function showAdminPanel() {
   let html = '';
   html += `<h4>📚 Libros en revisión (${d.pendingBooks.length})</h4>`;
   html += d.pendingBooks.length ? d.pendingBooks.map((b) =>
-    `<div class="adm-row"><span><b>${esc(b.title)}</b> · ${esc(b.author)} · ${b.price === 0 ? 'Gratis' : fmtPrice(b.price)} · ${b.ageRating === '18' ? '+18' : b.ageRating === '13' ? '+13' : 'Todos'}</span>` +
+    `<div class="adm-row"><span><b>${esc(b.title)}</b> · ${esc(b.author)} · ${b.ageRating === '18' ? '+18' : b.ageRating === '13' ? '+13' : 'Todos'}</span>` +
     `<span><button class="btn btn-primary" data-adm="book-ok" data-id="${esc(b.id)}">Aprobar</button> ` +
     `<button class="btn" data-adm="book-no" data-id="${esc(b.id)}">Rechazar</button></span></div>`
   ).join('') : '<p class="join-note">Nada pendiente.</p>';
@@ -2653,7 +2640,7 @@ function restoreProgress(bookId) {
 async function renderCreatorStats(book) {
   const el = $('creatorStats');
   if (!el) return;
-  const mine = book && book.author === myName && myName && myName !== 'Lector';
+  const mine = book && book.author === myName && myName && myName !== t('joinDefaultName');
   if (!mine) { el.classList.add('hidden'); el.innerHTML = ''; return; }
   el.classList.remove('hidden');
   el.innerHTML = '<span class="cs-title">📊 Tu libro</span><span class="cs-loading">Cargando…</span>';
@@ -2688,8 +2675,7 @@ function coverTile(b, opts) {
   opts = opts || {};
   const t = document.createElement('div');
   t.className = 'tile';
-  const owned = b.price === 0 || isOwned(b.id);
-  const mine = b.author === displayName() && myName !== 'Lector';
+  const mine = b.author === displayName() && myName !== t('joinDefaultName');
   const vBadge = b.verifiedAuthor ? '<span class="vbadge" title="Creador verificado">✔️</span>' : '';
   const classicBadge = b.classic ? '<div class="classic-badge">📜 Dominio público</div>' : '';
   const ageBadge = b.ageRating && b.ageRating !== 'all'
@@ -2707,7 +2693,7 @@ function coverTile(b, opts) {
     (b.coverUrl ? '' : `<div class="cover-title">${esc(b.title)}</div><div class="cover-author creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</div>`) +
     `</div>` +
     `<div class="tile-title">${esc(b.title)} ${vBadge}</div>` +
-    `<div class="tile-sub">${b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price)} · 🎨 ${b.marks || 0} · ${ratingHtml(b)}` +
+    `<div class="tile-sub">🎨 ${b.marks || 0} · ${ratingHtml(b)}` +
     (mine && !opts.badge ? ` · <u class="tile-feat">⭐ destacar</u>` : '') +
     ` · ${reportBtnHtml(b)}</div>`;
   t.onclick = (e) => {
@@ -2952,7 +2938,6 @@ function showImmersiveBestOffer() {
 }
 /* Libro destacado en inmersiva: portada grande, título, autor, precio, Leer */
 function showImmersiveBook(b) {
-  const owned = b.price === 0 || isOwned(b.id);
   const visual = b.coverUrl
     ? `<img src="${esc(b.coverUrl)}" alt="Portada de ${esc(b.title)}">`
     : `<div style="width:100%;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:22px;${coverStyle(b.id)}"><div class="cover-title" style="font-size:24px">${esc(b.title)}</div><div class="cover-author">${esc(b.author)}</div></div>`;
@@ -2960,9 +2945,9 @@ function showImmersiveBook(b) {
     visual,
     badge: '⭐ Destacado',
     title: b.title,
-    sub: `${b.author} · ${b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price)}`,
-    subHtml: `<span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> ${levelSpan(b.author)} · ${b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price)} · <span class="tile-rating" id="immRating">${ratingText(b)}</span>`,
-    cta: owned ? 'Leer ahora' : 'Ver libro',
+    sub: `${b.author}`,
+    subHtml: `<span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> · <span class="tile-rating" id="immRating">${ratingText(b)}</span>`,
+    cta: 'Leer ahora',
     tag: 'TINTAJUNTA',
     onCta: () => { closeImmersive(); openBook(b.id); },
   });
@@ -2998,15 +2983,13 @@ function showImmersiveBook(b) {
 let heroIdx = 0, heroTimer = null, heroSlides = [], lastHeroRotate = 0;
 const isNewBook = (b) => (Date.now() - (b.createdAt || 0)) < 14 * 24 * 3600 * 1000;
 function heroSlideBook(b) {
-  const owned = b.price === 0 || isOwned(b.id);
   const bgDiv = b.coverUrl
     ? `<div class="hero-bg" style="background-image:url('${esc(b.coverUrl)}')"></div>`
     : '';
   const bg = b.coverUrl ? '' : coverStyle(b.id);
   const tags = `<div class="hero-tags"><span class="hero-tag">⭐ DESTACADO</span>` +
     (isNewBook(b) ? `<span class="hero-tag">🆕 NUEVO</span>` : '') + `</div>`;
-  const meta = `<span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> ${levelSpan(b.author)} · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0} · ` +
-    (b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price));
+  const meta = `<span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0}`;
   const desc = (b.marks || b.notes)
     ? `La comunidad ya dejó ${b.marks || 0} marcas y ${b.notes || 0} notas en este libro.`
     : `Sé de los primeros en leerlo y marcarlo con tu tinta.`;
@@ -3017,7 +3000,7 @@ function heroSlideBook(b) {
     <div class="hero-title">${esc(b.title)}</div>
     <div class="hero-sub">${meta}</div>
     <div class="hero-desc">${desc}</div>
-    <button class="hero-cta-round" data-book="${b.id}">▶ ${owned ? 'Leer ahora' : 'Ver libro'}</button>
+    <button class="hero-cta-round" data-book="${b.id}">▶ Leer ahora</button>
   </div>`;
 }
 function heroSlideAd(a, paid) {
@@ -3103,6 +3086,40 @@ function heroPlay() {
 function heroPause() { if (heroTimer) { clearInterval(heroTimer); heroTimer = null; } }
 const popularity = (b) => (b.marks || 0) + (b.notes || 0) * 2;
 
+/* ---------------- Google AdSense ----------------
+   Slots en la página principal (biblioteca). NUNCA en la sala de lectura.
+   ADSENSE_CLIENT vacío → placeholder discreto "Espacio publicitario".
+   Con Publisher ID → carga el script de AdSense y renderiza anuncios reales. */
+let adsenseLoaded = false;
+function renderAdSenseSlots() {
+  const slots = document.querySelectorAll('.adsense-slot');
+  if (!slots.length) return;
+  if (!ADSENSE_CLIENT) {
+    // Sin Publisher ID: placeholder discreto para que Alejandro vea dónde van
+    const label = (typeof t === 'function') ? t('adsensePh') : 'Espacio publicitario';
+    slots.forEach((s) => {
+      s.innerHTML = '<span class="adsense-ph">' + esc(label) + '</span>';
+    });
+    return;
+  }
+  // Con Publisher ID: anuncios reales de Google
+  if (!adsenseLoaded) {
+    adsenseLoaded = true;
+    const sc = document.createElement('script');
+    sc.async = true;
+    sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADSENSE_CLIENT);
+    sc.crossOrigin = 'anonymous';
+    document.head.appendChild(sc);
+  }
+  slots.forEach((s) => {
+    if (s.dataset.adsDone) return;
+    s.dataset.adsDone = '1';
+    s.innerHTML = '<ins class="adsbygoogle" style="display:block" data-ad-client="' + esc(ADSENSE_CLIENT) + '" data-ad-format="auto" data-full-width-responsive="true"></ins>';
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); }
+    catch (e) { /* AdSense aún cargando */ }
+  });
+}
+
 async function showLibrary(push) {
   setViewState('library', push);
   const lib = $('library');
@@ -3125,6 +3142,7 @@ async function showLibrary(push) {
     renderHero(feat); // carrusel en movimiento: destacados + anuncios
     lastFeat = feat;
     renderRows();
+    renderAdSenseSlots(); // Google Ads: solo en la biblioteca, nunca en la sala
     paintLevelBadges($('heroCarousel'));
   } catch (e) {
     $('heroCarousel').classList.add('hidden');
@@ -3154,20 +3172,18 @@ function coverInner(b, small) {
 function bookRow(b, rank) {
   const row = document.createElement('div');
   row.className = 'book-row';
-  const owned = b.price === 0 || isOwned(b.id);
-  const mine = b.author === displayName() && myName !== 'Lector';
+  const mine = b.author === displayName() && myName !== t('joinDefaultName');
   const act = popularity(b);
   row.innerHTML =
     `<div class="rank-badge">#${rank}</div>` +
     `<div class="row-cover" style="${b.coverUrl ? '' : coverStyle(b.id)}">${coverInner(b, true)}</div>` +
     `<div class="row-main">` +
       `<div class="row-title">${esc(b.title)}</div>` +
-      `<div class="row-meta"><span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> ${levelSpan(b.author)} · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0}` +
-      (b.price === 0 ? ' · <span class="free">Gratis</span>' : owned ? ' · Adquirido' : ` · ${fmtPrice(b.price)}`) +
+      `<div class="row-meta"><span class="creator-link" data-creator="${esc(b.author)}">${esc(b.author)}</span> · 🎨 ${b.marks || 0} · 💬 ${b.notes || 0}` +
       `</div>` +
     `</div>` +
     `<button class="info-btn" data-act="info" title="Ver ficha">i</button>` +
-    `<button class="btn row-btn" data-act="open">${owned ? 'Leer' : 'Ver'}</button>` +
+    `<button class="btn row-btn" data-act="open">Leer</button>` +
     (mine ? `<button class="linklike" data-act="feature" title="Destacar en portada">⭐</button>` : '');
   row.querySelector('[data-act="open"]').onclick = () => openBook(b.id);
   row.querySelector('[data-act="info"]').onclick = () => openBook(b.id);
@@ -3198,8 +3214,7 @@ function coverStyle(id) {
 function bookCard(b, isFeat) {
   const card = document.createElement('div');
   card.className = 'book-card' + (isFeat ? ' book-feat' : '');
-  const owned = b.price === 0 || isOwned(b.id);
-  const mine = b.author === displayName() && myName !== 'Lector';
+  const mine = b.author === displayName() && myName !== t('joinDefaultName');
   // Actividad de la comunidad en este libro (la cuenta la envía el servidor)
   const activity = (b.marks || b.notes)
     ? `<p class="book-activity">🎨 ${b.marks || 0} · 💬 ${b.notes || 0}</p>`
@@ -3209,10 +3224,8 @@ function bookCard(b, isFeat) {
     (isFeat ? '<div class="feat-badge">⭐ DESTACADO</div>' : '') +
     coverInner(b, false) + `</div>` +
     `<div class="book-info">` +
-    `<div class="book-foot"><span class="book-price ${b.price === 0 ? 'free' : ''}">` +
-    (b.price === 0 ? 'Gratis' : owned ? 'Adquirido' : fmtPrice(b.price)) +
-    `</span>${activity}</div>` +
-    `<button class="btn" data-act="open">${owned ? 'Leer' : 'Ver'}</button>` +
+    `<div class="book-foot">${activity}</div>` +
+    `<button class="btn" data-act="open">Leer</button>` +
     (mine && !isFeat ? `<button class="linklike" data-act="feature">⭐ Destacar</button>` : '') +
     `</div>`;
   card.querySelector('[data-act="open"]').onclick = () => openBook(b.id);
@@ -3233,7 +3246,7 @@ async function openBook(id, push) {
     if (!d.ok) throw 0;
     book = d.book;
   } catch (e) { toast('No se pudo abrir el libro — revisa tu conexión e intenta de nuevo'); return; }
-  if (book.price > 0 && !isOwned(book.id)) { showBuy(book); return; }
+  // Todos los libros son gratis: se abren directo
   // Advertencia de contenido adulto
   if (book.ageRating === '18' && !sessionStorage.getItem('tj_age_ok_' + book.id)) {
     $('ageText').textContent = `"${book.title}" está clasificado +18 (contenido para adultos).`;
@@ -3249,8 +3262,7 @@ async function openBook(id, push) {
   bootBook(book, push);
 }
 
-/* Pagos reales con Stripe (modo TEST). En la versión real aquí va Stripe */
-let buyBookPending = null;
+/* Pagos reales con Stripe. En la versión real aquí va Stripe */
 let featurePending = null, featurePlan = 'week';
 
 /* ---------- Stripe: helper de pago con tarjeta ---------- */
@@ -3317,34 +3329,13 @@ async function initCheckoutReturn() {
     toast('✅ Pago recibido'); return;
   }
   try {
-    if (pend.type === 'buy') await finalizeBuy(pend.params.bookId, sid);
-    else if (pend.type === 'feature') await finalizeFeature(pend.params.bookId, pend.params.plan, pend.params.author, sid);
+    if (pend.type === 'feature') await finalizeFeature(pend.params.bookId, pend.params.plan, pend.params.author, sid);
     else if (pend.type === 'ad') await finalizeAd(pend.params, sid);
     else toast('✅ Pago recibido');
   } catch (e) {
     clog('finalize pago falló: ' + (e && e.message));
     toast('No se pudo confirmar el pago');
   }
-}
-/* Finaliza una compra al volver de Stripe: registra la venta y celebra */
-async function finalizeBuy(bookId, sessionId) {
-  const r = await fetch('/api/books/' + encodeURIComponent(bookId) + '/buy', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId }),
-  });
-  const d = await r.json().catch(() => ({}));
-  if (!d.ok) throw new Error(d.error || 'buy-failed');
-  markOwned(bookId);
-  let book = (typeof libBooksCache !== 'undefined' && libBooksCache || []).find((b) => b.id === bookId);
-  if (!book) {
-    try {
-      const br = await fetch('/api/books'); const bd = await br.json();
-      book = (bd.books || []).find((b) => b.id === bookId);
-    } catch (e) {}
-  }
-  if (book) { book.sales = d.sales || book.sales; showBought(book); }
-  else toast('¡Libro adquirido!');
-  try { showLibrary(false); } catch (e) {}
 }
 /* Finaliza un destacado al volver de Stripe */
 async function finalizeFeature(bookId, plan, author, sessionId) {
@@ -3395,7 +3386,7 @@ async function showFeature(b) {
   } catch (e) { /* usar valores por defecto */ }
   const plans = $('featurePlans');
   plans.innerHTML = '';
-  [['day', 'Por día', prices.day], ['week', 'Por semana', prices.week], ['month', 'Por mes', prices.month]].forEach(([key, label, cents]) => {
+  [['day', t('planDay'), prices.day], ['week', t('planWeek'), prices.week], ['month', t('planMonth'), prices.month]].forEach(([key, label, cents]) => {
     const row = document.createElement('label');
     row.className = 'plan-row' + (key === featurePlan ? ' sel' : '');
     row.innerHTML = `<input type="radio" name="fplan" value="${key}" ${key === featurePlan ? 'checked' : ''}>` +
@@ -3409,16 +3400,8 @@ async function showFeature(b) {
   });
   $('featurePop').classList.remove('hidden');
 }
-function showBuy(book) {
-  buyBookPending = book;
-  $('buyTitle').textContent = book.title;
-  $('buyAuthor').innerHTML = `<span class="creator-link" data-creator="${esc(book.author)}">${esc(book.author)}</span>`;
-  $('buyPrice').textContent = fmtPrice(book.price);
-  $('buyConfirm').textContent = 'Comprar por ' + fmtPrice(book.price);
-  $('buyPop').classList.remove('hidden');
-}
 /* v71 — 📖 Muestra gratis: primeros 3 párrafos en solo lectura (patrón "Look Inside").
- * El lector prueba la escritura antes de comprar; al final, CTA a comprar. */
+ * Vista previa del libro antes de leerlo completo. */
 function showSample(book) {
   const ch = (book.chapters && book.chapters[0]) || {};
   const paras = (ch.paragraphs || []).slice(0, 3);
@@ -3451,14 +3434,6 @@ async function shareBook(book) {
     }
   }
 }
-/* v71 — 🎉 Post-compra: celebra e invita a leer JUNTOS (el diferenciador).
- * Convierte la compra en una sala en vivo o en invitar amigos. */
-let boughtBookPending = null;
-function showBought(book) {
-  boughtBookPending = book;
-  $('boughtBookLine').textContent = book.title + ' — ' + book.author;
-  $('boughtPop').classList.remove('hidden');
-}
 /* v79 — 🎨 Creador de portadas para publicar libros.
  * Paletas editoriales + textura + vista previa en vivo → render a canvas → blob para subir. */
 let generatedCoverBlob = null;
@@ -3483,9 +3458,9 @@ function updateCoverPreview() {
   if (!pv) return;
   pv.style.cssText = coverMakerCSS(coverMakerState.pal, coverMakerState.pat) +
     ';aspect-ratio:2/3;border-radius:6px;overflow:hidden;position:relative;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.2)';
-  const t = ($('pubTitle') && $('pubTitle').value.trim()) || 'Tu título';
-  $('coverPreviewTitle').textContent = t;
-  $('coverPreviewAuthor').textContent = (typeof myName !== 'undefined' && myName !== 'Lector') ? myName : 'Tu nombre';
+  const pvTitle = ($('pubTitle') && $('pubTitle').value.trim()) || t('pubYourTitle');
+  $('coverPreviewTitle').textContent = pvTitle;
+  $('coverPreviewAuthor').textContent = (typeof myName !== 'undefined' && myName !== t('joinDefaultName')) ? myName : t('pubYourName');
 }
 function renderCoverToBlob() {
   return new Promise((resolve) => {
@@ -3508,8 +3483,8 @@ function renderCoverToBlob() {
     // franja decorativa
     x.fillStyle = 'rgba(255,255,255,.14)'; x.fillRect(48, H - 260, 90, 6);
     // título + autor
-    const title = ($('pubTitle') && $('pubTitle').value.trim()) || 'Tu título';
-    const author = (typeof myName !== 'undefined' && myName !== 'Lector') ? myName : 'Tu nombre';
+    const title = ($('pubTitle') && $('pubTitle').value.trim()) || t('pubYourTitle');
+    const author = (typeof myName !== 'undefined' && myName !== t('joinDefaultName')) ? myName : t('pubYourName');
     x.fillStyle = '#fff'; x.shadowColor = 'rgba(0,0,0,.45)'; x.shadowBlur = 8;
     x.font = '800 54px Georgia, serif';
     wrapText(x, title, 48, H - 210, W - 96, 66);
@@ -3573,7 +3548,7 @@ function initCoverMaker() {
 }
 function initLibrary() {
   buildSwatchesInto($('libSwatches'));
-  $('libNameInput').value = myName === 'Lector' ? '' : myName;
+  $('libNameInput').value = myName === t('joinDefaultName') ? '' : myName;
   $('libNameInput').addEventListener('change', syncNameFromLib);
   // Modo profesor: tinta negra siempre, selector bloqueado
   const tc = $('teacherCheck');
@@ -3596,7 +3571,6 @@ function initLibrary() {
   $('publishBtn').onclick = () => {
     syncNameFromLib();
     $('pubTitle').value = '';
-    $('pubPrice').value = '';
     $('pubText').value = '';
     $('pubCover').value = '';
     generatedCoverBlob = null;
@@ -3609,11 +3583,10 @@ function initLibrary() {
   initCoverMaker();
   $('pubSave').onclick = async () => {
     const title = $('pubTitle').value.trim();
-    const price = Math.round((parseFloat($('pubPrice').value) || 0) * 100);
+    const price = 0; // todos los libros son gratis
     const text = $('pubText').value.trim();
     const ageRating = ($('pubAge') && $('pubAge').value) || 'all';
     if (!title || !text) { toast('Ponle título y texto a tu libro'); return; }
-    if (price > 0 && price < 199) { toast('El precio mínimo es $1.99, o publícalo gratis'); return; }
     // validar portada en el cliente (obligatoria, tipo y 2MB) — v79: acepta portada generada
     const coverFile = $('pubCover').files[0] || generatedCoverBlob || null;
     if (!coverFile) { toast('La portada es obligatoria — súbela o créala con 🎨'); return; }
@@ -3672,20 +3645,9 @@ function initLibrary() {
     } catch (e) { toast('No se pudo publicar el libro'); }
     $('pubSave').disabled = false;
   };
-  $('buyCancel').onclick = () => { $('buyPop').classList.add('hidden'); buyBookPending = null; };
-  // v71 — muestra gratis, compartir y post-compra
-  $('buySample').onclick = () => { if (buyBookPending) { $('buyPop').classList.add('hidden'); showSample(buyBookPending); } };
-  $('buyShare').onclick = () => { if (buyBookPending) shareBook(buyBookPending); };
+  // v71 — muestra gratis y compartir
   $('sampleClose').onclick = () => $('samplePop').classList.add('hidden');
-  $('sampleBuy').onclick = () => { $('samplePop').classList.add('hidden'); if (buyBookPending) showBuy(buyBookPending); };
-  $('boughtShare').onclick = () => { if (boughtBookPending) shareBook(boughtBookPending); };
-  $('boughtRead').onclick = () => { const b = boughtBookPending; boughtBookPending = null; $('boughtPop').classList.add('hidden'); if (b) bootBook(b); };
-  $('boughtRoom').onclick = () => {
-    const b = boughtBookPending; boughtBookPending = null;
-    $('boughtPop').classList.add('hidden');
-    if (b) { bootBook(b); toast('🔴 Toca "Sala en vivo" para leer juntos en tiempo real'); }
-    else goLiveRoom();
-  };
+  $('sampleRead').onclick = () => { $('samplePop').classList.add('hidden'); };
   /* Destacar libro en portada (anuncio pagado del creador) */
   $('featureCancel').onclick = () => { $('featurePop').classList.add('hidden'); featurePending = null; };
   $('featureConfirm').onclick = async () => {
@@ -3699,36 +3661,9 @@ function initLibrary() {
         description: `Destacar "${b.title}"`, amountCents: null,
       });
     } catch (e) {
-      if (String((e && e.message) || e) !== 'cancelado') toast('No se pudo completar el pago');
+      if (String((e && e.message) || e) !== 'cancelado') toast(t('adPayErr'));
     }
     $('featureConfirm').disabled = false;
-  };
-  $('buyConfirm').onclick = async () => {
-    if (!buyBookPending) return;
-    const b = buyBookPending;
-    // Libro gratis: sin pago
-    if (!b.price) {
-      markOwned(b.id);
-      buyBookPending = null;
-      $('buyPop').classList.add('hidden');
-      toast('¡Libro adquirido!');
-      showLibrary(false);
-      bootBook(b);
-      return;
-    }
-    $('buyConfirm').disabled = true;
-    $('buyConfirm').textContent = 'Procesando…';
-    try {
-      // Cobrar con Stripe: redirige; al volver (?pago=ok) initCheckoutReturn registra la compra
-      await payWithStripe({
-        type: 'buy', intentParams: { bookId: b.id },
-        description: `Comprar "${b.title}"`, amountCents: b.price,
-      });
-    } catch (e) {
-      if (String(e.message || e) !== 'cancelado') toast('No se pudo completar el pago');
-    }
-    $('buyConfirm').disabled = false;
-    $('buyConfirm').textContent = 'Comprar por ' + fmtPrice(b.price);
   };
   // arranque: la biblioteca es el estado inicial del historial (no se pushea)
   try { history.replaceState({ tjview: 'library' }, ''); } catch (e) {}
@@ -3825,7 +3760,7 @@ function goLiveRoom() {
   closeDrawer();
   $('library').classList.add('hidden');
   $('writing').classList.add('hidden');
-  $('nameInput').value = myName === 'Lector' ? '' : myName;
+  $('nameInput').value = myName === t('joinDefaultName') ? '' : myName;
   myRoom = 'SALA';
   const j = $('join');
   j.classList.remove('hidden');

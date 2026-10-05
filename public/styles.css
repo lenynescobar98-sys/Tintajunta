@@ -2149,3 +2149,31 @@ body.in-room .samplenote { margin-top: 10px; }
   .presence .avatar-name { max-width: 64px; }
   body.in-room #chapterTitle { font-size: 27px; }
 }
+
+/* --- Google AdSense: slots en la biblioteca (nunca en la sala) --- */
+.adsense-slot {
+  margin: 8px auto 24px;
+  padding: 0 16px;
+  max-width: 1200px;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.adsense-slot .adsbygoogle {
+  width: 100%;
+}
+.adsense-ph {
+  display: block;
+  width: 100%;
+  max-width: 728px;
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #9a9a9a;
+  border: 1px dashed #d4d4d4;
+  border-radius: 8px;
+  background: #fafafa;
+}
