@@ -1473,6 +1473,7 @@ main.layout article.chapter.read-w-wide #chapterTitle { max-width: none; }
 
 /* v77 — Login visible en header */
 #library .imdb-login {
+  display: none !important; /* v116: quitar botón Entrar del header (queda en el menú ☰) */
   background: #ffffff;
   color: #1a1a1a;
   border: 2px solid #1a1a1a;
