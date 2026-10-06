@@ -2245,3 +2245,16 @@ body.in-room #boardView {
 #boardWrap .btn-chip {
   border-radius: 3px;
 }
+
+/* ============ v118: píldora "Deshacer marca" ============
+   Tras marcar, aparece 6s para corregir toques accidentales en móvil. */
+.undo-pill {
+  position: fixed; bottom: 66px; left: 50%; transform: translateX(-50%); z-index: 70;
+  background: #1a1a1a; color: #ffd34d;
+  font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 15px; font-weight: 700;
+  border: none; border-radius: 999px; padding: 12px 22px; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  animation: toastin .25s ease; touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent; white-space: nowrap;
+}
+.undo-pill:active { transform: translateX(-50%) scale(.95); }

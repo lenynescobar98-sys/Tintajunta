@@ -913,12 +913,25 @@ async function apiPost(path, body) {
 }
 const roomBase = () => '/api/rooms/' + encodeURIComponent(myRoom);
 
+/* v118: avisos de conexión con anti-rebote (señal débil en escuelas):
+   solo avisa si la caída dura más de 5s, y la recuperación solo si estuvo caída */
+let offlineSince = 0, offlineToastTimer = null;
 function setOnline(on) {
+  const was = netOnline;
   netOnline = on;
   const d = $('netdot');
   if (d) {
     d.classList.toggle('off', !on);
     d.title = on ? t('netOnlineTitle') : t('netOfflineTitle');
+  }
+  if (!on && was) {
+    offlineSince = Date.now();
+    clearTimeout(offlineToastTimer);
+    offlineToastTimer = setTimeout(() => { if (!netOnline) toast(t('netOffline')); }, 5000);
+  } else if (on && !was) {
+    clearTimeout(offlineToastTimer);
+    if (offlineSince && Date.now() - offlineSince >= 5000) toast(t('netBack'));
+    offlineSince = 0;
   }
 }
 
@@ -1532,6 +1545,7 @@ async function postHighlight(range) {
     if (s && s.ok && s.highlight && !highlights.some((h) => h.id === s.highlight.id)) {
       highlights.push(s.highlight);
       paintHighlight(s.highlight);
+      showUndoPill(s.highlight.id); // v118: deshacer la última marca (toques accidentales en móvil)
     }
     setOnline(true);
     return true;
@@ -1540,6 +1554,35 @@ async function postHighlight(range) {
     toast(t('hlSaveErr'));
     return false;
   }
+}
+
+/* v118: píldora "↩ Deshacer marca" tras marcar (móvil: corrige toques accidentales).
+   Vive 6s; si marcas de nuevo, se reemplaza con la marca nueva. Solo aditiva. */
+let undoPillEl = null, undoPillTimer = null;
+function showUndoPill(hlId) {
+  hideUndoPill();
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'undo-pill';
+  el.textContent = t('undoMark');
+  el.onclick = async () => {
+    hideUndoPill();
+    try {
+      await apiPost(roomBase() + '/del', { kind: 'highlight', id: hlId });
+      highlights = highlights.filter((h) => h.id !== hlId);
+      repaintAll();
+      if (navigator.vibrate) navigator.vibrate(15);
+      toast(t('markUndone'));
+    } catch (e) { toast(t('hlDelErr')); }
+  };
+  document.body.appendChild(el);
+  undoPillEl = el;
+  undoPillTimer = setTimeout(hideUndoPill, 6000);
+}
+function hideUndoPill() {
+  clearTimeout(undoPillTimer);
+  undoPillTimer = null;
+  if (undoPillEl) { undoPillEl.remove(); undoPillEl = null; }
 }
 
 /* Borra mis subrayados que se solapen con el rango dado */
