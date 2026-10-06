@@ -10,7 +10,7 @@
 #immersive { position: fixed; inset: 0; z-index: 100; }
 #immClose { position: absolute; top: 14px; right: 16px; z-index: 101; width: 44px; height: 44px; font-size: 22px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; }
 </style>
-<link rel="stylesheet" href="styles.css?v=117" id="mainCss"
+<link rel="stylesheet" href="styles.css?v=118" id="mainCss"
   onerror="(function(l){var n=0;var t=setInterval(function(){n++;l.href='styles.css?retry='+n+'&t='+Date.now();if(n>=3)clearInterval(t);},1500);})(this)"></head>
 <body>
 
@@ -142,18 +142,22 @@
     <p class="join-note" data-i18n="noAccountNote">Sin cuenta para leer. Los libros que publiques los verá todo el que entre.</p>
     <footer class="credits">
       <div class="credits-brand">📚 TintaJunta</div>
-      <p data-i18n="footTag">Lee juntos, marca con tu tinta.</p>
-      <!-- v102: logo Best Offer prominente en créditos -->
-      <a class="credits-sponsor" id="creditsBestOffer" href="https://facebook.com/groups/1620696721546400/" target="_blank" rel="noopener">
-        <img class="credits-logo" src="img/best-offer-logo.jpg" alt="Best Offer" loading="lazy">
-        <span class="credits-sponsor-name">Best Offer <span class="credits-sponsor-sub" data-i18n="footSponsorSub">· Comunidad patrocinadora</span></span>
+      <p class="credits-tag" data-i18n="footTag">Lee juntos, marca con tu tinta.</p>
+      <div class="credits-divider"></div>
+      <!-- v118: patrocinador Best Offer — tarjeta profesional -->
+      <a class="credits-sponsor-card" id="creditsBestOffer" href="https://facebook.com/groups/1620696721546400/" target="_blank" rel="noopener">
+        <img class="credits-sponsor-logo" src="img/best-offer-logo.jpg" alt="Best Offer" loading="lazy">
+        <span class="credits-sponsor-info">
+          <span class="credits-sponsor-name">Best Offer</span>
+          <span class="credits-sponsor-sub" data-i18n="footSponsorSub">Comunidad patrocinadora · 8,400+ miembros</span>
+        </span>
+        <span class="credits-sponsor-arrow">→</span>
       </a>
-      <p class="credits-small" data-i18n-html="footBy">Creado por <b>Lenyn Escobar</b> · CEO de TintaJunta</p>
-      <p class="credits-small" data-i18n-html="footSponsors">Patrocinado por <b>Best Offer</b> — 8,400+ miembros comprando y vendiendo</p>
-      <p class="credits-small">© 2026 TintaJunta · <a href="https://facebook.com/groups/1620696721546400/" target="_blank" rel="noopener" class="credits-link">Facebook</a> · <a href="#" id="footerFeedback" class="credits-link" data-i18n="footReport">🐛 Reportar problema</a></p>
+      <p class="credits-creator" data-i18n-html="footBy">Creado por <b>Lenyn Escobar</b> · CEO de TintaJunta</p>
+      <p class="credits-legal">© 2026 TintaJunta · <a href="https://facebook.com/groups/1620696721546400/" target="_blank" rel="noopener" class="credits-link">Facebook</a> · <a href="#" id="footerFeedback" class="credits-link" data-i18n="footReport">🐛 Reportar problema</a></p>
       <div class="room-code-row">
         <input id="footerRoomCode" type="text" maxlength="12" data-i18n-ph="footRoomCodePh" placeholder="Código de sala" autocomplete="off" autocapitalize="characters" spellcheck="false">
-        <button id="footerRoomGo" type="button" class="linklike" data-i18n="footRoomGo">Entrar →</button>
+        <button id="footerRoomGo" type="button" class="roomcode-go" data-i18n="footRoomGo">Entrar →</button>
       </div>
     </footer>
   </div>

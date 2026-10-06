@@ -168,21 +168,37 @@ body {
 .credits-brand { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
 .credits p { font-size: 14px; color: var(--ink-soft); margin: 4px 0; font-family: -apple-system, 'Segoe UI', sans-serif; }
 .credits-small { font-size: 12px !important; opacity: .7; }
+/* v118: créditos profesionales — tarjeta de patrocinador + jerarquía clara */
+.credits-tag { font-size: 15px; color: var(--ink-soft); margin: 6px 0 0; font-style: italic; }
+.credits-divider { width: 48px; height: 3px; background: var(--accent, #8a5a1e); border-radius: 2px; margin: 14px auto; opacity: .7; }
+.credits-sponsor-card { display: flex; align-items: center; gap: 14px; max-width: 380px; margin: 6px auto 16px; padding: 12px 16px; background: #ffffff; border: 1px solid #e8e8e8; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06); text-decoration: none; text-align: left; transition: transform .15s ease, box-shadow .2s ease; }
+.credits-sponsor-card:active { transform: scale(.98); }
+.credits-sponsor-logo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.credits-sponsor-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.credits-sponsor-name { font-size: 18px; font-weight: 800; color: #1a1a1a; line-height: 1.2; font-family: -apple-system, 'Segoe UI', sans-serif; }
+.credits-sponsor-sub { font-size: 12.5px; font-weight: 500; color: #8a8a8a; line-height: 1.35; font-family: -apple-system, 'Segoe UI', sans-serif; }
+.credits-sponsor-arrow { font-size: 20px; color: #b0b0b0; font-weight: 700; flex-shrink: 0; }
+.credits-creator { font-size: 14px; color: #4a4a4a; margin: 8px 0 4px; font-family: -apple-system, 'Segoe UI', sans-serif; }
+.credits-creator b { color: #1a1a1a; font-weight: 800; }
+.credits-legal { font-size: 12px !important; color: #9a9a9a; margin: 4px 0 0; }
 /* v102: logo Best Offer prominente en créditos — bonito y claro, nunca pequeño */
 .credits-sponsor { display: inline-flex; align-items: center; gap: 10px; margin: 10px auto 8px; padding: 0; border: none; border-radius: 0; background: transparent; box-shadow: none; text-decoration: none; }
 .credits-sponsor:active { transform: scale(.98); }
 .credits-logo { width: 56px; height: 56px; border-radius: 0; object-fit: contain; display: block; background: transparent; }
 .credits-sponsor-name { font-size: 17px; font-weight: 800; color: var(--ink, #1a1a1a); text-align: left; line-height: 1.25; }
 .credits-sponsor-sub { display: block; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
-/* Campo discreto "Código de sala" — única entrada pública a la sala privada */
-.room-code-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; opacity: .55; }
-.room-code-row:hover, .room-code-row:focus-within { opacity: 1; }
+/* v118: campo "Código de sala" — píldora profesional integrada */
+.room-code-row { display: flex; align-items: center; justify-content: center; margin: 16px auto 0; max-width: 320px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 999px; padding: 4px 4px 4px 18px; gap: 8px; }
 .room-code-row input {
-  width: 130px; padding: 6px 10px; font-size: 12px; text-align: center;
-  border: 1px solid var(--line); border-radius: 20px; background: transparent;
-  color: var(--ink-soft); text-transform: uppercase; letter-spacing: 1px;
+  flex: 1; border: none; background: transparent; padding: 10px 0; font-size: 13px;
+  text-align: left; color: #1a1a1a; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;
+  font-family: -apple-system, 'Segoe UI', sans-serif; min-width: 0;
 }
-.room-code-row input:focus { outline: none; border-color: var(--accent); opacity: 1; }
+.room-code-row input::placeholder { color: #a0a0a0; font-weight: 500; }
+.room-code-row input:focus { outline: none; }
+.room-code-row:focus-within { border-color: var(--accent, #8a5a1e); box-shadow: 0 0 0 3px rgba(138,90,30,.12); }
+.roomcode-go { background: #1a1a1a; color: #fff; border: none; border-radius: 999px; padding: 10px 20px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: -apple-system, 'Segoe UI', sans-serif; transition: transform .15s ease; }
+.roomcode-go:active { transform: scale(.95); }
 .room-code-row .linklike { font-size: 12px; }
 
 /* ---------- carrusel principal ---------- */
