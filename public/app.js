@@ -1,6 +1,17 @@
 /* TintaJunta · prototipo — lógica de la sala en vivo (cliente) */
 'use strict';
 
+/* v115: limpieza de elementos obsoletos — si el navegador tiene HTML viejo en caché
+ * (ej. la barra roomKeyBar eliminada en v114), quitarlos del DOM al arrancar. */
+(function killStale() {
+  try {
+    ['roomKeyBar', 'roomKeyBtn'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+  } catch (e) {}
+})();
+
 /* ============ Google AdSense ============
  * Alejandro: pega aquí tu Publisher ID cuando Google apruebe la cuenta.
  * Formato: 'ca-pub-XXXXXXXXXXXXXXXX'
