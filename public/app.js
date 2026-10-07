@@ -1833,10 +1833,10 @@ function syncNameFromLib() {
 const AD_BADGE_LABEL = { 'mas-vendido': t('adBadgeBest'), 'famoso': '⭐ Famoso' };
 /* Afiliados: recomendados por TintaJunta. Prototipo: los links reales van aquí al activar cuentas de afiliado. */
 const AFFILIATES = [
-  { emoji: '🎧', img: 'img/ads/beats.jpg', name: 'Audífonos Beats', descKey: 'affDescBeats', store: 'Amazon', price: '', hue: 270, url: 'https://www.amazon.com/s?k=Beats+Solo+4+audifonos&tag=lenynalopez-20' },
-  { emoji: '📱', img: 'img/ads/moto-g15.jpg', name: 'Motorola Moto G15', descKey: 'affDescMotoG15', store: 'Amazon', price: '', hue: 210, url: 'https://www.amazon.com/s?k=Motorola+Moto+G15&tag=lenynalopez-20' },
-  { emoji: '📱', img: 'img/ads/moto-g56.jpg', name: 'Motorola Moto G56 5G', descKey: 'affDescMotoG56', store: 'Amazon', price: '', hue: 160, url: 'https://www.amazon.com/s?k=Motorola+Moto+G56+5G&tag=lenynalopez-20' },
-  { emoji: '🎧', img: 'img/ads/pixel-buds.jpg', name: 'Google Pixel Buds Pro 2', descKey: 'affDescPixelBuds', store: 'Amazon', price: '', hue: 200, url: 'https://www.amazon.com/s?k=Google+Pixel+Buds+Pro+2&tag=lenynalopez-20' },
+  { emoji: '🎧', img: 'img/ads/beats.jpg', name: 'Beats Solo 4 · Matte Black', descKey: 'affDescBeats', store: 'Amazon', price: '', hue: 270, url: 'https://www.amazon.com/dp/B0CZPLV566?tag=lenynalopez-20' },
+  { emoji: '📱', img: 'img/ads/moto-g15.jpg', name: 'Motorola Moto G15 · 4/256 GB', descKey: 'affDescMotoG15', store: 'Amazon', price: '', hue: 210, url: 'https://www.amazon.com/dp/B0DTC17BX1?tag=lenynalopez-20' },
+  { emoji: '📱', img: 'img/ads/moto-g56.jpg', name: 'Motorola Moto G56 5G · 8/256 GB', descKey: 'affDescMotoG56', store: 'Amazon', price: '', hue: 160, url: 'https://www.amazon.com/dp/B0F7RHZ9Q4?tag=lenynalopez-20' },
+  { emoji: '🎧', img: 'img/ads/pixel-buds.jpg', name: 'Google Pixel Buds Pro 2 · Porcelain', descKey: 'affDescPixelBuds', store: 'Amazon', price: '', hue: 200, url: 'https://www.amazon.com/dp/B0D79QF9RC?tag=lenynalopez-20' },
 ];
 function renderAffiliates() {
   const row = document.getElementById('rowAff');
