@@ -2313,3 +2313,39 @@ body.in-room #boardView {
 @media (max-width: 640px) {
   .ki-grid { grid-template-columns: 1fr; max-width: 340px; margin-left: auto; margin-right: auto; }
 }
+
+/* ============ v122: nuevos diseños ============
+   1) Ki en el logo del header. 2) Sección Ki como panel destacado. */
+.imdb-logo {
+  display: flex; align-items: center; gap: 8px;
+}
+.logo-ki {
+  width: 30px; height: 30px; border-radius: 50%; object-fit: cover;
+  border: 2px solid #8a5a1e; background: #1a2332; flex: none;
+}
+.ki-feature {
+  background: linear-gradient(135deg, #fff8e8 0%, #fdf3dd 60%, #fbeed3 100%);
+  border: 1px solid #ecd9ac;
+  border-radius: 18px;
+  padding: 22px 20px 24px;
+  box-shadow: 0 4px 18px rgba(138, 90, 30, .10);
+}
+.ki-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.ki-head .row-h2 { margin: 0; }
+.ki-badge {
+  font-size: 12px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+  color: #7a4d12; background: #ffe9b8; border: 1px solid #e3c37a;
+  border-radius: 999px; padding: 4px 12px; white-space: nowrap;
+}
+.ki-feature .ki-card {
+  border-color: #e7d3a1;
+  box-shadow: 0 4px 14px rgba(138, 90, 30, .10);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.ki-feature .ki-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(138, 90, 30, .16);
+}
+.ki-feature .ki-card h3 { color: #7a4d12; }
