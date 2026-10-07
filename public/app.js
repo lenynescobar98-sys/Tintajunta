@@ -903,7 +903,7 @@ function initSelection() {
 let netOnline = false;
 
 async function apiPost(path, body) {
-  const r = await fetch(path, {
+  const r = await fetchTimeout(path, 15000, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name: displayName(), color: myColor, ...(body || {}) }),
@@ -1527,7 +1527,7 @@ function paintHandsInRoster() {
 
 async function pollState() {
   try {
-    const r = await fetch(roomBase() + '/state', { cache: 'no-store' });
+    const r = await fetchTimeout(roomBase() + '/state', 10000, { cache: 'no-store' });
     if (!r.ok) throw new Error('http ' + r.status);
     applyState(await r.json());
     if (!netOnline) clog('red: en línea');
@@ -1556,34 +1556,43 @@ async function postHighlight(range) {
   }
 }
 
-/* v118: píldora "↩ Deshacer marca" tras marcar (móvil: corrige toques accidentales).
-   Vive 6s; si marcas de nuevo, se reemplaza con la marca nueva. Solo aditiva. */
-let undoPillEl = null, undoPillTimer = null;
+/* v121: píldora "↩ Deshacer" con pila — tras marcar, cada toque deshace UNA marca
+   más (hasta 5 recientes). Vive 6s y el temporizador se refresca con cada marca
+   nueva. Si el id ya no existe (se borró con otro gesto), se descarta en silencio. */
+let undoPillEl = null, undoPillTimer = null, undoStack = [];
 function showUndoPill(hlId) {
-  hideUndoPill();
+  undoStack.push(hlId);
+  if (undoStack.length > 5) undoStack.shift();
+  renderUndoPill();
+}
+function renderUndoPill() {
+  hideUndoPillEl();
+  if (!undoStack.length) return;
   const el = document.createElement('button');
   el.type = 'button';
   el.className = 'undo-pill';
-  el.textContent = t('undoMark');
+  el.textContent = undoStack.length > 1 ? t('undoMarkN', { n: undoStack.length }) : t('undoMark');
   el.onclick = async () => {
-    hideUndoPill();
+    const id = undoStack.pop();
     try {
-      await apiPost(roomBase() + '/del', { kind: 'highlight', id: hlId });
-      highlights = highlights.filter((h) => h.id !== hlId);
-      repaintAll();
+      await apiPost(roomBase() + '/del', { kind: 'highlight', id });
       if (navigator.vibrate) navigator.vibrate(15);
       toast(t('markUndone'));
-    } catch (e) { toast(t('hlDelErr')); }
+    } catch (e) { /* id ya borrado por otro gesto: se descarta en silencio */ }
+    highlights = highlights.filter((h) => h.id !== id);
+    repaintAll();
+    renderUndoPill(); // sigue ofreciendo deshacer las anteriores, o se oculta
   };
   document.body.appendChild(el);
   undoPillEl = el;
-  undoPillTimer = setTimeout(hideUndoPill, 6000);
+  undoPillTimer = setTimeout(() => { undoStack = []; hideUndoPillEl(); }, 6000);
 }
-function hideUndoPill() {
+function hideUndoPillEl() {
   clearTimeout(undoPillTimer);
   undoPillTimer = null;
   if (undoPillEl) { undoPillEl.remove(); undoPillEl = null; }
 }
+function hideUndoPill() { undoStack = []; hideUndoPillEl(); }
 
 /* Borra mis subrayados que se solapen con el rango dado */
 async function eraseInRange(range) {
