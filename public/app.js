@@ -675,11 +675,21 @@ function initSelection() {
   let marking = false, markStartIdx = null, markCur = null;
   let touchMode = null, touchStartPt = null; // null | 'maybe' | 'marking' | 'scroll'
   const parasEl = $('paras');
-  function clearTempMark() { spanByIdx.forEach((s) => s.classList.remove('marking')); }
+  // v127: solo se borra el tramo pintado antes (O(rango) en vez de O(libro) por touchmove)
+  let lastTempRange = null;
+  function clearTempMark() {
+    if (lastTempRange) {
+      for (let i = lastTempRange.s; i <= lastTempRange.e; i++) { const sp = spanByIdx[i]; if (sp) sp.classList.remove('marking'); }
+      lastTempRange = null;
+    } else {
+      spanByIdx.forEach((s) => s.classList.remove('marking'));
+    }
+  }
   function paintTempMark(a, b) {
     clearTempMark();
     const s = Math.min(a, b), e = Math.max(a, b);
     for (let i = s; i <= e; i++) { const sp = spanByIdx[i]; if (sp) sp.classList.add('marking'); }
+    lastTempRange = { s, e };
     markCur = { start: s, end: e };
   }
   function startMarking() {
@@ -1488,9 +1498,13 @@ function initHands() {
     const up = !myHandUp();
     apiPost(roomBase() + '/hand', { up })
       .then((s) => {
-        if (s && s.ok) { hands = s.hands || []; renderHands(); renderRoster(); }
-        toast(up ? t('handRaised') : t('handLowered'));
-        setOnline(true);
+        if (s && s.ok) {
+          hands = s.hands || []; renderHands(); renderRoster();
+          toast(up ? t('handRaised') : t('handLowered'));
+          setOnline(true);
+        } else {
+          toast(t('handErr')); // v127: antes se confirmaba aunque el servidor lo rechazara
+        }
       })
       .catch(() => { setOnline(false); toast(t('handErr')); });
   };
@@ -1525,7 +1539,13 @@ function paintHandsInRoster() {
   });
 }
 
+/* v127: guardia anti-apilamiento — en señal débil un poll puede tardar hasta 10s;
+   sin esto los polls se enciman y un estado viejo puede "resucitar" una marca
+   recién deshecha (applyState reemplaza todo). */
+let pollInFlight = false;
 async function pollState() {
+  if (pollInFlight) return;
+  pollInFlight = true;
   try {
     const r = await fetchTimeout(roomBase() + '/state', 10000, { cache: 'no-store' });
     if (!r.ok) throw new Error('http ' + r.status);
@@ -1535,6 +1555,8 @@ async function pollState() {
   } catch (e) {
     if (netOnline) clog('red: sin conexión, reintentando…');
     setOnline(false);
+  } finally {
+    pollInFlight = false;
   }
 }
 
