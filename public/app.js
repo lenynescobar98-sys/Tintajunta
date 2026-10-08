@@ -2889,6 +2889,13 @@ function renderRows() {
   fillRow('rowRecomendados',
     rec.map((b) => coverTile(b, {})),
     libQuery ? t('noResults') : t('publishFirst'));
+  // ✨ Novedades del mes: clásicos agregados en los últimos 30 días, los últimos primero
+  const MONTH_MS = 30 * 24 * 3600 * 1000;
+  const nov = libBooksCache.filter((b) => b.classic && (Date.now() - (b.createdAt || 0)) < MONTH_MS)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const secN = document.getElementById('secNovedades');
+  if (secN) secN.style.display = nov.length ? '' : 'none';
+  fillRow('rowNovedades', nov.map((b) => coverTile(b, { badge: '✨ ' + t('newBadge') })), '');
   // 📜 Clásicos gratis: dominio público, sin creador (v101: es → en → resto)
   const cls = libBooksCache.filter((b) => b.classic)
     .sort((a, b) => langPriority(a.language) - langPriority(b.language)
