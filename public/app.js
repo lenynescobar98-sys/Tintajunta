@@ -1707,6 +1707,7 @@ async function boot() {
   clog('boot: entrando a la sala ' + myRoom + ', UA=' + navigator.userAgent.slice(0, 80));
   currentBook = null;
   readingType = 'sample';
+  document.body.classList.remove('book-room'); // v124: sala con código = solo pizarra (v107); el texto vive en las salas de libros
   updateRoomLabel();
   await loadText();
   clog('texto cargado, palabras=' + wordCount);
@@ -1718,6 +1719,7 @@ async function bootBook(book, push) {
   myRoom = book.id; // el id del libro ES su sala de marcas
   currentBook = book;
   readingType = book.classic ? 'classic' : 'book';
+  document.body.classList.add('book-room'); // v124: en la sala del libro el texto SIEMPRE se muestra (fix "libros vacíos")
   localStorage.setItem('tj_room', myRoom);
   try {
 
@@ -3214,6 +3216,7 @@ function renderAdSenseSlots() {
 
 async function showLibrary(push) {
   setViewState('library', push);
+  document.body.classList.remove('book-room'); // v124: limpieza al volver a la biblioteca
   const lib = $('library');
   lib.classList.remove('hidden');
   lib.classList.remove('view-enter'); void lib.offsetWidth; lib.classList.add('view-enter');
