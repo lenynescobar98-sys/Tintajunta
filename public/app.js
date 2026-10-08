@@ -3364,7 +3364,7 @@ async function openBook(id, push) {
   syncNameFromLib();
   let book;
   try {
-    const r = await fetchTimeout('/api/books/' + encodeURIComponent(id), 10000);
+    const r = await fetchTimeout('/api/books/' + encodeURIComponent(id), 30000); // v130: libros completos pesan más
     if (!r.ok) throw 0;
     const d = await r.json();
     if (!d.ok) throw 0;
