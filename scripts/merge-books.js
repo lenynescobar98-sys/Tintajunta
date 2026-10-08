@@ -6,7 +6,10 @@
 //   2. ACTUALIZA los clásicos existentes con el contenido del repo (capítulos,
 //      idioma), SIN TOCAR los campos de runtime (ventas, destacados, portada
 //      subida, estado, etc.).
-// Los libros NO clásicos (publicados por creadores) no se tocan jamás.
+//   2b. ACTUALIZA también los libros demo marcados con repoManaged:true
+//      (contenido semilla del repo que no es clásico). Los libros publicados
+//      por creadores reales (sin la marca) no se tocan jamás.
+// Los libros de creadores reales (sin classic ni repoManaged) no se tocan jamás.
 // Se ejecuta en cada arranque desde railway-start.sh.
 const fs = require('fs');
 const path = require('path');
@@ -33,8 +36,8 @@ let added = 0;
 let updated = 0;
 const merged = vol.map(v => {
   const r = v && repoById.get(v.id);
-  if (r && r.classic) {
-    // Clásico: el repo manda en contenido; el volumen conserva su runtime.
+  if (r && (r.classic || r.repoManaged)) {
+    // Clásico o demo del repo: el repo manda en contenido; el volumen conserva su runtime.
     const nb = { ...r };
     for (const k of RUNTIME_FIELDS) {
       if (v[k] !== undefined) nb[k] = v[k];
