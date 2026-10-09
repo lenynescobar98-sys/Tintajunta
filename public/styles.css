@@ -1704,11 +1704,10 @@ main.layout article.chapter .paras p {
 }
 .page-nav-btn:active { transform: translateY(1px); }
 .page-nav-btn:disabled { opacity: .35; cursor: default; box-shadow: none; }
-/* Párrafo enfocado por el profesor: se destaca para todos */
+/* v138: el cuadro amarillo del párrafo enfocado se eliminó a petición de Alejandro.
+   El seguimiento del profesor (scroll al párrafo) sigue funcionando sin el recuadro. */
 #paras p.para-focus {
-  background: #fff8e8; border-left: 4px solid #c9962e;
-  padding: 10px 14px; border-radius: 0 8px 8px 0;
-  box-shadow: 0 2px 8px rgba(201,150,46,.15);
+  background: none; border-left: none; padding: 0; border-radius: 0; box-shadow: none;
 }
 /* 🖥️ Modo pizarra: solo se ve la pizarra blanca */
 .board-mode {
