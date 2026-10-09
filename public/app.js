@@ -946,13 +946,26 @@ function setOnline(on) {
 }
 
 let lastStateSig = '';
+let lastRosterSig = '';
 function applyState(s) {
   if (!s || s.ok === false) return;
   // Optimización: si nada cambió desde el último poll, no re-renderizar
   try {
-    const sig = JSON.stringify([s.highlights, s.notes, s.board, s.follow, s.para, s.chat, s.reactions, s.hands, s.roster, s.switchTo]);
-    if (sig === lastStateSig) return;
+    // v132 — el roster (posición de lectura de cada uno, actualizada en cada
+    // heartbeat/scroll) sale de la firma principal: antes, cualquier scroll de
+    // otro lector disparaba repaintAll() completo (~512k palabras en v130).
+    const sig = JSON.stringify([s.highlights, s.notes, s.board, s.follow, s.para, s.chat, s.reactions, s.hands, s.switchTo]);
+    if (sig === lastStateSig) {
+      // Solo cambió el roster: actualizar presencia sin repintar todo el libro
+      const rsig = JSON.stringify(s.roster || []);
+      if (rsig !== lastRosterSig) {
+        lastRosterSig = rsig;
+        try { renderRoster(s.roster || []); } catch (e) { /* presencia es cosmética */ }
+      }
+      return;
+    }
     lastStateSig = sig;
+    lastRosterSig = JSON.stringify(s.roster || []);
   } catch (e) { /* si falla el diff, renderizar normal */ }
   highlights = s.highlights || [];
   notes = s.notes || [];
@@ -3837,6 +3850,11 @@ function openDrawer() {
   const d = $('drawer'), s = $('drawerScrim');
   d.classList.remove('hidden'); d.removeAttribute('hidden');
   s.classList.remove('hidden'); s.removeAttribute('hidden');
+  // v132 — El botón "🌙 Tema" del drawer solo actúa en la sala de lectura (el
+  // tema claro/oscuro aplica al lector; la biblioteca tiene su diseño oscuro
+  // fijo). Ocultarlo fuera de la sala evita un control con feedback falso.
+  const tdb = d.querySelector('button[data-go="theme"]');
+  if (tdb) tdb.style.display = (typeof currentView !== 'undefined' && currentView === 'room') ? '' : 'none';
   // El botón de revisión solo lo ve el admin (Alejandro)
   const ab = $('adminBtn');
   if (ab) {

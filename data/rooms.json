@@ -281,5 +281,1370 @@
   "chat": [],
   "reactions": [],
   "hands": []
+ },
+ "BAUDEL": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "HOLMES": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "CASMUR": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ALFLAY": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "LAZARI": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "FUENTE": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "VIDASU": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "FRANKN": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "MOBYDK": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "MISERA": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "PRIMOB": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "DIVCOM": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "FAUSTD": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "CRIMEN": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "RASHOM": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ILIADA": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "REGENT": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ORGULL": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "CONDEM": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "DECAME": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "TRONCE": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "RELOJM": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "LUNACR": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "VERSOS": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "CERART": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "SENALP": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "NIEBLA": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "MAPATE": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "CARTAS": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "JARDIN": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "FRN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "FRN2": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ENN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "PTN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "PTN2": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "PTN3": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ITN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ITN2": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ITN3": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "DEN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "DEN2": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "DEN3": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "DEN4": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "RUN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "RUN2": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "RUN3": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "RUN4": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ELN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ELN2": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ELN3": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ELN4": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ARN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ARN2": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ARN3": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "ARN4": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "JAN1": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "JAN2": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "JAN3": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "JAN4": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "DRACUL": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "JNEYRE": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "DORIAN": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "TRSURE": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "TIMEMC": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
+ },
+ "GATSBY": {
+  "seq": 1,
+  "highlights": [],
+  "notes": [],
+  "board": [],
+  "follow": {
+   "active": false,
+   "pos": 0,
+   "ts": 0,
+   "name": ""
+  },
+  "para": {
+   "idx": 0,
+   "ts": 0
+  },
+  "teacher": null,
+  "chat": [],
+  "reactions": [],
+  "hands": [],
+  "switchTo": null
  }
 }
