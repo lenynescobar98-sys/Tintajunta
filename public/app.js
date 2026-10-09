@@ -3270,8 +3270,21 @@ async function showLibrary(push) {
   // skeleton mientras carga (nunca en blanco)
   renderHeroSkeleton();
   try {
-    const r = await fetchTimeout('/api/books', 10000);
-    if (!r.ok) throw new Error('http ' + r.status);
+    // v135: reintentos automáticos — si la señal es débil o el servidor
+    // se está reiniciando por una actualización, reintenta solo antes de
+    // mostrar el error (antes fallaba al primer intento de 10s).
+    let r = null, lastErr = null;
+    for (let intento = 0; intento < 3 && !r; intento++) {
+      try {
+        const rr = await fetchTimeout('/api/books', 10000);
+        if (!rr.ok) throw new Error('http ' + rr.status);
+        r = rr;
+      } catch (e) {
+        lastErr = e;
+        if (intento < 2) await new Promise((res) => setTimeout(res, 2500));
+      }
+    }
+    if (!r) throw lastErr || new Error('net');
     const d = await r.json();
     libBooksCache = d.books || [];
     window.__tjBooksReady = true; // v71: deep link ?libro=ID puede abrir
