@@ -29,6 +29,9 @@ for d in covers ads pageimg; do
     if [ -d "public/$d" ]; then
       # conserva archivos empaquetados (ej. best-offer-logo.jpg)
       cp -rn "public/$d/." "$VOLUME/$d/" 2>/dev/null || true
+      # ...pero las portadas tipográficas de clásicos las manda el repo:
+      # se regeneran (p. ej. ILIADA/DIVCOM pasaron de fragmento a obra completa)
+      if [ "$d" = "covers" ]; then cp -f public/covers/*.webp "$VOLUME/covers/" 2>/dev/null || true; fi
       rm -rf "public/$d"
     fi
     ln -s "$VOLUME/$d" "public/$d"
