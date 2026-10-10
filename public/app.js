@@ -816,8 +816,9 @@ function initSelection() {
         const j = +el.dataset.i; if (j < ps) ps = j; if (j > pe) pe = j;
       });
       if (navigator.vibrate) navigator.vibrate(30);
+      // v139: sin toast aquí — eraseInRange ya avisa con honestidad
+      // ('Subrayado borrado' en éxito, error de conexión si falla)
       eraseInRange({ start: ps, end: pe });
-      toast(t('paraCleaned'));
       return;
     }
     if (h) { // subrayado ajeno: ver sus notas si las hay
@@ -1045,16 +1046,24 @@ function renderBoard() {
   meta.textContent = entries.length ? t('boardCount', { n: entries.length, ps: entries.length === 1 ? '' : 's' }) : '';
 }
 
-/* v85: enviar como entrada discreta (botón o Enter) */
+/* v85: enviar como entrada discreta (botón o Enter).
+   v139: el texto solo se limpia tras confirmar el envío en el servidor;
+   si falla la red, el texto se conserva para reintentarlo (señal débil). */
 function sendBoard() {
   const edit = $('boardEdit');
   if (!edit) return;
   const text = (edit.value || '').trim();
   if (!text) return;
-  edit.value = '';
   apiPost(roomBase() + '/board', { text })
-    .then((s) => { if (s && s.ok && Array.isArray(s.board)) { board = s.board; renderBoard(); } })
-    .catch(() => toast(t('boardErr')));
+    .then((s) => {
+      if (s && s.ok && Array.isArray(s.board)) {
+        edit.value = ''; // limpiar solo tras confirmar
+        board = s.board; renderBoard();
+      } else {
+        toast(t('boardErr')); // respuesta no válida: el texto se conserva
+      }
+    })
+    .catch(() => toast(t('boardNotSent'))); // fallo de red: el texto sigue ahí
 }
 
 function initBoard() {
@@ -1612,10 +1621,21 @@ function renderUndoPill() {
     try {
       await apiPost(roomBase() + '/del', { kind: 'highlight', id });
       if (navigator.vibrate) navigator.vibrate(15);
+      highlights = highlights.filter((h) => h.id !== id);
+      repaintAll();
       toast(t('markUndone'));
-    } catch (e) { /* id ya borrado por otro gesto: se descarta en silencio */ }
-    highlights = highlights.filter((h) => h.id !== id);
-    repaintAll();
+    } catch (e) {
+      if (String(e && e.message).indexOf('404') >= 0) {
+        // el id ya se borró con otro gesto: confirmar localmente y descartar
+        highlights = highlights.filter((h) => h.id !== id);
+        repaintAll();
+      } else {
+        // fallo de red: NO borrar localmente; devolver el intento a la pila
+        // para poder reintentarlo y avisar con honestidad
+        undoStack.push(id);
+        toast(t('hlDelErr'));
+      }
+    }
     renderUndoPill(); // sigue ofreciendo deshacer las anteriores, o se oculta
   };
   document.body.appendChild(el);
@@ -1824,6 +1844,7 @@ function exitRoom() {
     localStorage.removeItem('tj_inRoom');
     localStorage.removeItem('tj_lastBook');
   } catch (e) {}
+  hideUndoPill(); // la pila de deshacer no sobrevive el cambio de sala
   toast(t('exitedRoom'));
   showLibrary(true);
 }
