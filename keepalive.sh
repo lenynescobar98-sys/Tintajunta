@@ -8,20 +8,21 @@ while true; do
     (node server.js > /tmp/tj-server.log 2>&1 &)
     sleep 3
   fi
-  # El túnel cuenta como caído si no responde O si localtunnel devuelve 5xx
-  # ("Tunnel Unavailable"): la conexión TCP puede seguir abierta aunque la
-  # sesión del túnel ya murió en el servidor (visto el 2026-10-03: el URL
-  # servía 503 durante horas y el chequeo viejo lo veía "sano").
+  # El túnel cuenta como caído si no responde, si localtunnel devuelve 5xx
+  # ("Tunnel Unavailable") o 403 (sesión muerta/revocada en el servidor de
+  # localtunnel): la conexión TCP puede seguir abierta aunque la sesión ya
+  # murió (2026-10-03: el URL servía 503 durante horas y el chequeo viejo lo
+  # veía "sano"; 2026-10-10: servía 403 con el proceso local vivo).
   TUNNEL_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://tintajunta-sala.loca.lt/api/feature-prices 2>/dev/null)
-  if [ -z "$TUNNEL_CODE" ] || [ "$TUNNEL_CODE" -ge 500 ]; then
+  if [ -z "$TUNNEL_CODE" ] || [ "$TUNNEL_CODE" -ge 500 ] || [ "$TUNNEL_CODE" = "403" ]; then
     echo "[$(date)] túnel caído (http $TUNNEL_CODE), reiniciando..." >> /tmp/tj-keepalive.log
     pkill -f "tunnel-prod[.]js" 2>/dev/null
     sleep 2
     (node tunnel-prod.js > /tmp/tj-tunnel.log 2>&1 &)
-    # Verificar que el túnel nuevo sí sirve; si sigue en 5xx, un intento más
+    # Verificar que el túnel nuevo sí sirve; si sigue en 5xx/403, un intento más
     sleep 25
     TUNNEL_CODE2=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://tintajunta-sala.loca.lt/api/feature-prices 2>/dev/null)
-    if [ -z "$TUNNEL_CODE2" ] || [ "$TUNNEL_CODE2" -ge 500 ]; then
+    if [ -z "$TUNNEL_CODE2" ] || [ "$TUNNEL_CODE2" -ge 500 ] || [ "$TUNNEL_CODE2" = "403" ]; then
       echo "[$(date)] túnel aún caído tras reinicio (http $TUNNEL_CODE2), reintentando..." >> /tmp/tj-keepalive.log
       pkill -f "tunnel-prod[.]js" 2>/dev/null
       sleep 2

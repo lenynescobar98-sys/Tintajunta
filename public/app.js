@@ -3278,6 +3278,18 @@ function renderAdSenseSlots() {
     try { (window.adsbygoogle = window.adsbygoogle || []).push({}); }
     catch (e) { /* AdSense aún cargando */ }
   });
+  // v141: si el anuncio no se llenó (sitio aún sin aprobar por Google,
+  // bloqueador de anuncios o fallo de red), colapsar el slot en vez de
+  // dejar un hueco vacío en la biblioteca. Revisión única por carga.
+  if (!window.__adsCollapseDone) {
+    window.__adsCollapseDone = true;
+    setTimeout(() => {
+      document.querySelectorAll('.adsense-slot').forEach((s) => {
+        const ins = s.querySelector('ins.adsbygoogle');
+        if (!ins || ins.getAttribute('data-ad-status') !== 'filled') s.style.display = 'none';
+      });
+    }, 6000);
+  }
 }
 
 async function showLibrary(push) {
