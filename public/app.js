@@ -304,8 +304,6 @@ function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
   cover.clear();
   highlights = [];
   notes = [];
-  if (typeof myPage !== 'undefined') myPage = null; // nuevo texto → reiniciar página local
-  renderPageNav();
   // Fotos del libro (si tiene): se muestran arriba del texto
   if (images && images.length) {
     const gal = document.createElement('div');
@@ -1215,7 +1213,6 @@ function renderParaBar() {
   } else {
     prev.classList.add('hidden'); next.classList.add('hidden');
   }
-  renderPageNav();
 }
 function setRoomPara(idx) {
   if (!isTeacher) return;
@@ -1246,7 +1243,6 @@ function checkPara(s) {
   if (pa.ts <= lastParaTs) return;
   lastParaTs = pa.ts;
   roomPara = pa;
-  myPage = null; // el profesor se movió → vuelvo a seguir la sala
   renderParaBar();
   focusPara(pa.idx, true);
   if (!isTeacher) toast(t('paraTeacherMoved') + paraLabel().toLowerCase());
@@ -1255,37 +1251,7 @@ function initParaBar() {
   const prev = $('paraPrev'), next = $('paraNext');
   if (prev) prev.onclick = () => setRoomPara(roomPara.idx - 1);
   if (next) next.onclick = () => setRoomPara(roomPara.idx + 1);
-  const pagePrev = $('pagePrev'), pageNext = $('pageNext');
-  if (pagePrev) pagePrev.onclick = () => pageNavTo(-1);
-  if (pageNext) pageNext.onclick = () => pageNavTo(1);
   renderParaBar();
-}
-
-/* ------------------------- 📄 Paginación inferior ------------------------- */
-/* Botones "← Anterior / Siguiente →" al final de la lectura — visibles para TODOS.
-   El profesor mueve el párrafo COMPARTIDO (setRoomPara); el estudiante solo mueve
-   su propia vista (local), sin cambiar lo que ve la sala. */
-let myPage = null; // índice local del estudiante (null = seguir el de la sala)
-function pageNavTo(delta) {
-  const n = paraCount();
-  if (n <= 0) return;
-  if (isTeacher) { setRoomPara(roomPara.idx + delta); return; }
-  if (myPage === null) myPage = Math.min(roomPara.idx, Math.max(0, n - 1));
-  myPage = Math.max(0, Math.min(n - 1, myPage + delta));
-  focusPara(myPage, true);
-  renderPageNav();
-}
-function renderPageNav() {
-  const nav = $('pageNav');
-  if (!nav) return;
-  const n = paraCount();
-  const show = currentView === 'room' && n > 0;
-  nav.classList.toggle('hidden', !show);
-  if (!show) return;
-  const i = isTeacher ? Math.min(roomPara.idx, Math.max(0, n - 1))
-                      : (myPage === null ? Math.min(roomPara.idx, Math.max(0, n - 1)) : myPage);
-  $('pagePrev').disabled = i <= 0;
-  $('pageNext').disabled = i >= n - 1;
 }
 
 /* ------------------------- 🖥️ Modo pizarra (v81) ------------------------- */
