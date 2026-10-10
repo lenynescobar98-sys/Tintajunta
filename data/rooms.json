@@ -28,7 +28,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ALEX": {
   "seq": 297,
@@ -147,7 +149,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "BEUVHA": {
   "seq": 1,
@@ -166,7 +170,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "NLSWKZ": {
   "seq": 1,
@@ -185,7 +191,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "VNFLDP": {
   "seq": 1,
@@ -204,7 +212,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ERALAB": {
   "seq": 4,
@@ -223,7 +233,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "BKHEGB": {
   "seq": 1,
@@ -242,7 +254,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "STBRGA": {
   "seq": 1,
@@ -261,7 +275,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "BQPYCJ": {
   "seq": 1,
@@ -280,7 +296,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "BAUDEL": {
   "seq": 1,
@@ -299,7 +317,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "HOLMES": {
   "seq": 1,
@@ -318,7 +338,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "CASMUR": {
   "seq": 1,
@@ -337,7 +359,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ALFLAY": {
   "seq": 1,
@@ -356,7 +380,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "LAZARI": {
   "seq": 1,
@@ -375,7 +401,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "FUENTE": {
   "seq": 1,
@@ -394,7 +422,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "VIDASU": {
   "seq": 1,
@@ -413,7 +443,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "FRANKN": {
   "seq": 1,
@@ -432,7 +464,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "MOBYDK": {
   "seq": 1,
@@ -451,7 +485,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "MISERA": {
   "seq": 1,
@@ -470,7 +506,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "PRIMOB": {
   "seq": 1,
@@ -489,7 +527,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "DIVCOM": {
   "seq": 1,
@@ -508,7 +548,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "FAUSTD": {
   "seq": 1,
@@ -527,7 +569,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "CRIMEN": {
   "seq": 1,
@@ -546,7 +590,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "RASHOM": {
   "seq": 1,
@@ -565,7 +611,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ILIADA": {
   "seq": 1,
@@ -584,7 +632,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "REGENT": {
   "seq": 1,
@@ -603,7 +653,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ORGULL": {
   "seq": 1,
@@ -622,7 +674,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "CONDEM": {
   "seq": 1,
@@ -641,7 +695,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "DECAME": {
   "seq": 1,
@@ -660,7 +716,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "TRONCE": {
   "seq": 1,
@@ -679,7 +737,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "RELOJM": {
   "seq": 1,
@@ -698,7 +758,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "LUNACR": {
   "seq": 1,
@@ -717,7 +779,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "VERSOS": {
   "seq": 1,
@@ -736,7 +800,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "CERART": {
   "seq": 1,
@@ -755,7 +821,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "SENALP": {
   "seq": 1,
@@ -774,7 +842,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "NIEBLA": {
   "seq": 1,
@@ -793,7 +863,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "MAPATE": {
   "seq": 1,
@@ -812,7 +884,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "CARTAS": {
   "seq": 1,
@@ -831,7 +905,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "JARDIN": {
   "seq": 1,
@@ -850,7 +926,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "FRN1": {
   "seq": 1,
@@ -869,7 +947,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "FRN2": {
   "seq": 1,
@@ -888,7 +968,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ENN1": {
   "seq": 1,
@@ -907,7 +989,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "PTN1": {
   "seq": 1,
@@ -926,7 +1010,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "PTN2": {
   "seq": 1,
@@ -945,7 +1031,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "PTN3": {
   "seq": 1,
@@ -964,7 +1052,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ITN1": {
   "seq": 1,
@@ -983,7 +1073,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ITN2": {
   "seq": 1,
@@ -1002,7 +1094,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ITN3": {
   "seq": 1,
@@ -1021,7 +1115,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "DEN1": {
   "seq": 1,
@@ -1040,7 +1136,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "DEN2": {
   "seq": 1,
@@ -1059,7 +1157,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "DEN3": {
   "seq": 1,
@@ -1078,7 +1178,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "DEN4": {
   "seq": 1,
@@ -1097,7 +1199,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "RUN1": {
   "seq": 1,
@@ -1116,7 +1220,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "RUN2": {
   "seq": 1,
@@ -1135,7 +1241,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "RUN3": {
   "seq": 1,
@@ -1154,7 +1262,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "RUN4": {
   "seq": 1,
@@ -1173,7 +1283,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ELN1": {
   "seq": 1,
@@ -1192,7 +1304,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ELN2": {
   "seq": 1,
@@ -1211,7 +1325,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ELN3": {
   "seq": 1,
@@ -1230,7 +1346,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ELN4": {
   "seq": 1,
@@ -1249,7 +1367,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ARN1": {
   "seq": 1,
@@ -1268,7 +1388,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ARN2": {
   "seq": 1,
@@ -1287,7 +1409,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ARN3": {
   "seq": 1,
@@ -1306,7 +1430,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "ARN4": {
   "seq": 1,
@@ -1325,7 +1451,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "JAN1": {
   "seq": 1,
@@ -1344,7 +1472,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "JAN2": {
   "seq": 1,
@@ -1363,7 +1493,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "JAN3": {
   "seq": 1,
@@ -1382,7 +1514,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "JAN4": {
   "seq": 1,
@@ -1401,7 +1535,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "DRACUL": {
   "seq": 1,
@@ -1420,7 +1556,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "JNEYRE": {
   "seq": 1,
@@ -1439,7 +1577,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "DORIAN": {
   "seq": 1,
@@ -1458,7 +1598,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "TRSURE": {
   "seq": 1,
@@ -1477,7 +1619,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "TIMEMC": {
   "seq": 1,
@@ -1496,7 +1640,9 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  },
  "GATSBY": {
   "seq": 1,
@@ -1515,6 +1661,8 @@
   },
   "chat": [],
   "reactions": [],
-  "hands": []
+  "hands": [],
+  "teacher": null,
+  "switchTo": null
  }
 }
