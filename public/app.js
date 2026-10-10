@@ -3419,8 +3419,30 @@ let featurePending = null, featurePlan = 'week';
 
 /* ---------- Stripe: helper de pago con tarjeta ---------- */
 let stripeJs = null, stripeCard = null, stripeKeyCache = null;
+/* v144: Stripe solo se descarga cuando alguien va a pagar (ya no bloquea el arranque) */
+function loadStripeScript() {
+  return new Promise((resolve, reject) => {
+    if (typeof Stripe !== 'undefined') return resolve();
+    if (document.querySelector('script[data-stripe-js]')) {
+      // Ya en camino: esperar a que cargue
+      const t = setInterval(() => {
+        if (typeof Stripe !== 'undefined') { clearInterval(t); resolve(); }
+      }, 100);
+      setTimeout(() => { clearInterval(t); reject(new Error('stripe-js-missing')); }, 15000);
+      return;
+    }
+    const sc = document.createElement('script');
+    sc.src = 'https://js.stripe.com/v3/';
+    sc.async = true;
+    sc.dataset.stripeJs = '1';
+    sc.onload = resolve;
+    sc.onerror = () => reject(new Error('stripe-js-missing'));
+    document.head.appendChild(sc);
+  });
+}
 async function getStripeJs() {
   if (stripeJs) return stripeJs;
+  if (typeof Stripe === 'undefined') await loadStripeScript();
   if (typeof Stripe === 'undefined') throw new Error('stripe-js-missing');
   if (!stripeKeyCache) {
     const r = await fetch('/api/stripe-key');

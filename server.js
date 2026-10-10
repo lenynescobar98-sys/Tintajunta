@@ -17,6 +17,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib'); // v144: compresión gzip nativa (sin dependencias nuevas)
 const multer = require('multer');
 const crypto = require('crypto');
 const session = require('express-session');
@@ -337,6 +338,38 @@ app.post('/webhooks/stripe', express.raw({ type: 'application/json' }), (req, re
     console.log('[tintajunta] webhook pago', pi.id, done ? 'completado' : 'sin acción pendiente');
   }
   res.json({ ok: true, received: true });
+});
+/* v144: rendimiento — gzip + caché inmutable para estáticos versionados.
+   - Comprime (gzip) respuestas de texto: html/js/css/json/txt/svg y el libro
+     completo (/api/books/:id, hasta ~2MB sin comprimir). Sin dependencias nuevas.
+   - Los estáticos con ?v= (cache-buster) se sirven con caché inmutable de 1 año:
+     el nombre cambia en cada versión, así que es seguro y las visitas repetidas
+     no descargan nada. index.html (sin ?v=) sigue fresco (max-age=0). */
+const GZIP_OK = /\.(js|css|json|html|txt|svg|xml|webmanifest)$/i;
+const IMMUTABLE_OK = /\.(js|css|png|jpg|jpeg|webp|gif|svg|ico|woff2?)$/i;
+app.use((req, res, next) => {
+  const wantImmutable = !!(req.query && req.query.v && IMMUTABLE_OK.test(req.path));
+  const ae = req.headers['accept-encoding'] || '';
+  const canGzip = req.method === 'GET' && /\bgzip\b/.test(ae) && !req.headers.range &&
+    (GZIP_OK.test(req.path) || req.path === '/' || req.path.startsWith('/api/books/'));
+  if (!wantImmutable && !canGzip) return next();
+  const _end = res.end.bind(res);
+  const chunks = [];
+  res.write = function (c, enc) { if (c) chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c, enc)); return true; };
+  res.end = function (c, enc) {
+    if (c) chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c, enc));
+    if (wantImmutable) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    const body = Buffer.concat(chunks);
+    if (!canGzip || body.length < 1024) return _end(body);
+    zlib.gzip(body, (err, gz) => {
+      if (err || gz.length >= body.length) return _end(body);
+      res.removeHeader('Content-Length');
+      res.setHeader('Content-Encoding', 'gzip');
+      res.setHeader('Content-Length', String(gz.length));
+      _end(gz);
+    });
+  };
+  next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '256kb' }));
