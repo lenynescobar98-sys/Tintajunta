@@ -18,7 +18,7 @@
  * Vacío ('') = muestra placeholder "Espacio publicitario" en los slots.
  * NO se muestran anuncios dentro de la sala de lectura (regla permanente).
  */
-const ADSENSE_CLIENT = '';
+const ADSENSE_CLIENT = 'ca-pub-7762243852397440';
 
 const COLORS = {
   azul:     '#1e40af',
@@ -3262,11 +3262,14 @@ function renderAdSenseSlots() {
   // Con Publisher ID: anuncios reales de Google
   if (!adsenseLoaded) {
     adsenseLoaded = true;
-    const sc = document.createElement('script');
-    sc.async = true;
-    sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADSENSE_CLIENT);
-    sc.crossOrigin = 'anonymous';
-    document.head.appendChild(sc);
+    // v140: el script ya va estático en <head> (verificación AdSense); no duplicar
+    if (!document.querySelector('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')) {
+      const sc = document.createElement('script');
+      sc.async = true;
+      sc.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(ADSENSE_CLIENT);
+      sc.crossOrigin = 'anonymous';
+      document.head.appendChild(sc);
+    }
   }
   slots.forEach((s) => {
     if (s.dataset.adsDone) return;
