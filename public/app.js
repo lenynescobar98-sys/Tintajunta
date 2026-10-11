@@ -4267,18 +4267,41 @@ async function initDeepLink() {
   } catch (e) { clog('deep-link: ' + (e && e.message)); }
 }
 
-/* Bienvenida: solo la primera visita. Explica qué es TintaJunta en 10 segundos. */
+/* Bienvenida: solo la primera visita. Explica qué es TintaJunta en 10 segundos.
+   v147: ahora también pide nombre + código de sala para entrar directo;
+   la X cierra sin entrar. La decisión se guarda en localStorage y no vuelve
+   a salir aunque la página se actualice. */
 function initWelcome() {
-  try {
-    if (localStorage.getItem('tj_welcomed')) return;
-  } catch (e) { return; }
   const pop = $('welcomePop');
   if (!pop) return;
-  pop.classList.remove('hidden');
-  $('welcomeOk').onclick = () => {
+  const done = () => {
     try { localStorage.setItem('tj_welcomed', '1'); } catch (e) {}
     pop.classList.add('hidden');
   };
+  try {
+    if (localStorage.getItem('tj_welcomed')) return;
+  } catch (e) { return; }
+  pop.classList.remove('hidden');
+  // Nombre guardado de antes, si existe
+  try {
+    const sn = localStorage.getItem('tj_name');
+    if (sn) $('welcomeName').value = sn;
+  } catch (e) {}
+  $('welcomeOk').onclick = done;
+  $('welcomeX').onclick = done;
+  const go = () => {
+    const code = $('welcomeCode').value.trim();
+    if (!normalizeRoomClient(code)) { toast(t('joinNeedCode')); return; } // no cerrar si el código está mal
+    const ji = $('joinBtn'), ni = $('nameInput'), ri = $('roomInput');
+    if (!ji || !ni || !ri) { done(); return; }
+    ni.value = $('welcomeName').value.trim().slice(0, 24);
+    ri.value = code;
+    done();
+    ji.click(); // reutiliza el flujo de entrada existente
+  };
+  $('welcomeJoin').onclick = go;
+  $('welcomeCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+  $('welcomeName').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('welcomeCode').focus(); });
 }
 
 /* Cada init aislado: si uno falla, los demás siguen funcionando */

@@ -2359,3 +2359,18 @@ body.in-room #boardView {
   contain-intrinsic-size: auto 4em;
 }
 .chunk-sentinel { height: 4px; }
+
+/* v147: bienvenida con entrada a sala — X para cerrar y campos nombre+código */
+.pop-x {
+  position: absolute; top: 8px; right: 10px;
+  border: 0; background: transparent; cursor: pointer;
+  font-size: 20px; line-height: 1; color: #8a8a8a; padding: 6px;
+}
+.pop-x:hover { color: #222; }
+.modal-pop { position: relative; }
+.welcome-join { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.welcome-join input {
+  font-size: 16px; padding: 10px 12px; border: 1px solid #d8d2c4;
+  border-radius: 10px; background: #fffdf8; width: 100%; box-sizing: border-box;
+}
+.welcome-join input:focus { outline: 2px solid #c9a227; border-color: #c9a227; }
