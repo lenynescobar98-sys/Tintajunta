@@ -294,11 +294,20 @@ function initJoin() {
 }
 
 /* ------------------------------ capítulo ------------------------------ */
+/* v146: renderizado por partes — los libros completos (hasta ~500 mil
+   palabras) se pintan en trozos para no congelar el teléfono. Los primeros
+   párrafos salen al instante y el resto se agrega solo al acercarse al
+   final (scroll infinito), sin que se trabe la página. */
+const CHUNK_FIRST = 60, CHUNK_NEXT = 120;
+let paraQueue = [], queuePos = 0, wordBase = 0, totalParas = 0;
+let chunkObs = null, chunkSentinel = null;
 function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
   $('chapterTitle').textContent = chapterTitle;
   $('bookLine').textContent = bookLine || '';
   $('sampleNote').textContent = sampleNote || '';
   const paras = $('paras');
+  if (chunkObs) { try { chunkObs.disconnect(); } catch (e) {} chunkObs = null; }
+  chunkSentinel = null;
   paras.innerHTML = '';
   spanByIdx.length = 0;
   cover.clear();
@@ -315,12 +324,33 @@ function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
     });
     paras.appendChild(gal);
   }
-  let idx = 0;
-  let pi = 0;
-  paragraphs.forEach((text) => {
+  // v146: cola de párrafos — se pinta el primer trozo ya y el resto por scroll
+  paraQueue = paragraphs || [];
+  queuePos = 0;
+  wordBase = 0;
+  totalParas = paraQueue.length;
+  wordCount = 0;
+  for (const t of paraQueue) wordCount += String(t).split(/\s+/).length; // total, sin DOM
+  renderMoreParas(paras, CHUNK_FIRST, true);
+  setupChunkObserver();
+  renderNotes();
+  /* v78: transición suave al pintar un capítulo */
+  paras.classList.remove('fade-in');
+  void paras.offsetWidth;
+  paras.classList.add('fade-in');
+}
+/* v146: pinta el siguiente trozo de párrafos (usa fragmento: un solo reflow).
+   Devuelve cuántos párrafos agregó. */
+function renderMoreParas(paras, count, skipRepaint) {
+  paras = paras || $('paras');
+  if (!paras || queuePos >= paraQueue.length) return 0;
+  const frag = document.createDocumentFragment();
+  const end = Math.min(paraQueue.length, queuePos + (count || CHUNK_NEXT));
+  let pi = queuePos, idx = wordBase, added = 0;
+  for (; pi < end; pi++) {
     const p = document.createElement('p');
-    p.dataset.para = pi++; // v68: índice de párrafo para presencia viva y notas
-    String(text).split(/\s+/).forEach((t) => {
+    p.dataset.para = pi; // v68: índice de párrafo para presencia viva y notas
+    String(paraQueue[pi]).split(/\s+/).forEach((t) => {
       if (!t) return;
       const s = document.createElement('span');
       s.className = 'w';
@@ -331,14 +361,42 @@ function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
       p.appendChild(document.createTextNode(' '));
       idx++;
     });
-    paras.appendChild(p);
-  });
-  wordCount = idx;
-  renderNotes();
-  /* v78: transición suave al pintar un capítulo */
-  paras.classList.remove('fade-in');
-  void paras.offsetWidth;
-  paras.classList.add('fade-in');
+    frag.appendChild(p);
+    added++;
+  }
+  if (chunkSentinel) paras.insertBefore(frag, chunkSentinel);
+  else paras.appendChild(frag);
+  queuePos = pi;
+  wordBase = idx;
+  if (!skipRepaint) repaintAll(); // aplica marcas/notas a lo recién pintado
+  return added;
+}
+/* v146: al acercarse al final, agrega el siguiente trozo automáticamente */
+function setupChunkObserver() {
+  const paras = $('paras');
+  if (!paras || queuePos >= paraQueue.length) return;
+  chunkSentinel = document.createElement('div');
+  chunkSentinel.className = 'chunk-sentinel';
+  chunkSentinel.setAttribute('aria-hidden', 'true');
+  paras.appendChild(chunkSentinel);
+  chunkObs = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      const n = renderMoreParas(null, CHUNK_NEXT);
+      if (n === 0 || queuePos >= paraQueue.length) {
+        try { chunkObs.disconnect(); } catch (err) {}
+        chunkObs = null;
+      }
+    }
+  }, { rootMargin: '1200px' });
+  chunkObs.observe(chunkSentinel);
+}
+/* v146: garantiza que el párrafo idx esté pintado (Modo Sígueme, pizarra) */
+function ensureParaRendered(idx) {
+  let guard = 0;
+  while (queuePos <= idx && queuePos < paraQueue.length && guard++ < 12) {
+    renderMoreParas(null, CHUNK_NEXT);
+  }
 }
 async function loadText() {
   const r = await fetch('/api/text');
@@ -1255,7 +1313,7 @@ function paraCount() {
   return document.querySelectorAll('#paras p[data-para]').length;
 }
 function paraLabel() {
-  const n = paraCount();
+  const n = totalParas > 0 ? totalParas : paraCount(); // v146: N total aunque falte por pintar
   const i = Math.min(roomPara.idx, Math.max(0, n - 1));
   return n > 0 ? t('paraOf', { i: i + 1, n }) : t('paraDash');
 }
@@ -1278,6 +1336,7 @@ function renderParaBar() {
 }
 function setRoomPara(idx) {
   if (!isTeacher) return;
+  if (idx >= queuePos && queuePos < paraQueue.length) renderMoreParas(null, CHUNK_NEXT); // v146: no frenar al avanzar
   const n = paraCount();
   idx = Math.max(0, Math.min(n - 1, idx));
   if (idx === roomPara.idx && roomPara.ts > 0) return;
@@ -1289,6 +1348,7 @@ function setRoomPara(idx) {
 }
 /* Resalta el párrafo actual para todos y lo muestra en modo pizarra */
 function focusPara(idx, smooth) {
+  ensureParaRendered(idx); // v146: pintar hasta el párrafo antes de enfocarlo
   document.querySelectorAll('#paras p[data-para]').forEach((p) => {
     p.classList.toggle('para-focus', Number(p.dataset.para) === idx);
   });
@@ -2814,10 +2874,20 @@ function initProgress() {
 function restoreProgress(bookId) {
   const y = getProgress(bookId);
   if (y > 120) {
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      window.scrollTo(0, y);
-      toast('📖 Continuando donde quedaste');
-    }));
+    // v146: pinta por trozos hasta alcanzar la posición guardada, cediendo
+    // el hilo entre trozos para no congelar la página
+    (async () => {
+      let guard = 0;
+      while (queuePos < paraQueue.length &&
+             document.documentElement.scrollHeight < y && guard++ < 60) {
+        renderMoreParas(null, CHUNK_NEXT);
+        await new Promise((r) => setTimeout(r, 0));
+      }
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        window.scrollTo(0, y);
+        toast('📖 Continuando donde quedaste');
+      }));
+    })();
   }
 }
 /* ------------------------------ 📊 stats del creador ------------------------------

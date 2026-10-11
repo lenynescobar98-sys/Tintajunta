@@ -2350,3 +2350,12 @@ body.in-room #boardView {
   box-shadow: 0 10px 24px rgba(138, 90, 30, .16);
 }
 .ki-feature .ki-card h3 { color: #7a4d12; }
+
+/* v146: rendimiento en libros largos — el navegador no pinta los párrafos
+   fuera de pantalla: abrir un clásico de 500 mil palabras ya no traba el
+   teléfono y el scroll se mantiene fluido. */
+#paras p[data-para] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 4em;
+}
+.chunk-sentinel { height: 4px; }
