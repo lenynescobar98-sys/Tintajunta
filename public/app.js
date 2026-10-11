@@ -1848,14 +1848,30 @@ function updateRoomLabel() {
 /* ------------------------------ boot -------------------------------- */
 let selInitDone = false;
 let readingType = 'sample'; // 'sample' | 'book' | 'classic': qué se está leyendo
+/* v148: limpia todo rastro de texto/párrafos de la sala (regla permanente:
+   la sala con código es SOLO pizarra + chat, sin historia). */
+function clearRoomText() {
+  const paras = $('paras');
+  if (chunkObs) { try { chunkObs.disconnect(); } catch (e) {} chunkObs = null; }
+  chunkSentinel = null;
+  if (paras) paras.innerHTML = '';
+  spanByIdx.length = 0;
+  cover.clear();
+  highlights = [];
+  notes = [];
+  paraQueue = []; queuePos = 0; wordBase = 0; totalParas = 0; wordCount = 0;
+  const ct = $('chapterTitle'); if (ct) ct.textContent = '';
+  const bl = $('bookLine'); if (bl) bl.textContent = '';
+  const sn = $('sampleNote'); if (sn) sn.textContent = '';
+  renderNotes();
+}
 async function boot() {
   clog('boot: entrando a la sala ' + myRoom + ', UA=' + navigator.userAgent.slice(0, 80));
   currentBook = null;
   readingType = 'sample';
   document.body.classList.remove('book-room'); // v124: sala con código = solo pizarra (v107); el texto vive en las salas de libros
   updateRoomLabel();
-  await loadText();
-  clog('texto cargado, palabras=' + wordCount);
+  clearRoomText(); // v148: en sala nueva/código NO se descarga ni pinta ningún párrafo ni historia
   if (!selInitDone) { selInitDone = true; initSelection(); }
   initNet();
 }
