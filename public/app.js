@@ -4294,9 +4294,11 @@ function initWelcome() {
     try { localStorage.setItem('tj_welcomed', '1'); } catch (e) {}
     pop.classList.add('hidden');
   };
+  // v149: ?welcome=1 fuerza ver el anuncio (para probarlo sin borrar datos)
+  const forceWel = /[?&]welcome=1/.test(location.search);
   try {
-    if (localStorage.getItem('tj_welcomed')) return;
-  } catch (e) { return; }
+    if (!forceWel && localStorage.getItem('tj_welcomed')) return;
+  } catch (e) { if (!forceWel) return; }
   pop.classList.remove('hidden');
   // Nombre guardado de antes, si existe
   try {
