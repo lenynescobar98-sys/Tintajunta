@@ -1445,6 +1445,11 @@ app.post('/api/rooms/:room/switch', (req, res) => {
   save();
   res.json({ ok: true, switchTo: st.switchTo });
 });
+/* v145: idempotencia para reintentos del cliente en señal débil.
+   El cliente envía un `cid` opcional por gesto; si el POST original sí llegó
+   pero se perdió la respuesta, el reintento devuelve el registro existente
+   en vez de duplicarlo. */
+const cidOf = (req) => String((req.body && req.body.cid) || '').slice(0, 40);
 /* 💬 Chat de la sala: mensajes cortos, últimos 50 */
 app.post('/api/rooms/:room/chat', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
@@ -1454,7 +1459,13 @@ app.post('/api/rooms/:room/chat', (req, res) => {
   const st = getRoom(code);
   const text = String((req.body && req.body.text) || '').trim().slice(0, 300);
   if (!text) return res.status(400).json({ ok: false, error: 'empty' });
+  const cid = cidOf(req); // v145: no duplicar ante reintento del mismo gesto
+  if (cid) {
+    const dup = st.chat.find((m) => m.cid === cid && m.name === u.name);
+    if (dup) return res.json({ ok: true, msg: dup });
+  }
   const msg = { id: 'c' + (st.seq++), name: u.name, color: vc, text, ts: Date.now() };
+  if (cid) msg.cid = cid;
   st.chat.push(msg);
   if (st.chat.length > 50) st.chat = st.chat.slice(-50);
   save();
@@ -1474,13 +1485,20 @@ app.post('/api/rooms/:room/reaction', (req, res) => {
     return res.status(400).json({ ok: false, error: 'bad-reaction' });
   }
   if (!Array.isArray(st.reactions)) st.reactions = [];
+  const cid = cidOf(req); // v145: un reintento del mismo gesto no debe alternar dos veces
+  if (cid) {
+    const dup = st.reactions.find((r) => r.cid === cid && r.name === u.name);
+    if (dup) return res.json({ ok: true, added: true });
+  }
   const i = st.reactions.findIndex((r) => r.start === start && r.emoji === emoji && r.name === u.name);
   let added = true;
   if (i >= 0) {
     st.reactions.splice(i, 1); // toggle: ya reaccioné así → quitar
     added = false;
   } else {
-    st.reactions.push({ id: 'r' + (st.seq++), name: u.name, color: vc, start, emoji, ts: Date.now() });
+    const rec = { id: 'r' + (st.seq++), name: u.name, color: vc, start, emoji, ts: Date.now() };
+    if (cid) rec.cid = cid;
+    st.reactions.push(rec);
   }
   save();
   res.json({ ok: true, added });
@@ -1559,8 +1577,14 @@ app.post('/api/rooms/:room/highlight', (req, res) => {
   const st = getRoom(code);
   const r = validRange(code, req.body && req.body.start, req.body && req.body.end);
   if (!r) return res.status(400).json({ ok: false, error: 'bad-range' });
+  const hcid = cidOf(req); // v145: no duplicar ante reintento del mismo gesto
+  if (hcid) {
+    const dup = st.highlights.find((h) => h.cid === hcid && h.name === u.name);
+    if (dup) return res.json({ ok: true, highlight: dup });
+  }
   const rec = { id: 'h' + (st.seq++), name: u.name, color: vc,
     start: r.start, end: r.end, text: passageText(code, r.start, r.end), ts: Date.now() };
+  if (hcid) rec.cid = hcid;
   st.highlights.push(rec);
   save();
   res.json({ ok: true, highlight: rec });
@@ -1575,10 +1599,16 @@ app.post('/api/rooms/:room/note', (req, res) => {
   const r = validRange(code, req.body && req.body.start, req.body && req.body.end);
   const text = String((req.body && req.body.text) || '').trim().slice(0, MAX_NOTE_LEN);
   if (!r || !text) return res.status(400).json({ ok: false, error: 'bad-note' });
+  const ncid = cidOf(req); // v145: no duplicar ante reintento del mismo gesto
+  if (ncid) {
+    const dup = st.notes.find((n) => n.cid === ncid && n.name === u.name);
+    if (dup) return res.json({ ok: true, note: dup });
+  }
   const rec = { id: 'n' + (st.seq++), name: u.name, color: vc,
     start: r.start, end: r.end, quote: passageText(code, r.start, r.end).slice(0, 140),
     text, ts: Date.now(),
     code: genNoteCode(new Set(st.notes.map((n) => n.code).filter(Boolean))) };
+  if (ncid) rec.cid = ncid;
   st.notes.push(rec);
   save();
   res.json({ ok: true, note: rec });

@@ -847,7 +847,7 @@ I18N.es.handErr = 'No se pudo levantar la mano — revisa tu conexión';
 I18N.es.handLower = 'Tocar para bajar la mano de ';
 I18N.es.netOnline = 'Conectado a la sala';
 I18N.es.netOnlineTitle = 'red: en línea';
-I18N.es.netOffline = 'Sin conexión — reintentando…';
+I18N.es.actQueued = 'Sin conexión — se guardará al reconectar';
 I18N.es.netOfflineTitle = 'red: sin conexión, reintentando…';
 I18N.es.enterErr = 'No se pudo entrar, reintentando…';
 /* ---------- sígueme ---------- */
@@ -1045,7 +1045,7 @@ I18N.en.handErr = 'Could not raise your hand — check your connection';
 I18N.en.handLower = 'Tap to lower the hand of ';
 I18N.en.netOnline = 'Connected to the room';
 I18N.en.netOnlineTitle = 'net: online';
-I18N.en.netOffline = 'No connection — retrying…';
+I18N.en.actQueued = 'Offline — will sync when you reconnect';
 I18N.en.netOfflineTitle = 'net: offline, retrying…';
 I18N.en.enterErr = 'Could not join, retrying…';
 I18N.en.followPillOn = '👀 Following the teacher';

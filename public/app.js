@@ -889,20 +889,18 @@ function initSelection() {
     hideNotepop();
     window.getSelection().removeAllRanges();
     pendingRange = null;
-    try {
-      const s = await apiPost(roomBase() + '/note', { start, end, text });
-      if (s && s.ok && s.note && !notes.some((n) => n.id === s.note.id)) {
+    // v145: si falla la red, la nota se encola y se envía sola al reconectar
+    const r = await netPost(roomBase() + '/note', { start, end, text }, (s) => {
+      if (s.note && !notes.some((n) => n.id === s.note.id)) {
         notes.push(s.note);
         renderNotes();
         paintNoteMarks();
         paintNoteBadges(); // v68
         toast(s.note.code ? t('noteSaved', { code: s.note.code }) : t('noteSavedPlain'));
       }
-      setOnline(true);
-    } catch (e) {
-      setOnline(false);
-      toast(t('noteErr'));
-    }
+    });
+    if (r.queued) toast(t('actQueued'));
+    else if (!r.ok) toast(t('noteErr'));
   };
 }
 
@@ -941,6 +939,70 @@ function setOnline(on) {
     clearTimeout(offlineToastTimer);
     if (offlineSince && Date.now() - offlineSince >= 5000) toast(t('netBack'));
     offlineSince = 0;
+  }
+}
+
+/* v145 — outbox: en señal débil, los POST que fallan POR RED se encolan y se
+   reintentan solos al recuperar la conexión (antes el gesto se perdía para
+   siempre con solo un toast). Los errores HTTP (4xx/5xx) nunca se reintentan:
+   son validación, no red. Idempotencia vía `cid`: si el POST original sí llegó
+   al servidor pero se perdió la respuesta, el reintento no duplica. */
+let outbox = [];
+let flushingOutbox = false;
+const OUTBOX_MAX = 100;
+function makeCid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+/* apiPost lanza Error('http NNN') cuando el servidor respondió; cualquier otro
+   error es fallo de red de bajo nivel (timeout, abort, TypeError). */
+function isHttpErr(e) {
+  return !!(e && typeof e.message === 'string' && e.message.indexOf('http ') === 0);
+}
+/* netPost(path, body, apply): como apiPost, pero ante fallo de red encola el
+   gesto para reintentarlo al reconectar. apply(s) fusiona la respuesta exitosa
+   (pintar la marca, mostrar la nota…). Devuelve {ok, queued}. */
+async function netPost(path, body, apply) {
+  const payload = { ...(body || {}), cid: makeCid() };
+  try {
+    const s = await apiPost(path, payload);
+    if (s && s.ok) {
+      if (apply) apply(s);
+      setOnline(true);
+      return { ok: true, queued: false };
+    }
+    return { ok: false, queued: false };
+  } catch (e) {
+    if (isHttpErr(e)) return { ok: false, queued: false }; // 4xx/5xx: no reintentar
+    if (outbox.length >= OUTBOX_MAX) outbox.shift(); // tope de seguridad
+    outbox.push({ path, body: payload, apply, room: myRoom });
+    setOnline(false);
+    return { ok: false, queued: true };
+  }
+}
+/* Vacía la cola en orden tras recuperar la red. Cada gesto se envía a SU sala
+   (la ruta quedó fija al encolarse); el apply local solo corre si seguimos en
+   esa sala — si el usuario cambió de sala, el gesto ya quedó guardado y se verá
+   al volver. */
+async function flushOutbox() {
+  if (flushingOutbox || !outbox.length) return;
+  flushingOutbox = true;
+  try {
+    while (outbox.length) {
+      const item = outbox[0];
+      let s;
+      try {
+        s = await apiPost(item.path, item.body);
+      } catch (e) {
+        if (isHttpErr(e)) { outbox.shift(); continue; } // 4xx: descartar, no reintentar
+        break; // sigue sin red: el resto queda encolado
+      }
+      outbox.shift();
+      if (s && s.ok && item.apply && item.room === myRoom) {
+        try { item.apply(s); } catch (e2) { /* no romper el flush */ }
+      }
+    }
+  } finally {
+    flushingOutbox = false;
   }
 }
 
@@ -1394,17 +1456,18 @@ function sendChat() {
   const text = (input.value || '').trim();
   if (!text) return;
   input.value = '';
-  apiPost(roomBase() + '/chat', { text: text.slice(0, 300) })
-    .then((s) => {
-      if (s && s.ok && s.msg && !chat.some((m) => m.id === s.msg.id)) {
-        chat.push(s.msg);
-        if (chat.length > 50) chat = chat.slice(-50);
-        chatSeen = chat.length;
-        renderChat();
-      }
-      setOnline(true);
-    })
-    .catch(() => { setOnline(false); toast(t('chatErr')); });
+  // v145: si falla la red, el mensaje se encola y se envía solo al reconectar
+  netPost(roomBase() + '/chat', { text: text.slice(0, 300) }, (s) => {
+    if (s.msg && !chat.some((m) => m.id === s.msg.id)) {
+      chat.push(s.msg);
+      if (chat.length > 50) chat = chat.slice(-50);
+      chatSeen = chat.length;
+      renderChat();
+    }
+  }).then((r) => {
+    if (r.queued) toast(t('actQueued'));
+    else if (!r.ok) toast(t('chatErr'));
+  });
 }
 
 function initChat() {
@@ -1444,9 +1507,12 @@ function renderReactions() {
 }
 
 function toggleReaction(start, emoji) {
-  apiPost(roomBase() + '/reaction', { start, emoji })
-    .then((s) => { if (s && s.ok) pollState(); setOnline(true); })
-    .catch(() => { setOnline(false); toast(t('reactErr')); });
+  // v145: si falla la red, la reacción se encola y se envía sola al reconectar
+  netPost(roomBase() + '/reaction', { start, emoji }, () => { pollState(); })
+    .then((r) => {
+      if (r.queued) toast(t('actQueued'));
+      else if (!r.ok) toast(t('reactErr'));
+    });
 }
 
 function initReactions() {
@@ -1540,6 +1606,7 @@ async function pollState() {
     applyState(await r.json());
     if (!netOnline) clog('red: en línea');
     setOnline(true);
+    flushOutbox(); // v145: reintentar gestos encolados en señal débil (sin await: tiene su propio guardia)
   } catch (e) {
     if (netOnline) clog('red: sin conexión, reintentando…');
     setOnline(false);
@@ -1548,22 +1615,19 @@ async function pollState() {
   }
 }
 
-/* Publica un subrayado y lo pinta de inmediato (optimista) */
+/* Publica un subrayado. v145: si falla la red, el gesto se encola y se reintenta
+   solo al reconectar (outbox) — ya no se pierde con solo un toast. */
 async function postHighlight(range) {
-  try {
-    const s = await apiPost(roomBase() + '/highlight', range);
-    if (s && s.ok && s.highlight && !highlights.some((h) => h.id === s.highlight.id)) {
+  const r = await netPost(roomBase() + '/highlight', range, (s) => {
+    if (s.highlight && !highlights.some((h) => h.id === s.highlight.id)) {
       highlights.push(s.highlight);
       paintHighlight(s.highlight);
       showUndoPill(s.highlight.id); // v118: deshacer la última marca (toques accidentales en móvil)
     }
-    setOnline(true);
-    return true;
-  } catch (e) {
-    setOnline(false);
-    toast(t('hlSaveErr'));
-    return false;
-  }
+  });
+  if (r.queued) toast(t('actQueued'));
+  else if (!r.ok) toast(t('hlSaveErr'));
+  return r.ok;
 }
 
 /* v121: píldora "↩ Deshacer" con pila — tras marcar, cada toque deshace UNA marca
@@ -2715,6 +2779,23 @@ function getProgressMeta(id) {
   try { return JSON.parse(localStorage.getItem(progMetaKey(id)) || 'null'); }
   catch (e) { return null; }
 }
+/* v145: limpiar "seguir leyendo" huérfano — progreso de libros que ya no
+   existen en el catálogo (la tarjeta sería un callejón sin salida). */
+function clearProgress(id) {
+  try { localStorage.removeItem(progKey(id)); localStorage.removeItem(progMetaKey(id)); } catch (e) {}
+}
+function pruneOrphanProgress() {
+  try {
+    const ids = new Set((libBooksCache || []).map((b) => String(b.id)));
+    const dead = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf('tj_progress_') === 0 && !ids.has(k.slice(12))) dead.push(k.slice(12));
+    }
+    dead.forEach(clearProgress);
+    return dead.length;
+  } catch (e) { return 0; }
+}
 function initProgress() {
   window.addEventListener('scroll', () => {
     if (currentView !== 'room' || !myRoom) return;
@@ -3290,6 +3371,7 @@ async function showLibrary(push) {
     const d = await r.json();
     libBooksCache = d.books || [];
     window.__tjBooksReady = true; // v71: deep link ?libro=ID puede abrir
+    if (pruneOrphanProgress()) renderContinueReading(); // v145: sin tarjetas huérfanas
     const feat = libBooksCache.filter((b) => b.featured);
     renderHero(feat); // carrusel en movimiento: destacados + anuncios
     lastFeat = feat;
@@ -3393,11 +3475,14 @@ async function openBook(id, push) {
   let book;
   try {
     const r = await fetchTimeout('/api/books/' + encodeURIComponent(id), 30000); // v130: libros completos pesan más
-    if (!r.ok) throw 0;
+    if (!r.ok) throw r.status;
     const d = await r.json();
-    if (!d.ok) throw 0;
+    if (!d.ok) throw r.status;
     book = d.book;
-  } catch (e) { toast(t('buyLoadErr')); return; }
+  } catch (e) {
+    if (e === 404) clearProgress(id); // v145: el libro ya no existe, no dejar tarjeta huérfana
+    toast(t('buyLoadErr')); return;
+  }
   // Todos los libros son gratis: se abren directo
   // Advertencia de contenido adulto
   if (book.ageRating === '18' && !sessionStorage.getItem('tj_age_ok_' + book.id)) {
