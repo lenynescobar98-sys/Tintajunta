@@ -3116,6 +3116,28 @@ function renderContinueReading() {
     c.addEventListener('click', () => openBook(c.dataset.book, true)));
 }
 
+/* v152: intercala idiomas — en Recomendados nunca salen dos libros seguidos
+   del mismo idioma (es, en, fr, de… bien mezclados) */
+function interleaveByLang(list) {
+  const groups = {};
+  list.forEach((b) => { const l = b.language || 'es'; (groups[l] = groups[l] || []).push(b); });
+  const langs = Object.keys(groups);
+  const out = [];
+  let last = null;
+  while (out.length < list.length) {
+    let best = null;
+    for (const l of langs) {
+      if (l === last || !groups[l].length) continue;
+      if (!best || groups[l].length > groups[best].length) best = l;
+    }
+    if (!best) best = langs.find((l) => groups[l].length); // solo queda el mismo idioma
+    if (!best) break;
+    out.push(groups[best].shift());
+    last = best;
+  }
+  return out;
+}
+
 function renderRows() {
   const feat = libBooksCache.filter((b) => b.featured);
   const secD = document.getElementById('secDestacados');
@@ -3123,7 +3145,7 @@ function renderRows() {
   fillRow('rowDestacados',
     feat.map((b) => coverTile(b, { badge: '⭐ DESTACADO', onClick: () => showImmersiveBook(b) })),
     '');
-  const rec = visibleBooks(libBooksCache.filter((b) => !b.featured && !b.classic));
+  const rec = interleaveByLang(visibleBooks(libBooksCache.filter((b) => !b.featured && !b.classic)));
   fillRow('rowRecomendados',
     rec.map((b) => coverTile(b, {})),
     libQuery ? t('noResults') : t('publishFirst'));
