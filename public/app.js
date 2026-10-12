@@ -3163,40 +3163,9 @@ function renderRows() {
   const secC = document.getElementById('secClassics');
   if (secC) secC.style.display = cls.length ? '' : 'none';
   fillRow('rowClassics', cls.map((b) => coverTile(b, {})), '');
-  renderMarquee();
   paintLevelBadges();
 }
-/* Marquesina estilo Kanopy: portadas en loop infinito */
-let marqueePaused = false;
-function renderMarquee() {
-  const track = document.getElementById('marqueeTrack');
-  const sec = document.getElementById('secMarquee');
-  if (!track) return;
-  const books = [...libBooksCache].sort((a, b) => popularity(b) - popularity(a));
-  if (sec) sec.style.display = books.length ? '' : 'none';
-  if (!books.length) { track.innerHTML = ''; return; }
-  const one = books.map((b) => {
-    const inner = b.coverUrl
-      ? `<img src="${esc(b.coverUrl)}" alt="" loading="lazy">`
-      : `<div style="position:absolute;inset:0;${coverStyle(b.id)}"></div>`;
-    return `<div class="mq-cover" data-book="${b.id}">${inner}</div>`;
-  }).join('');
-  track.innerHTML = one + one; // duplicado para el loop infinito
-  track.classList.toggle('paused', marqueePaused);
-  track.querySelectorAll('.mq-cover').forEach((el) => {
-    el.onclick = () => openBook(el.dataset.book);
-  });
-}
-function initMarquee() {
-  const btn = document.getElementById('marqueePause');
-  if (!btn) return;
-  btn.onclick = () => {
-    marqueePaused = !marqueePaused;
-    btn.textContent = marqueePaused ? '▶' : '⏸';
-    const track = document.getElementById('marqueeTrack');
-    if (track) track.classList.toggle('paused', marqueePaused);
-  };
-}
+/* v153: marquesina eliminada a pedido del usuario (ralentizaba la página) */
 function initPills() {
   document.querySelectorAll('#pillsRow .pill').forEach((p) => {
     p.classList.toggle('on', p.dataset.pill === libPill);
@@ -4426,7 +4395,7 @@ function initWelcome() {
 [['initJoin', initJoin], ['initLibrary', initLibrary], ['initCheckoutReturn', initCheckoutReturn], ['initAds', initAds],
  ['renderAds', renderAds], ['renderAffiliates', renderAffiliates],
  ['initImdbBar', initImdbBar], ['initWriting', initWriting],
- ['initPills', initPills], ['initMarquee', initMarquee],
+ ['initPills', initPills],
  ['initBoard', initBoard], ['initFollow', initFollow], ['initWelcome', initWelcome],
 ['initOutbox', initOutbox],
  ['initReviews', initReviews], ['initProgress', initProgress], ['initReports', initReports],
