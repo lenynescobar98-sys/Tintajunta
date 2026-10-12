@@ -406,18 +406,25 @@ async function loadText() {
 
 /* ------------------------------ pintado ------------------------------- */
 function paintHighlight(h) {
+  const base = COLORS[h.color] || COLORS.azul;
+  // v151: estilo resaltador real — degradado de marcador con bordes
+  // irregulares (como trazo hecho a mano); la variante es estable por índice
+  const bg = 'linear-gradient(100deg,' + hexA(base, 0) + ' 0%,' +
+    hexA(base, 0.45) + ' 5%,' + hexA(base, 0.34) + ' 50%,' +
+    hexA(base, 0.45) + ' 95%,' + hexA(base, 0) + ' 100%)';
   for (let i = h.start; i <= h.end; i++) {
     cover.set(i, h);
     const s = spanByIdx[i];
     if (!s) continue;
-    s.style.background = hexA(COLORS[h.color] || COLORS.azul, 0.34);
+    s.style.background = bg;
     s.classList.add('mk');
+    s.classList.add('mkr' + (i % 4));
     s.title = `${capFor(h.color)}${h.name} · ${colorName(h.color)}`;
   }
 }
 function repaintAll() {
   cover.clear();
-  spanByIdx.forEach((s) => { s.style.background = ''; s.title = ''; s.classList.remove('has-note'); s.classList.remove('mk'); s.style.setProperty('--note-c', ''); });
+  spanByIdx.forEach((s) => { s.style.background = ''; s.title = ''; s.classList.remove('has-note'); s.classList.remove('mk'); s.classList.remove('mkr0'); s.classList.remove('mkr1'); s.classList.remove('mkr2'); s.classList.remove('mkr3'); s.style.setProperty('--note-c', ''); });
   highlights.forEach(paintHighlight);
   paintNoteMarks();
   paintNoteBadges(); // v68
@@ -1008,6 +1015,67 @@ function setOnline(on) {
 let outbox = [];
 let flushingOutbox = false;
 const OUTBOX_MAX = 100;
+/* v151: el outbox sobrevive a recargas/pestañas muertas (iOS descarta pestañas
+   en segundo plano; el toast "se guardará al reconectar" ahora sí es verdad).
+   Solo se persiste lo serializable: el `apply` (función) se reconstruye al
+   vaciar la cola según el kind derivado de la ruta. */
+const OUTBOX_KEY = 'tj_outbox';
+function outboxKindOf(path) {
+  const m = /\/api\/rooms\/[^/]+\/(highlight|note|chat|reaction)$/.exec(String(path || ''));
+  return m ? m[1] : '';
+}
+function persistOutbox() {
+  try {
+    localStorage.setItem(OUTBOX_KEY, JSON.stringify(outbox.map((it) => ({
+      path: it.path, body: it.body, room: it.room, kind: it.kind || outboxKindOf(it.path),
+    }))));
+  } catch (e) { /* almacenamiento lleno o bloqueado: la cola en memoria sigue viva */ }
+}
+function restoreOutbox() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]');
+    if (!Array.isArray(raw)) return;
+    for (const it of raw) {
+      if (!it || typeof it.path !== 'string' || !it.body || typeof it.body !== 'object') continue;
+      if (outbox.length >= OUTBOX_MAX) break;
+      outbox.push({ path: it.path, body: it.body, room: it.room || null, kind: it.kind || outboxKindOf(it.path), apply: null });
+    }
+    if (outbox.length) clog('outbox: restaurados ' + outbox.length + ' gestos pendientes');
+  } catch (e) { /* JSON corrupto: arrancar con cola vacía */ }
+}
+/* Reconstruye el `apply` original para un gesto restaurado (mismo efecto que
+   el cierre creado en el call-site: pintar la marca/nota/mensaje o sondear). */
+function outboxApplyFor(item) {
+  switch (item.kind) {
+    case 'highlight': return (s) => {
+      if (s.highlight && !highlights.some((h) => h.id === s.highlight.id)) {
+        highlights.push(s.highlight);
+        paintHighlight(s.highlight);
+        showUndoPill(s.highlight.id);
+      }
+    };
+    case 'note': return (s) => {
+      if (s.note && !notes.some((n) => n.id === s.note.id)) {
+        notes.push(s.note);
+        renderNotes();
+        paintNoteMarks();
+        paintNoteBadges();
+        toast(s.note.code ? t('noteSaved', { code: s.note.code }) : t('noteSavedPlain'));
+      }
+    };
+    case 'chat': return (s) => {
+      if (s.msg && !chat.some((m) => m.id === s.msg.id)) {
+        chat.push(s.msg);
+        if (chat.length > 50) chat = chat.slice(-50);
+        chatSeen = chat.length;
+        renderChat();
+      }
+    };
+    case 'reaction': return () => { pollState(); };
+    default: return null;
+  }
+}
+function initOutbox() { restoreOutbox(); }
 function makeCid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
@@ -1032,7 +1100,8 @@ async function netPost(path, body, apply) {
   } catch (e) {
     if (isHttpErr(e)) return { ok: false, queued: false }; // 4xx/5xx: no reintentar
     if (outbox.length >= OUTBOX_MAX) outbox.shift(); // tope de seguridad
-    outbox.push({ path, body: payload, apply, room: myRoom });
+    outbox.push({ path, body: payload, apply, room: myRoom, kind: outboxKindOf(path) });
+    persistOutbox(); // v151: la cola sobrevive a recargas
     setOnline(false);
     return { ok: false, queued: true };
   }
@@ -1047,16 +1116,18 @@ async function flushOutbox() {
   try {
     while (outbox.length) {
       const item = outbox[0];
+      const apply = item.apply || outboxApplyFor(item); // v151: gesto restaurado tras recarga
       let s;
       try {
         s = await apiPost(item.path, item.body);
       } catch (e) {
-        if (isHttpErr(e)) { outbox.shift(); continue; } // 4xx: descartar, no reintentar
+        if (isHttpErr(e)) { outbox.shift(); persistOutbox(); continue; } // 4xx: descartar, no reintentar
         break; // sigue sin red: el resto queda encolado
       }
       outbox.shift();
-      if (s && s.ok && item.apply && item.room === myRoom) {
-        try { item.apply(s); } catch (e2) { /* no romper el flush */ }
+      persistOutbox(); // v151
+      if (s && s.ok && apply && item.room === myRoom) {
+        try { apply(s); } catch (e2) { /* no romper el flush */ }
       }
     }
   } finally {
@@ -4291,11 +4362,18 @@ function initWelcome() {
   const pop = $('welcomePop');
   if (!pop) return;
   const done = () => {
-    try { localStorage.setItem('tj_welcomed', '1'); } catch (e) {}
+    // v151: guardar también el nombre escrito — antes se perdía en silencio si
+    // se cerraba con la X o "Entendido" en vez de "Entrar a la sala"
+    try {
+      const nm = $('welcomeName').value.trim().slice(0, 24);
+      if (nm) localStorage.setItem('tj_name', nm);
+      localStorage.setItem('tj_welcomed', '1');
+    } catch (e) {}
     pop.classList.add('hidden');
   };
   // v149: ?welcome=1 fuerza ver el anuncio (para probarlo sin borrar datos)
-  const forceWel = /[?&]welcome=1/.test(location.search);
+  // v151: anclado para no matchear ?welcome=10 o ?welcome=1x
+  const forceWel = /[?&]welcome=1(?:&|$)/.test(location.search);
   try {
     if (!forceWel && localStorage.getItem('tj_welcomed')) return;
   } catch (e) { if (!forceWel) return; }
@@ -4328,6 +4406,7 @@ function initWelcome() {
  ['initImdbBar', initImdbBar], ['initWriting', initWriting],
  ['initPills', initPills], ['initMarquee', initMarquee],
  ['initBoard', initBoard], ['initFollow', initFollow], ['initWelcome', initWelcome],
+['initOutbox', initOutbox],
  ['initReviews', initReviews], ['initProgress', initProgress], ['initReports', initReports],
  ['initTypo', initTypo], ['initReadProgress', initReadProgress],
  ['initChat', initChat], ['initReactions', initReactions], ['initHands', initHands],

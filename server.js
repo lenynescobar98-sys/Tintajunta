@@ -1485,15 +1485,27 @@ app.post('/api/rooms/:room/reaction', (req, res) => {
     return res.status(400).json({ ok: false, error: 'bad-reaction' });
   }
   if (!Array.isArray(st.reactions)) st.reactions = [];
+  if (!st.rxDead || typeof st.rxDead !== 'object') st.rxDead = {}; // v151: tombstones de cid
   const cid = cidOf(req); // v145: un reintento del mismo gesto no debe alternar dos veces
   if (cid) {
     const dup = st.reactions.find((r) => r.cid === cid && r.name === u.name);
     if (dup) return res.json({ ok: true, added: true });
+    // v151: si el gesto ya se procesó y luego se quitó (toggle OFF), el cid quedó
+    // en rxDead — un reintento tardío NO debe resucitar la reacción
+    if (st.rxDead[cid]) return res.json({ ok: true, added: false });
   }
   const i = st.reactions.findIndex((r) => r.start === start && r.emoji === emoji && r.name === u.name);
   let added = true;
   if (i >= 0) {
-    st.reactions.splice(i, 1); // toggle: ya reaccioné así → quitar
+    const gone = st.reactions.splice(i, 1)[0]; // toggle: ya reaccioné así → quitar
+    if (gone && gone.cid) { // v151: recordar que este cid ya se quitó
+      st.rxDead[gone.cid] = Date.now();
+      const ks = Object.keys(st.rxDead);
+      if (ks.length > 200) { // tope de seguridad: conservar los 200 más recientes
+        ks.sort((a, b) => st.rxDead[a] - st.rxDead[b]);
+        for (let k = 0; k < ks.length - 200; k++) delete st.rxDead[ks[k]];
+      }
+    }
     added = false;
   } else {
     const rec = { id: 'r' + (st.seq++), name: u.name, color: vc, start, emoji, ts: Date.now() };

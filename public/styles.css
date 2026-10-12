@@ -1642,13 +1642,19 @@ main.layout article.chapter .paras p {
   padding: 4px 10px 0 0;
   color: var(--accent);
 }
-/* Marcas: subrayado claro, redondeado y bonito */
+/* Marcas estilo resaltador real (v151): trazo de marcador con bordes
+   irregulares como hecho a mano; el padding hace que el trazo cubra los
+   espacios entre palabras como un marcador de verdad */
 .paras .w.mk {
-  border-radius: 4px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
-  padding: 1px 0;
+  padding: 0.1em 0.14em;
+  margin: 0 -0.14em;
 }
+.paras .w.mkr0 { border-radius: 0.28em 0.08em 0.32em 0.1em; }
+.paras .w.mkr1 { border-radius: 0.1em 0.32em 0.08em 0.3em; }
+.paras .w.mkr2 { border-radius: 0.32em 0.12em 0.28em 0.08em; }
+.paras .w.mkr3 { border-radius: 0.08em 0.28em 0.12em 0.32em; }
 /* Transición suave al cambiar de capítulo */
 #paras.fade-in { animation: pageIn .45s ease; }
 @keyframes pageIn {
