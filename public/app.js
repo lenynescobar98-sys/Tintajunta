@@ -1597,7 +1597,8 @@ function sendChat() {
     }
   }).then((r) => {
     if (r.queued) toast(t('actQueued'));
-    else if (!r.ok) toast(t('chatErr'));
+    // v154: si el servidor lo rechaza (4xx), el texto vuelve a la caja (patrón pizarra v139)
+    else if (!r.ok) { input.value = text; toast(t('chatErr')); }
   });
 }
 
@@ -3238,7 +3239,6 @@ function closeImmersive() {
   immCtaFn = null;
   const rb = $('immReport');
   if (rb) rb.style.display = 'none'; // el botón 🚩 solo es para libros
-  heroPlay();
 }
 // Escape cierra la inmersiva o el drawer
 document.addEventListener('keydown', (e) => {
@@ -3413,12 +3413,11 @@ function renderHero(featBooks) {
   track.ontouchmove = (e) => {
     if (sx === null) return;
     const dx = e.touches[0].clientX - sx;
-    if (Math.abs(dx) > 50) { heroSwipedAt = Date.now(); heroGo(heroIdx + (dx < 0 ? 1 : -1)); sx = null; heroPlay(); }
+    if (Math.abs(dx) > 50) { heroSwipedAt = Date.now(); heroGo(heroIdx + (dx < 0 ? 1 : -1)); sx = null; }
   };
-  track.ontouchend = () => { sx = null; heroPlay(); };
+  track.ontouchend = () => { sx = null; };
   heroIdx = 0;
   heroGo(0);
-  heroPlay();
   paintLevelBadges(car);
 }
 function heroGo(i) {

@@ -351,7 +351,7 @@ app.use((req, res, next) => {
   const wantImmutable = !!(req.query && req.query.v && IMMUTABLE_OK.test(req.path));
   const ae = req.headers['accept-encoding'] || '';
   const canGzip = req.method === 'GET' && /\bgzip\b/.test(ae) && !req.headers.range &&
-    (GZIP_OK.test(req.path) || req.path === '/' || req.path.startsWith('/api/books/'));
+    (GZIP_OK.test(req.path) || req.path === '/' || req.path.startsWith('/api/books/') || req.path.startsWith('/api/rooms/'));
   if (!wantImmutable && !canGzip) return next();
   const _end = res.end.bind(res);
   const chunks = [];
