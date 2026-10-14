@@ -1594,6 +1594,11 @@ app.post('/api/rooms/:room/highlight', (req, res) => {
     const dup = st.highlights.find((h) => h.cid === hcid && h.name === u.name);
     if (dup) return res.json({ ok: true, highlight: dup });
   }
+  // v156: mismo usuario + mismo rango = la misma marca (doble toque en señal
+  // débil: el segundo toque genera otro cid y duplicaba el registro, inflando
+  // contadores y obligando a dos toques de Deshacer). No afecta a otros usuarios.
+  const same = st.highlights.find((h) => h.name === u.name && h.start === r.start && h.end === r.end);
+  if (same) return res.json({ ok: true, highlight: same });
   const rec = { id: 'h' + (st.seq++), name: u.name, color: vc,
     start: r.start, end: r.end, text: passageText(code, r.start, r.end), ts: Date.now() };
   if (hcid) rec.cid = hcid;

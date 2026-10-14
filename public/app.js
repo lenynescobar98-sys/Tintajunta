@@ -1144,6 +1144,7 @@ async function flushOutbox() {
 
 let lastStateSig = '';
 let lastRosterSig = '';
+let lastFollowSig = '';
 function applyState(s) {
   if (!s || s.ok === false) return;
   // Optimización: si nada cambió desde el último poll, no re-renderizar
@@ -1151,7 +1152,11 @@ function applyState(s) {
     // v132 — el roster (posición de lectura de cada uno, actualizada en cada
     // heartbeat/scroll) sale de la firma principal: antes, cualquier scroll de
     // otro lector disparaba repaintAll() completo (~512k palabras en v130).
-    const sig = JSON.stringify([s.highlights, s.notes, s.board, s.follow, s.para, s.chat, s.reactions, s.hands, s.switchTo]);
+    // v156 — lo mismo para follow: el profesor reporta su scroll cada ~500ms
+    // con "Sígueme" activo; antes cada cambio de follow.pos disparaba
+    // repaintAll() + reconstrucción de chat/notas en todos los alumnos.
+    const sig = JSON.stringify([s.highlights, s.notes, s.board, s.para, s.chat, s.reactions, s.hands, s.switchTo]);
+    const fsig = JSON.stringify(s.follow || null);
     if (sig === lastStateSig) {
       // Solo cambió el roster: actualizar presencia sin repintar todo el libro
       const rsig = JSON.stringify(s.roster || []);
@@ -1159,9 +1164,16 @@ function applyState(s) {
         lastRosterSig = rsig;
         try { renderRoster(s.roster || []); } catch (e) { /* presencia es cosmética */ }
       }
+      // Solo cambió follow: actualizar seguimiento sin repintar nada más
+      if (fsig !== lastFollowSig) {
+        lastFollowSig = fsig;
+        follow = s.follow || { active: false, pos: 0, ts: 0, name: '' };
+        try { renderFollow(); } catch (e) { /* seguimiento es cosmético */ }
+      }
       return;
     }
     lastStateSig = sig;
+    lastFollowSig = fsig;
     lastRosterSig = JSON.stringify(s.roster || []);
   } catch (e) { /* si falla el diff, renderizar normal */ }
   highlights = s.highlights || [];
@@ -1825,12 +1837,13 @@ async function eraseInRange(range) {
   if (!mine.length) return;
   clog('borrador: borrando ' + mine.length + ' marca(s)');
   const deletedIds = new Set();
-  for (const h of mine) {
-    try {
-      await apiPost(roomBase() + '/del', { kind: 'highlight', id: h.id });
-      deletedIds.add(h.id); // solo los que sí se borraron en el servidor
-    } catch (e) { /* seguir con las demás */ }
-  }
+  // v156: borrados en paralelo — antes en serie, con red caída un párrafo con
+  // N marcas propias tardaba N×15s sin feedback antes del toast de error.
+  const deleted = await Promise.all(mine.map(async (h) => {
+    try { await apiPost(roomBase() + '/del', { kind: 'highlight', id: h.id }); return h.id; }
+    catch (e) { return null; } // seguir con las demás
+  }));
+  for (const id of deleted) if (id) deletedIds.add(id);
   if (deletedIds.size) {
     highlights = highlights.filter((h) => !deletedIds.has(h.id));
     repaintAll();
