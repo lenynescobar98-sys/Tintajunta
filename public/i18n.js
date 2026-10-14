@@ -1318,11 +1318,17 @@ I18N.en.palSlate = 'Slate';
 
 I18N.es.contCta = 'Seguir leyendo →';
 I18N.es.buyLoadErr = 'No se pudo abrir el libro — revisa tu conexión e intenta de nuevo';
+I18N.es.openingBook = 'Abriendo libro…';
+I18N.es.bookNotFound = 'Ese libro ya no existe';
+I18N.es.bookTimeout = 'Tardó demasiado — revisa tu conexión e intenta de nuevo';
 I18N.es.themeLabel = ' Tema';
 
 
 I18N.en.contCta = 'Keep reading →';
 I18N.en.buyLoadErr = "Couldn't open the book — check your connection and try again";
+I18N.en.openingBook = 'Opening book…';
+I18N.en.bookNotFound = "That book doesn't exist anymore";
+I18N.en.bookTimeout = 'Taking too long — check your connection and try again';
 I18N.en.themeLabel = ' Theme';
 
 /* ================= motor i18n ================= */

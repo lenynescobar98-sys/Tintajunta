@@ -1126,6 +1126,37 @@ app.get('/api/books/:id', (req, res) => {
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
   res.json({ ok: true, book: b });
 });
+/* v162: carga paginada de libros — el libro completo (hasta ~3MB en un solo
+   JSON) no abre en conexiones débiles: el fetch muere y el lector nunca
+   carga. El cliente pide primero el meta (pocos KB) y luego los párrafos por
+   rangos pequeños. Ambos quedan bajo /api/books/, así que el middleware de
+   gzip de v144 los comprime automáticamente. */
+app.get('/api/books/:id/meta', (req, res) => {
+  const b = books.get(String(req.params.id || '').toUpperCase());
+  if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+  res.json({ ok: true, meta: {
+    id: b.id, title: b.title, author: b.author, language: b.language || 'es',
+    price: b.price || 0, ageRating: b.ageRating || 'all', classic: !!b.classic,
+    coverUrl: b.coverUrl || null, createdAt: b.createdAt,
+    chapters: (b.chapters || []).map((c, n) => ({
+      n, title: c.title || '',
+      paragraphs: (c.paragraphs || []).length,
+      images: c.images || [],
+    })),
+  }});
+});
+app.get('/api/books/:id/paras', (req, res) => {
+  const b = books.get(String(req.params.id || '').toUpperCase());
+  if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+  const ch = (b.chapters || [])[0];
+  if (!ch) return res.status(404).json({ ok: false, error: 'no-chapters' });
+  const all = ch.paragraphs || [];
+  let from = Math.max(0, parseInt(req.query.from, 10) || 0);
+  let count = Math.min(500, Math.max(1, parseInt(req.query.count, 10) || 120));
+  if (from >= all.length) return res.json({ ok: true, from, count: 0, total: all.length, paragraphs: [] });
+  const slice = all.slice(from, from + count);
+  res.json({ ok: true, from, count: slice.length, total: all.length, paragraphs: slice });
+});
 /* ------------------------ portadas de libros ------------------------ */
 /* Subir portada propia (creador). Solo imágenes, máx 2MB. */
 const COVERS_DIR = path.join(__dirname, 'public', 'covers');

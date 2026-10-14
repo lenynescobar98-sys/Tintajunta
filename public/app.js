@@ -301,6 +301,11 @@ function initJoin() {
 const CHUNK_FIRST = 60, CHUNK_NEXT = 120;
 let paraQueue = [], queuePos = 0, wordBase = 0, totalParas = 0;
 let chunkObs = null, chunkSentinel = null;
+/* v162: carga paginada — el total de párrafos viene del meta y la cola se
+   llena por rangos desde /api/books/:id/paras (el libro completo de ~3MB
+   no abre en señal débil). */
+let bookParaTotal = 0, bookParaLoading = null;
+const PARA_FIRST = 200, PARA_NEXT = 400;
 function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
   $('chapterTitle').textContent = chapterTitle;
   $('bookLine').textContent = bookLine || '';
@@ -371,10 +376,81 @@ function renderMoreParas(paras, count, skipRepaint) {
   if (!skipRepaint) repaintAll(); // aplica marcas/notas a lo recién pintado
   return added;
 }
+/* v162: trae el siguiente rango de párrafos del servidor y lo agrega a la
+   cola (rangos pequeños: ~40-90KB crudos, ~10-20KB con gzip). Con guardia
+   anti-doble-fetch y anti-libro-viejo (si el usuario salió del libro a
+   mitad de la descarga, el trozo se descarta). */
+async function fetchBookParas(id, from, count) {
+  let lastErr = null;
+  for (let intento = 0; intento < 2; intento++) {
+    try {
+      const r = await fetchTimeout('/api/books/' + encodeURIComponent(id) +
+        '/paras?from=' + from + '&count=' + count, 20000);
+      if (r.status === 404) throw 404;
+      if (!r.ok) throw r.status;
+      const d = await r.json();
+      if (!d.ok || !Array.isArray(d.paragraphs)) throw 'bad-paras';
+      return d;
+    } catch (e) {
+      lastErr = e;
+      if (e === 404) break;
+      if (intento === 0) await new Promise((res) => setTimeout(res, 1200));
+    }
+  }
+  throw lastErr;
+}
+async function loadMoreBookParas(count) {
+  if (!currentBook || !currentBook.id) return 0;
+  const from = paraQueue.length;
+  if (from >= bookParaTotal) return 0;
+  const id = currentBook.id;
+  /* v162: la ranura identifica libro+posición — un fetch viejo de otro libro
+     (o de otra posición) nunca se reutiliza ni se pisa con el nuevo. */
+  if (bookParaLoading && bookParaLoading.id === id && bookParaLoading.from === from)
+    return bookParaLoading.promise;
+  const n = Math.min(count || PARA_NEXT, bookParaTotal - from);
+  const slot = { id, from, promise: null };
+  bookParaLoading = slot;
+  slot.promise = (async () => {
+    try {
+      const d = await fetchBookParas(id, from, n);
+      if (!currentBook || currentBook.id !== id) return 0; // ya salió del libro
+      const ps = d.paragraphs || [];
+      for (const p of ps) {
+        paraQueue.push(p);
+        wordCount += String(p).split(/\s+/).length;
+      }
+      return ps.length;
+    } catch (e) {
+      return 0;
+    } finally {
+      if (bookParaLoading === slot) bookParaLoading = null;
+    }
+  })();
+  return slot.promise;
+}
+/* v162: pinta lo que haya en cola; si se acabó pero el servidor tiene más,
+   descarga el siguiente rango y sigue. */
+async function paintMoreOrFetch() {
+  const id = currentBook && currentBook.id;
+  let n = renderMoreParas(null, CHUNK_NEXT);
+  if (n === 0 && paraQueue.length < bookParaTotal) {
+    const added = await loadMoreBookParas();
+    if (added > 0 && queuePos < paraQueue.length) n = renderMoreParas(null, CHUNK_NEXT);
+    else if (added === 0 && currentBook && currentBook.id === id) toast(t('bookTimeout'));
+  }
+  if (chunkObs && queuePos >= paraQueue.length && paraQueue.length >= bookParaTotal) {
+    try { chunkObs.disconnect(); } catch (err) {}
+    chunkObs = null;
+  }
+}
 /* v146: al acercarse al final, agrega el siguiente trozo automáticamente */
 function setupChunkObserver() {
   const paras = $('paras');
-  if (!paras || queuePos >= paraQueue.length) return;
+  /* v162: idempotente — renderText y bootBook pueden llamarlo en secuencia */
+  if (chunkObs) { try { chunkObs.disconnect(); } catch (e) {} chunkObs = null; }
+  if (chunkSentinel) { try { chunkSentinel.remove(); } catch (e) {} chunkSentinel = null; }
+  if (!paras || (queuePos >= paraQueue.length && paraQueue.length >= bookParaTotal)) return;
   chunkSentinel = document.createElement('div');
   chunkSentinel.className = 'chunk-sentinel';
   chunkSentinel.setAttribute('aria-hidden', 'true');
@@ -382,20 +458,21 @@ function setupChunkObserver() {
   chunkObs = new IntersectionObserver((entries) => {
     for (const e of entries) {
       if (!e.isIntersecting) continue;
-      const n = renderMoreParas(null, CHUNK_NEXT);
-      if (n === 0 || queuePos >= paraQueue.length) {
-        try { chunkObs.disconnect(); } catch (err) {}
-        chunkObs = null;
-      }
+      paintMoreOrFetch(); // v162: trae más del servidor si la cola se vació
     }
   }, { rootMargin: '1200px' });
   chunkObs.observe(chunkSentinel);
 }
-/* v146: garantiza que el párrafo idx esté pintado (Modo Sígueme, pizarra) */
-function ensureParaRendered(idx) {
+/* v146: garantiza que el párrafo idx esté pintado (Modo Sígueme, pizarra) —
+   v162: ahora también descarga del servidor lo que falte. */
+async function ensureParaRendered(idx) {
   let guard = 0;
-  while (queuePos <= idx && queuePos < paraQueue.length && guard++ < 12) {
-    renderMoreParas(null, CHUNK_NEXT);
+  while (queuePos <= idx && guard++ < 60) {
+    if (queuePos < paraQueue.length) renderMoreParas(null, CHUNK_NEXT);
+    else if (paraQueue.length < bookParaTotal) {
+      const n = await loadMoreBookParas();
+      if (!n) break;
+    } else break;
   }
 }
 /* ------------------------------ pintado ------------------------------- */
@@ -1456,14 +1533,14 @@ function setRoomPara(idx) {
   idx = Math.max(0, Math.min(n - 1, idx));
   if (idx === roomPara.idx && roomPara.ts > 0) return;
   apiPost(roomBase() + '/para', { idx })
-    .then((s) => {
-      if (s && s.ok && s.para) { roomPara = s.para; lastParaTs = s.para.ts; focusPara(roomPara.idx, true); renderParaBar(); renderBoardMode(); }
+    .then(async (s) => {
+      if (s && s.ok && s.para) { roomPara = s.para; lastParaTs = s.para.ts; await focusPara(roomPara.idx, true); renderParaBar(); renderBoardMode(); }
     })
     .catch(() => toast(t('paraErr')));
 }
 /* Resalta el párrafo actual para todos y lo muestra en modo pizarra */
-function focusPara(idx, smooth) {
-  ensureParaRendered(idx); // v146: pintar hasta el párrafo antes de enfocarlo
+async function focusPara(idx, smooth) {
+  await ensureParaRendered(idx); // v146: pintar hasta el párrafo antes de enfocarlo (v162: descarga si falta)
   document.querySelectorAll('#paras p[data-para]').forEach((p) => {
     p.classList.toggle('para-focus', Number(p.dataset.para) === idx);
   });
@@ -1481,7 +1558,7 @@ function checkPara(s) {
   lastParaTs = pa.ts;
   roomPara = pa;
   renderParaBar();
-  focusPara(pa.idx, true);
+  focusPara(pa.idx, true).catch(() => {});
   if (!isTeacher) toast(t('paraTeacherMoved') + paraLabel().toLowerCase());
 }
 function initParaBar() {
@@ -1981,6 +2058,7 @@ function clearRoomText() {
   highlights = [];
   notes = [];
   paraQueue = []; queuePos = 0; wordBase = 0; totalParas = 0; wordCount = 0;
+  bookParaTotal = 0; bookParaLoading = null; // v162: sin libro no hay rangos pendientes
   const ct = $('chapterTitle'); if (ct) ct.textContent = '';
   const bl = $('bookLine'); if (bl) bl.textContent = '';
   const sn = $('sampleNote'); if (sn) sn.textContent = '';
@@ -1996,34 +2074,50 @@ async function boot() {
   if (!selInitDone) { selInitDone = true; initSelection(); }
   initNet();
 }
-/* Entrar a leer un libro: mismo lector, texto del libro, marcas propias del libro */
-async function bootBook(book, push) {
-  myRoom = book.id; // el id del libro ES su sala de marcas
-  currentBook = book;
-  readingType = book.classic ? 'classic' : 'book';
+/* Entrar a leer un libro: mismo lector, texto del libro, marcas propias del libro.
+   v162: recibe el META (pequeño); los párrafos llegan por rangos desde
+   /api/books/:id/paras para que el libro abra hasta en señal débil. */
+async function bootBook(meta, push) {
+  myRoom = meta.id; // el id del libro ES su sala de marcas
+  currentBook = meta;
+  readingType = meta.classic ? 'classic' : 'book';
   document.body.classList.add('book-room'); // v124: en la sala del libro el texto SIEMPRE se muestra (fix "libros vacíos")
   localStorage.setItem('tj_room', myRoom);
   try {
 
-    localStorage.setItem('tj_lastBook', book.id); // v94: último libro abierto
+    localStorage.setItem('tj_lastBook', meta.id); // v94: último libro abierto
   } catch (e) {}
   setViewState('room', push);
   updateRoomLabel();
-  const ch = book.chapters[0];
-  const kindNote = book.classic
+  const ch = (meta.chapters && meta.chapters[0]) || { title: '', paragraphs: 0, images: [] };
+  bookParaTotal = ch.paragraphs || 0; // v162: el N total viene del meta
+  const kindNote = meta.classic
     ? t('classicInfo')
-    : book.price > 0 ? t('bookBoughtInfo') : t('bookFreeInfo');
-  renderText(ch.paragraphs, ch.title, book.title + ' — ' + book.author, kindNote, ch.images || []);
+    : meta.price > 0 ? t('bookBoughtInfo') : t('bookFreeInfo');
+  // La cáscara del lector se pinta de inmediato (título, lista vacía); el
+  // texto llega por rangos y se agrega a la cola existente.
+  renderText([], ch.title, meta.title + ' — ' + meta.author, kindNote, ch.images || []);
+  totalParas = bookParaTotal;
   // v69: el nombre del creador es tocable (abre su perfil knowledge panel)
-  $('bookLine').innerHTML = `${esc(book.title)} — <span class="creator-link" data-creator="${esc(book.author)}">${esc(book.author)}</span>`;
-  clog('libro cargado: ' + book.title + ', palabras=' + wordCount);
+  $('bookLine').innerHTML = `${esc(meta.title)} — <span class="creator-link" data-creator="${esc(meta.author)}">${esc(meta.author)}</span>`;
   if (!selInitDone) { selInitDone = true; initSelection(); }
   $('library').classList.add('hidden');
   $('join').classList.add('hidden');
   window.scrollTo(0, 0);
   initNet();
-  restoreProgress(book.id);
-  renderCreatorStats(book);
+  // v162: primer rango de párrafos — con esto el libro ya se lee; el resto
+  // baja solo al hacer scroll (paintMoreOrFetch).
+  try {
+    const n = await loadMoreBookParas(PARA_FIRST);
+    if (n > 0) renderMoreParas(null, CHUNK_FIRST);
+    else toast(t('bookTimeout'));
+  } catch (e) {
+    toast(t('bookTimeout'));
+  }
+  setupChunkObserver();
+  clog('libro abierto: ' + meta.title + ' (meta+paginado), párrafos=' + bookParaTotal);
+  restoreProgress(meta.id);
+  renderCreatorStats(meta);
 }
 
 /* ---------------- navegación con History API ----------------
@@ -3019,12 +3113,17 @@ function restoreProgress(bookId) {
   const y = getProgress(bookId);
   if (y > 120) {
     // v146: pinta por trozos hasta alcanzar la posición guardada, cediendo
-    // el hilo entre trozos para no congelar la página
+    // el hilo entre trozos para no congelar la página.
+    // v162: si faltan párrafos, los descarga del servidor por rangos.
     (async () => {
       let guard = 0;
-      while (queuePos < paraQueue.length &&
-             document.documentElement.scrollHeight < y && guard++ < 60) {
-        renderMoreParas(null, CHUNK_NEXT);
+      while (document.documentElement.scrollHeight < y && guard++ < 200) {
+        if (queuePos < paraQueue.length) {
+          renderMoreParas(null, CHUNK_NEXT);
+        } else if (paraQueue.length < bookParaTotal) {
+          const n = await loadMoreBookParas();
+          if (!n) break;
+        } else break;
         await new Promise((r) => setTimeout(r, 0));
       }
       requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -3679,45 +3778,49 @@ async function openBook(id, push) {
   syncNameFromLib();
   if (openingBooks.has(id)) return;
   openingBooks.add(id);
-  let book;
+  toast(t('openingBook')); // v162: el tap nunca se ve muerto — el meta abre el libro al instante
+  /* v162: primero el META (pocos KB); el texto completo (~3MB) es lo que
+     mataba la apertura en señal débil. Errores distintos para diagnósticos
+     distintos: 404 = no existe, timeout = tardó demasiado, resto = red. */
+  let meta = null, failKind = 'net';
   try {
-    /* v157: un reintento con pausa ante fallos de red (señal débil) antes
-       de mostrar el error — el 404 es definitivo y no se reintenta. */
-    let lastErr = null;
-    for (let intento = 0; intento < 2 && !book; intento++) {
+    for (let intento = 0; intento < 2 && !meta; intento++) {
       try {
-        const r = await fetchTimeout('/api/books/' + encodeURIComponent(id), 30000); // v130: libros completos pesan más
+        const r = await fetchTimeout('/api/books/' + encodeURIComponent(id) + '/meta', 15000);
+        if (r.status === 404) { failKind = 'missing'; break; }
         if (!r.ok) throw r.status;
         const d = await r.json();
-        if (!d.ok) throw r.status;
-        book = d.book;
+        if (!d.ok || !d.meta) throw 'bad-meta';
+        meta = d.meta;
       } catch (e) {
-        lastErr = e;
-        if (e === 404) break;
+        if (failKind === 'missing') break;
+        failKind = (e && e.name === 'AbortError') ? 'timeout' : 'net';
         if (intento === 0) await new Promise((res) => setTimeout(res, 1200));
       }
     }
-    if (!book) throw lastErr;
+    if (!meta) throw failKind;
   } catch (e) {
-    if (e === 404) clearProgress(id); // v145: el libro ya no existe, no dejar tarjeta huérfana
-    toast(t('buyLoadErr')); return;
+    if (failKind === 'missing') { clearProgress(id); toast(t('bookNotFound')); } // v145: el libro ya no existe, no dejar tarjeta huérfana
+    else if (failKind === 'timeout') toast(t('bookTimeout'));
+    else toast(t('buyLoadErr'));
+    return;
   } finally {
     openingBooks.delete(id);
   }
   // Todos los libros son gratis: se abren directo
   // Advertencia de contenido adulto
-  if (book.ageRating === '18' && !sessionStorage.getItem('tj_age_ok_' + book.id)) {
-    $('ageText').textContent = t('buyRated18', { title: book.title });
+  if (meta.ageRating === '18' && !sessionStorage.getItem('tj_age_ok_' + meta.id)) {
+    $('ageText').textContent = t('buyRated18', { title: meta.title });
     $('agePop').classList.remove('hidden');
     $('ageCancel').onclick = () => $('agePop').classList.add('hidden');
     $('ageConfirm').onclick = () => {
-      sessionStorage.setItem('tj_age_ok_' + book.id, '1');
+      sessionStorage.setItem('tj_age_ok_' + meta.id, '1');
       $('agePop').classList.add('hidden');
-      bootBook(book, push);
+      bootBook(meta, push);
     };
     return;
   }
-  bootBook(book, push);
+  bootBook(meta, push);
 }
 
 /* Pagos reales con Stripe. En la versión real aquí va Stripe */
