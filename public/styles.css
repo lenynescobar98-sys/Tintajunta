@@ -2348,6 +2348,27 @@ body.in-room #boardView {
   color: #7a4d12; background: #ffe9b8; border: 1px solid #e3c37a;
   border-radius: 999px; padding: 4px 12px; white-space: nowrap;
 }
+/* Portada: palabra Melo con los dorados de la mascota (v161) */
+.melo-banner {
+  display: flex; justify-content: center;
+  padding: 14px 16px 6px;
+}
+.melo-banner a {
+  display: flex; align-items: center; gap: 12px;
+  text-decoration: none;
+}
+.melo-banner img {
+  width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+  box-shadow: 0 2px 10px rgba(122, 77, 18, .35);
+  border: 2px solid #f0c040;
+}
+.melo-word {
+  font-size: 40px; font-weight: 900; letter-spacing: 2px; line-height: 1;
+  background: linear-gradient(180deg, #ffe066 0%, #f7b731 45%, #dd8a0a 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+  filter: drop-shadow(0 1.5px 0 rgba(26, 26, 26, .9)) drop-shadow(0 3px 5px rgba(0, 0, 0, .20));
+}
 .ki-feature .ki-card {
   border-color: #e7d3a1;
   box-shadow: 0 4px 14px rgba(138, 90, 30, .10);
