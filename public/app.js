@@ -602,12 +602,35 @@ function renderParaPresence(roster) {
 }
 
 /* ------------------------------- avisos ------------------------------- */
+/* v157: avisos sin spam — el mismo mensaje no se apila: si ya está visible,
+   solo se renueva su temporizador. Nunca más de 3 avisos a la vez. */
+const toastTimers = new Map();
 function toast(msg) {
+  const box = $('toasts');
+  if (!box) return;
+  const prev = toastTimers.get(msg);
+  if (prev) {
+    clearTimeout(prev.timer);
+    prev.el.classList.remove('toast');
+    void prev.el.offsetWidth; // re-dispara la animación
+    prev.el.classList.add('toast');
+    prev.timer = setTimeout(() => { prev.el.remove(); toastTimers.delete(msg); }, 3200);
+    return;
+  }
   const t = document.createElement('div');
   t.className = 'toast';
   t.textContent = msg;
-  $('toasts').appendChild(t);
-  setTimeout(() => t.remove(), 3200);
+  box.appendChild(t);
+  while (box.children.length > 3) {
+    const old = box.firstElementChild;
+    if (!old) break;
+    const rec = toastTimers.get(old.textContent);
+    if (rec) clearTimeout(rec.timer);
+    toastTimers.delete(old.textContent);
+    old.remove();
+  }
+  const timer = setTimeout(() => { t.remove(); toastTimers.delete(msg); }, 3200);
+  toastTimers.set(msg, { el: t, timer });
 }
 
 /* ----------------------------- selección ------------------------------ */
@@ -3083,6 +3106,10 @@ function coverTile(b, opts) {
   };
   return tile;
 }
+/* v157: la animación de entrada de las tarjetas solo corre en la primera
+   pintura — en cada re-render (búsqueda, idioma, reseña) las tarjetas
+   aparecían/desaparecían con salto visible. */
+let rowsFirstPaint = true;
 function fillRow(elId, tiles, emptyMsg) {
   const row = document.getElementById(elId);
   if (!row) return;
@@ -3093,7 +3120,7 @@ function fillRow(elId, tiles, emptyMsg) {
   }
   tiles.forEach((t, i) => {
     // entrada escalonada: máx 8 tarjetas animadas para no saturar
-    if (i < 8 && !t.classList.contains('tile-enter')) {
+    if (rowsFirstPaint && i < 8 && !t.classList.contains('tile-enter')) {
       t.classList.add('tile-enter');
       t.style.animationDelay = Math.min(i * 45, 360) + 'ms';
     }
@@ -3184,6 +3211,7 @@ function renderRows() {
   const secC = document.getElementById('secClassics');
   if (secC) secC.style.display = cls.length ? '' : 'none';
   fillRow('rowClassics', cls.map((b) => coverTile(b, {})), '');
+  rowsFirstPaint = false; // v157: a partir de aquí, re-renders sin animación
   paintLevelBadges();
 }
 /* v153: marquesina eliminada a pedido del usuario (ralentizaba la página) */
@@ -3641,18 +3669,37 @@ function bookCard(b, isFeat) {
   return card;
 }
 
+/* v157: toques repetidos sobre el mismo libro mientras carga no lanzan
+   fetches paralelos (cada fallo era un aviso apilado). */
+const openingBooks = new Set();
 async function openBook(id, push) {
   syncNameFromLib();
+  if (openingBooks.has(id)) return;
+  openingBooks.add(id);
   let book;
   try {
-    const r = await fetchTimeout('/api/books/' + encodeURIComponent(id), 30000); // v130: libros completos pesan más
-    if (!r.ok) throw r.status;
-    const d = await r.json();
-    if (!d.ok) throw r.status;
-    book = d.book;
+    /* v157: un reintento con pausa ante fallos de red (señal débil) antes
+       de mostrar el error — el 404 es definitivo y no se reintenta. */
+    let lastErr = null;
+    for (let intento = 0; intento < 2 && !book; intento++) {
+      try {
+        const r = await fetchTimeout('/api/books/' + encodeURIComponent(id), 30000); // v130: libros completos pesan más
+        if (!r.ok) throw r.status;
+        const d = await r.json();
+        if (!d.ok) throw r.status;
+        book = d.book;
+      } catch (e) {
+        lastErr = e;
+        if (e === 404) break;
+        if (intento === 0) await new Promise((res) => setTimeout(res, 1200));
+      }
+    }
+    if (!book) throw lastErr;
   } catch (e) {
     if (e === 404) clearProgress(id); // v145: el libro ya no existe, no dejar tarjeta huérfana
     toast(t('buyLoadErr')); return;
+  } finally {
+    openingBooks.delete(id);
   }
   // Todos los libros son gratis: se abren directo
   // Advertencia de contenido adulto
