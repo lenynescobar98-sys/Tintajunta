@@ -1564,7 +1564,16 @@ app.post('/api/rooms/:room/board', (req, res) => {
   const text = String((req.body && req.body.text) || '').slice(0, 500);
   if (!text.trim()) return res.status(400).json({ ok: false, error: 'texto-vacio' });
   if (!Array.isArray(st.board)) st.board = [];
-  st.board.push({ text: text.trim(), name: u.name, color: verifiedColor, ts: Date.now() });
+  // v158: dedupe por cid — el outbox reintenta si se pierde la respuesta;
+  // sin esto, un reintento duplicaba el mensaje en la pizarra.
+  const cid = cidOf(req);
+  if (cid) {
+    const dup = st.board.find((e) => e.cid === cid && e.name === u.name);
+    if (dup) return res.json({ ok: true, board: st.board });
+  }
+  const entry = { text: text.trim(), name: u.name, color: verifiedColor, ts: Date.now() };
+  if (cid) entry.cid = cid;
+  st.board.push(entry);
   if (st.board.length > 20) st.board = st.board.slice(-20);
   save();
   res.json({ ok: true, board: st.board });

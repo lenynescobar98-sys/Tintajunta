@@ -138,7 +138,9 @@ body {
 .pencil-btn.on { border-color: var(--brand); background: rgba(30,58,95,.12); }
 #followBtn.on { border-color: #8a5a1e; background: rgba(138,90,30,.25); }
 .follow-pill {
-  position: fixed; top: 66px; left: 50%; transform: translateX(-50%); z-index: 80;
+  /* v158: abajo, no arriba — con top:66px se montaba sobre el encabezado
+     de la sala cuando este se envolvía a 2-3 filas en teléfonos angostos. */
+  position: fixed; top: auto; bottom: 116px; left: 50%; transform: translateX(-50%); z-index: 80;
   background: #1a1a1a; color: #ffffff; font-weight: 700; font-size: 14px;
   font-family: -apple-system, 'Segoe UI', sans-serif;
   padding: 8px 18px; border-radius: 999px; white-space: nowrap;
@@ -207,8 +209,7 @@ body {
 .hero-slide { position: relative; flex: 0 0 100%; min-height: 220px; display: flex; flex-direction: column; justify-content: flex-end; padding: 20px 18px; overflow: hidden; }
 .hero-shade { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, rgba(0,0,0,.72) 100%); pointer-events: none; }
 .hero-tag { position: relative; align-self: flex-start; font-size: 11px; font-weight: 800; letter-spacing: 1px; color: #fff; background: rgba(0,0,0,.5); border-radius: 8px; padding: 4px 10px; margin-bottom: 8px; font-family: -apple-system, 'Segoe UI', sans-serif; }
-.hero-emoji { position: relative; font-size: 64px; margin-bottom: 6px; filter: drop-shadow(0 4px 12px rgba(0,0,0,.4)); animation: heroFloat 3s ease-in-out infinite; }
-@keyframes heroFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.hero-emoji { position: relative; font-size: 64px; margin-bottom: 6px; filter: drop-shadow(0 4px 12px rgba(0,0,0,.4)); }
 .hero-title { position: relative; color: #fff; font-size: 22px; font-weight: 800; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
 .hero-sub { position: relative; color: rgba(255,255,255,.85); font-size: 14px; margin-top: 4px; font-family: -apple-system, 'Segoe UI', sans-serif; }
 .hero-cta { position: relative; align-self: flex-start; margin-top: 12px; }
@@ -398,7 +399,6 @@ body {
   display: flex; align-items: center; justify-content: center;
   margin: 30px 0 6px;
   box-shadow: 0 20px 60px rgba(0,0,0,.5);
-  animation: heroFloat 3.2s ease-in-out infinite;
   overflow: hidden;
 }
 .imm-visual span { font-size: 120px; filter: drop-shadow(0 8px 20px rgba(0,0,0,.4)); }
@@ -1321,7 +1321,9 @@ main.layout article.chapter.read-w-wide #chapterTitle { max-width: none; }
 
 /* Barra de progreso de lectura (patrón Kindle) */
 .read-progress {
-  position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 90;
+  /* v158: abajo, no arriba — en top:0 tapaba el encabezado fijo de la sala
+     y la insignia % se dibujaba sobre los botones de herramientas. */
+  position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: 4px; z-index: 90;
   background: rgba(0,0,0,.08); pointer-events: none;
 }
 .read-progress-fill {
@@ -1329,7 +1331,7 @@ main.layout article.chapter.read-w-wide #chapterTitle { max-width: none; }
   transition: width .3s ease; border-radius: 0 2px 2px 0;
 }
 .read-progress-pct {
-  position: fixed; top: 8px; right: 12px; font-size: 11px; font-weight: 700;
+  position: fixed; top: auto; bottom: 8px; right: 12px; font-size: 11px; font-weight: 700;
   color: var(--ink-soft); background: var(--paper); border: 1px solid var(--line);
   padding: 2px 8px; border-radius: 10px; pointer-events: none;
 }

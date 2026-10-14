@@ -398,12 +398,6 @@ function ensureParaRendered(idx) {
     renderMoreParas(null, CHUNK_NEXT);
   }
 }
-async function loadText() {
-  const r = await fetch('/api/text');
-  const data = await r.json();
-  renderText(data.paragraphs, data.chapterTitle, data.bookLine, data.sampleNote);
-}
-
 /* ------------------------------ pintado ------------------------------- */
 function paintHighlight(h) {
   const base = COLORS[h.color] || COLORS.azul;
@@ -1051,7 +1045,7 @@ const OUTBOX_MAX = 100;
    vaciar la cola según el kind derivado de la ruta. */
 const OUTBOX_KEY = 'tj_outbox';
 function outboxKindOf(path) {
-  const m = /\/api\/rooms\/[^/]+\/(highlight|note|chat|reaction)$/.exec(String(path || ''));
+  const m = /\/api\/rooms\/[^/]+\/(highlight|note|chat|reaction|board)$/.exec(String(path || ''));
   return m ? m[1] : '';
 }
 function persistOutbox() {
@@ -1099,6 +1093,13 @@ function outboxApplyFor(item) {
         if (chat.length > 50) chat = chat.slice(-50);
         chatSeen = chat.length;
         renderChat();
+      }
+    };
+    case 'board': return (s) => {
+      if (s && s.ok && Array.isArray(s.board)) {
+        const edit = $('boardEdit');
+        if (edit && edit.value.trim() === item.body.text) edit.value = ''; // no borrar un mensaje nuevo
+        board = s.board; renderBoard();
       }
     };
     case 'reaction': return () => { pollState(); };
@@ -1285,16 +1286,17 @@ function sendBoard() {
   if (!edit) return;
   const text = (edit.value || '').trim();
   if (!text) return;
-  apiPost(roomBase() + '/board', { text })
-    .then((s) => {
-      if (s && s.ok && Array.isArray(s.board)) {
-        edit.value = ''; // limpiar solo tras confirmar
-        board = s.board; renderBoard();
-      } else {
-        toast(t('boardErr')); // respuesta no válida: el texto se conserva
-      }
-    })
-    .catch(() => toast(t('boardNotSent'))); // fallo de red: el texto sigue ahí
+  // v158: si falla la red, el mensaje se encola y se envía solo al reconectar
+  // (como el chat y las marcas). El texto solo se borra tras confirmar.
+  netPost(roomBase() + '/board', { text }, (s) => {
+    if (s && s.ok && Array.isArray(s.board)) {
+      if (edit.value.trim() === text) edit.value = ''; // no borrar un mensaje nuevo
+      board = s.board; renderBoard();
+    }
+  }).then((r) => {
+    if (r.queued) toast(t('actQueued'));
+    else if (!r.ok) toast(t('boardErr')); // respuesta no válida: el texto se conserva
+  });
 }
 
 function initBoard() {
@@ -1597,6 +1599,9 @@ function renderChat() {
   if (!box) return;
   const unread = chat.length - chatSeen;
   $('chatCount').textContent = (chatTab !== 'chat' && unread > 0) ? `(${unread})` : '';
+  // v158: no arrastrar al final si el lector está viendo mensajes viejos —
+  // cada re-render del poll lo devolvía abajo aunque estuviera leyendo arriba.
+  const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
   if (!chat.length) {
     box.innerHTML = '<p class="chat-empty-board">' + t('chatEmpty') + '</p>';
     return;
@@ -1611,7 +1616,7 @@ function renderChat() {
       `<span class="chat-text" style="color:${ink}">${esc(m.text)}</span>`;
     box.appendChild(div);
   });
-  box.scrollTop = box.scrollHeight;
+  if (nearBottom) box.scrollTop = box.scrollHeight;
 }
 
 function setMarginTab(t) {
@@ -1882,7 +1887,8 @@ function initNet() {
   if (!netInitDone) {
     netInitDone = true;
     setInterval(() => { if (!document.hidden && currentView === 'room') pollState(); }, 2500); // novedades de los demás (pausado si la pestaña está oculta o fuera de la sala)
-    setInterval(() => { if (!document.hidden && currentView === 'room') apiPost(roomBase() + '/ping', {}).catch(() => {}); }, 15000); // presencia
+    // v158: se eliminó el ping de presencia de 15s — el latido de párrafo de
+    // 8s ya mantiene la presencia viva; era un POST redundante en señal débil.
     // v68: latido de párrafo visible (cada 8s) para la presencia viva 👁
     setInterval(() => {
       if (document.hidden || currentView !== 'room') return;
@@ -2747,8 +2753,15 @@ async function loadAdminFeedback() {
   ).join('');
   box.querySelectorAll('button[data-fb]').forEach((btn) => {
     btn.onclick = async () => {
-      const r2 = await post('/api/admin/feedback/' + encodeURIComponent(btn.dataset.id) + '/status',
-        { admin: displayName(), status: btn.dataset.fb });
+      // v158: antes usaba post(), que es local de showAdminPanel() y aquí no
+      // existe — pulsar "leído"/"resuelto" lanzaba ReferenceError.
+      let r2 = {};
+      try {
+        const rr = await fetch('/api/admin/feedback/' + encodeURIComponent(btn.dataset.id) + '/status',
+          { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin: displayName(), status: btn.dataset.fb }) });
+        r2 = await rr.json().catch(() => ({}));
+      } catch (e) {}
       toast(r2.ok ? t('admDone') : t('admFail'));
       if (r2.ok) loadAdminFeedback();
     };
@@ -3251,7 +3264,6 @@ function initPills() {
 }
 /* ---------- vista inmersiva a pantalla completa ---------- */
 let immCtaFn = null;
-let immOpenedAt = 0;
 function openImmersive(o) {
   // Guardia: nunca abrir sin contenido real (solo por toque directo del usuario)
   if (!o || (!o.title && !o.visual)) { clog('openImmersive bloqueado: sin contenido'); return; }
@@ -3271,8 +3283,6 @@ function openImmersive(o) {
     if (!tag) { tag = document.createElement('div'); tag.className = 'imm-tag'; $('immCta').after(tag); }
     tag.textContent = o.tag;
   } else if (tag) tag.remove();
-  heroPause();
-  immOpenedAt = Date.now();
   const im = $('immersive');
   im.classList.remove('hidden');
   im.removeAttribute('hidden');
@@ -3383,8 +3393,8 @@ function showImmersiveBook(b) {
   sb.style.display = '';
   sb.onclick = (e) => { e.stopPropagation(); shareBook(b); };
 }
-/* ---------- carrusel principal estilo Tubi (se mueve solo) ---------- */
-let heroIdx = 0, heroTimer = null, heroSlides = [], lastHeroRotate = 0;
+/* ---------- carrusel principal estilo Tubi (100% manual: sin auto-avance) ---------- */
+let heroIdx = 0, heroSlides = [], lastHeroRotate = 0;
 const isNewBook = (b) => (Date.now() - (b.createdAt || 0)) < 14 * 24 * 3600 * 1000;
 function heroSlideBook(b) {
   const bgDiv = b.coverUrl
@@ -3436,7 +3446,7 @@ function renderHero(featBooks) {
     heroSlides.push({ html: heroSlideBook(b), book: b });
   }
   paidAds.slice(0, 2).forEach((a) => heroSlides.push({ html: heroSlideAd(a, true), ad: a, adPaid: true }));
-  if (!heroSlides.length) { car.classList.add('hidden'); heroPause(); return; }
+  if (!heroSlides.length) { car.classList.add('hidden'); return; }
   car.classList.remove('hidden');
   track.innerHTML = heroSlides.map((s) => s.html).join('');
   dots.innerHTML = heroSlides.map((_, i) => `<span class="hero-dot${i === 0 ? ' on' : ''}" data-i="${i}"></span>`).join('');
@@ -3450,7 +3460,7 @@ function renderHero(featBooks) {
     sl.style.cursor = 'pointer';
     sl.addEventListener('click', () => {
       if (Date.now() - heroSwipedAt < 600) return; // después de deslizar
-      if (Date.now() - lastHeroRotate < 600) return; // justo después de rotar solo
+      if (Date.now() - lastHeroRotate < 600) return; // justo después de rotar
       const s = heroSlides[i];
       if (!s) return;
       if (s.book) showImmersiveBook(s.book);
@@ -3461,7 +3471,7 @@ function renderHero(featBooks) {
     d.onclick = () => heroGo(+d.dataset.i);
   });
   let sx = null;
-  track.ontouchstart = (e) => { sx = e.touches[0].clientX; heroPause(); };
+  track.ontouchstart = (e) => { sx = e.touches[0].clientX; };
   track.ontouchmove = (e) => {
     if (sx === null) return;
     const dx = e.touches[0].clientX - sx;
@@ -3481,12 +3491,6 @@ function heroGo(i) {
   document.querySelectorAll('#heroDots .hero-dot').forEach((d, j) =>
     d.classList.toggle('on', j === heroIdx));
 }
-function heroPlay() {
-  heroPause();
-  if (heroSlides.length < 2) return;
-  heroTimer = setInterval(() => heroGo(heroIdx + 1), 5000);
-}
-function heroPause() { if (heroTimer) { clearInterval(heroTimer); heroTimer = null; } }
 const popularity = (b) => (b.marks || 0) + (b.notes || 0) * 2;
 
 /* ---------------- Google AdSense ----------------
@@ -3572,7 +3576,7 @@ async function showLibrary(push) {
     window.__tjBooksReady = true; // v71: deep link ?libro=ID puede abrir
     if (pruneOrphanProgress()) renderContinueReading(); // v145: sin tarjetas huérfanas
     const feat = libBooksCache.filter((b) => b.featured);
-    renderHero(feat); // carrusel en movimiento: destacados + anuncios
+    renderHero(feat); // carrusel manual: destacados + anuncios
     lastFeat = feat;
     renderRows();
     renderAdSenseSlots(); // Google Ads: solo en la biblioteca, nunca en la sala
@@ -3588,7 +3592,6 @@ function renderHeroSkeleton() {
   const track = document.getElementById('heroTrack');
   const dots = document.getElementById('heroDots');
   if (!car || !track) return;
-  heroPause();
   car.classList.remove('hidden');
   track.innerHTML = '<div class="hero-slide hero-skeleton"><div class="hero-shade"></div><div class="skel-line" style="width:60%"></div><div class="skel-line" style="width:40%"></div></div>';
   if (dots) dots.innerHTML = '';
