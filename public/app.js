@@ -641,6 +641,13 @@ function selectionRect() {
   const r = sel.getRangeAt(0).getBoundingClientRect();
   return (r.width || r.height) ? r : null;
 }
+// v155: los popups nunca salen de la pantalla. El clamp viejo
+// Math.min(Math.max(8, cx), innerWidth - 360) daba valores NEGATIVOS en
+// móviles angostos (320px - 360 = -40) y con el teclado abierto el alto
+// (innerHeight - 280) también podía ser negativo: el popup quedaba fuera
+// de la pantalla, sin forma de cerrarlo. El ancho real es ≤340px (CSS).
+function clampPopupX(cx, w) { return Math.min(Math.max(8, cx), Math.max(8, window.innerWidth - w - 8)); }
+function clampPopupY(cy, h) { return Math.min(Math.max(8, cy), Math.max(8, window.innerHeight - h - 8)); }
 function showToolbar(range, anchorRect, mode) {
   pendingRange = range;
   const tb = $('toolbar');
@@ -660,8 +667,8 @@ function showToolbar(range, anchorRect, mode) {
     tb.dataset.hid = mine ? own.id : '';
   }
   tb.classList.remove('hidden');
-  const x = Math.min(Math.max(8, anchorRect.left + anchorRect.width / 2 - 120), window.innerWidth - 250);
-  const y = Math.max(8, anchorRect.top - 56); // .toolbar es position:fixed -> coordenadas de viewport
+  const x = clampPopupX(anchorRect.left + anchorRect.width / 2 - 120, 250);
+  const y = clampPopupY(anchorRect.top - 56, 60); // .toolbar es position:fixed -> coordenadas de viewport
   tb.style.left = x + 'px';
   tb.style.top = y + 'px';
 }
@@ -679,8 +686,8 @@ function showViewNote(n, anchorRect) {
   const d = n.ts ? new Date(n.ts) : null;
   $('vnoteDate').textContent = d ? d.toLocaleDateString('es', { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '';
   const p = $('viewNotePop');
-  p.style.left = Math.min(Math.max(8, anchorRect.left + anchorRect.width / 2 - 170), window.innerWidth - 360) + 'px';
-  p.style.top = Math.min(anchorRect.bottom + 8, window.innerHeight - 300) + 'px'; // .notepop es position:fixed
+  p.style.left = clampPopupX(anchorRect.left + anchorRect.width / 2 - 170, 340) + 'px';
+  p.style.top = clampPopupY(anchorRect.bottom + 8, 300) + 'px'; // .notepop es position:fixed
   p.classList.remove('hidden');
 }
 
@@ -928,8 +935,8 @@ function initSelection() {
     $('noteQuote').textContent = '“' + words.join(' ').slice(0, 120) + '”';
     const tb = $('toolbar').getBoundingClientRect();
     const np = $('notepop');
-    np.style.left = Math.min(Math.max(8, tb.left), window.innerWidth - 360) + 'px';
-    np.style.top = Math.min(tb.bottom + 8, window.innerHeight - 280) + 'px'; // .notepop es position:fixed
+    np.style.left = clampPopupX(tb.left, 340) + 'px';
+    np.style.top = clampPopupY(tb.bottom + 8, 280) + 'px'; // .notepop es position:fixed
     np.classList.remove('hidden');
     hideToolbar();
     setTimeout(() => $('noteText').focus(), 50);
@@ -2973,7 +2980,7 @@ function restoreProgress(bookId) {
       }
       requestAnimationFrame(() => requestAnimationFrame(() => {
         window.scrollTo(0, y);
-        toast('📖 Continuando donde quedaste');
+        toast(t('continueReading'));
       }));
     })();
   }
@@ -3240,9 +3247,13 @@ function closeImmersive() {
   const rb = $('immReport');
   if (rb) rb.style.display = 'none'; // el botón 🚩 solo es para libros
 }
-// Escape cierra la inmersiva o el drawer
+// Escape cierra la inmersiva o el drawer (v155: también los popups de la sala)
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
+  // Los popups de la sala van primero: son lo más cercano al foco del lector
+  if (!$('notepop').classList.contains('hidden')) { hideNotepop(); return; }
+  if (!$('viewNotePop').classList.contains('hidden')) { hideViewNote(); return; }
+  if (!$('toolbar').classList.contains('hidden')) { hideToolbar(); return; }
   if (!$('immersive').classList.contains('hidden')) closeImmersive();
   else if ($('drawer') && !$('drawer').classList.contains('hidden')) closeDrawer();
 });
