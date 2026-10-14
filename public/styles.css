@@ -1095,8 +1095,9 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 }
 #library .hero-cta-round:active { transform: scale(.95); box-shadow: 0 5px 16px rgba(0,0,0,.3); }
 #library .hero-tag {
-  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  /* v159: sin backdrop-filter (fantasmas al desplazar en Safari móvil) —
+     fondo oscuro sólido para seguir legible sobre la imagen del hero. */
+  background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.2);
   border-radius: 999px; padding: 6px 13px; font-size: 11px; letter-spacing: 1.2px;
 }
 #library .hero-dot { width: 8px; height: 12px; border-radius: 999px; transition: all .3s ease; }
@@ -1254,11 +1255,16 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 #library .credits-brand { font-size: 25px; font-weight: 800; letter-spacing: -.5px; }
 
 /* --- Micro-animaciones: todo lo tocable responde suave --- */
-#library .tile, #library .ad-card, #library .book-card, #library .mq-cover { will-change: transform; }
+/* v159: eliminado will-change en las tarjetas — docenas de capas compuestas
+   en Safari móvil causaban parpadeo/tearing al desplazar. La animación de
+   entrada (una sola vez, v157) sigue funcionando sin él. */
 #library .row-more { transition: transform .2s ease, color .2s ease; }
 #library .row-h2:hover .row-more { transform: translateX(4px); color: #8a5a1e; }
 #library .ads-tag { border-radius: 999px; padding: 4px 12px; font-size: 10px; letter-spacing: 1.2px; }
-#library .feat-badge { border-radius: 999px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+/* v159: sin backdrop-filter — docenas de insignias con blur sobre las
+   portadas dejaban copias fantasma al desplazar en Safari móvil
+   (la v157 solo lo quitó de las barras fijas). Fondo sólido en su lugar. */
+#library .feat-badge { border-radius: 999px; background: #1a1a1a; }
 #library .prog-badge { border-radius: 999px; box-shadow: 0 4px 14px rgba(138,90,30,.45); }
 #library .tile-report { border-radius: 8px; padding: 2px 6px; transition: opacity .2s ease, background .2s ease; }
 #library .tile-report:hover { background: rgba(255,255,255,.08); }
@@ -2009,13 +2015,22 @@ img { max-width: 100%; }
   padding-bottom: calc(20px + env(safe-area-inset-bottom));
 }
 .toasts { bottom: calc(18px + env(safe-area-inset-bottom)); }
+/* v159: la v158 movió la píldora abajo (top:auto; bottom:116px) pero esta
+   regla posterior la devolvía arriba (top:66px ganaba en la cascada) y
+   tapaba el encabezado de la sala. Se respeta la posición inferior,
+   con margen del área segura. */
 .follow-pill {
-  top: calc(66px + env(safe-area-inset-top));
+  top: auto;
+  bottom: calc(116px + env(safe-area-inset-bottom));
   max-width: 92vw; overflow: hidden; text-overflow: ellipsis;
 }
-.read-progress { top: env(safe-area-inset-top); }
+.read-progress { top: auto; bottom: env(safe-area-inset-bottom); }
+/* v159: la v158 pasó la barra y la insignia % abajo, pero estas dos reglas
+   las devolvían arriba (top ganaba a bottom en la cascada) y la insignia
+   se dibujaba sobre los botones de la sala. Abajo con área segura. */
 .read-progress-pct {
-  top: calc(8px + env(safe-area-inset-top));
+  top: auto;
+  bottom: calc(8px + env(safe-area-inset-bottom));
   right: calc(12px + env(safe-area-inset-right));
 }
 .board-mode {
