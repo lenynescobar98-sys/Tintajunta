@@ -3658,6 +3658,27 @@ function showImmersiveBook(b) {
 /* ---------- carrusel principal estilo Tubi (100% manual: sin auto-avance) ---------- */
 let heroIdx = 0, heroSlides = [], lastHeroRotate = 0;
 const isNewBook = (b) => (Date.now() - (b.createdAt || 0)) < 14 * 24 * 3600 * 1000;
+/* v165: elección editorial semanal — un libro NUEVO rota cada lunes en el hero.
+   "Los nuevos" = los 4 clásicos agregados más recientemente (la última tanda;
+   hoy: MSTRKY + Douglass + Da Vinci + Dostoievski). No desplaza destacados
+   pagados (van primero, intactos); ocupa el lugar del libro de respaldo
+   ("La tinta compartida") cuando no hay de pago. Determinista: misma semana
+   = mismo libro, sin temporizadores ni movimiento automático. */
+const HERO_WEEK_MS = 7 * 24 * 3600 * 1000;
+const HERO_MONDAY0 = Date.UTC(2026, 9, 12); // lunes 2026-10-12 00:00 UTC: las semanas cambian cada lunes
+const HERO_NEW_N = 4;
+function heroWeeklyPick() {
+  const lib = (typeof libBooksCache !== 'undefined' ? libBooksCache : [])
+    .filter((b) => b && b.classic && b.createdAt);
+  if (!lib.length) return null;
+  const byId = (a, b) => (a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
+  const pool = lib.slice()
+    .sort((a, b) => (b.createdAt - a.createdAt) || byId(a, b)) // más recientes primero
+    .slice(0, HERO_NEW_N)
+    .sort((a, b) => (a.createdAt - b.createdAt) || byId(a, b)); // el más antiguo de la tanda abre la rotación
+  const weekIdx = Math.floor((Date.now() - HERO_MONDAY0) / HERO_WEEK_MS);
+  return pool[((weekIdx % pool.length) + pool.length) % pool.length];
+}
 function heroSlideBook(b) {
   const bgDiv = b.coverUrl
     ? `<div class="hero-bg" style="background-image:url('${esc(b.coverUrl)}')"></div>`
@@ -3702,7 +3723,12 @@ function renderHero(featBooks) {
   if (!car || !track) return;
   heroSlides = [];
   (featBooks || []).slice(0, 3).forEach((b) => heroSlides.push({ html: heroSlideBook(b), book: b }));
-  // Garantía editorial: al menos un slide de LIBRO aunque no haya destacados
+  // v165: libro nuevo de la semana (rotación automática cada lunes) tras los destacados de pago
+  const weekly = heroWeeklyPick();
+  if (weekly && !heroSlides.some((s) => s.book && s.book.id === weekly.id)) {
+    heroSlides.push({ html: heroSlideBook(weekly), book: weekly });
+  }
+  // Garantía editorial: al menos un slide de LIBRO aunque no haya destacados ni novedades
   if (!heroSlides.length && libBooksCache.length) {
     const b = libBooksCache[0];
     heroSlides.push({ html: heroSlideBook(b), book: b });
