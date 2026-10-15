@@ -2738,18 +2738,20 @@ async function saveCreatorProfile(name) {
     if (fi && fi.files && fi.files[0]) {
       const fd = new FormData();
       fd.append('photo', fi.files[0]);
-      const rp = await fetch('/api/creators/' + encodeURIComponent(name) + '/photo', { method: 'POST', body: fd });
+      const rp = await fetchTimeout('/api/creators/' + encodeURIComponent(name) + '/photo', 30000, { method: 'POST', body: fd });
       const dp = await rp.json().catch(() => ({}));
       if (!dp.ok) throw new Error(dp.error || 'photo-failed');
     }
     // 2. Datos del perfil
-    const r = await fetch('/api/creators/' + encodeURIComponent(name) + '/profile', {
+    // v164: timeout anti-cuelgue (15s) + aviso honesto si falta login
+    const r = await fetchTimeout('/api/creators/' + encodeURIComponent(name) + '/profile', 15000, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         bio: $('kpBio').value, location: $('kpLoc').value,
         website: $('kpWeb').value, about: $('kpAbout').value, socials,
       }),
     });
+    if (needLogin(r)) { btn.disabled = false; btn.textContent = t('kpSaveBtn'); return; }
     const d = await r.json().catch(() => ({}));
     if (!d.ok) throw new Error(d.error || 'save-failed');
     toast(t('kpSaved'));
@@ -3065,9 +3067,10 @@ function initReviews() {
     syncNameFromLib();
     $('reviewSave').disabled = true;
     try {
-      const r = await fetch('/api/books/' + encodeURIComponent(reviewBookId) + '/reviews', {
+      // v164: timeout anti-cuelgue (15s) + cid para no duplicar la reseña ante reintento
+      const r = await fetchTimeout('/api/books/' + encodeURIComponent(reviewBookId) + '/reviews', 15000, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: myName, stars: reviewStars, comment: $('reviewComment').value.trim() }),
+        body: JSON.stringify({ name: myName, stars: reviewStars, comment: $('reviewComment').value.trim(), cid: makeCid() }),
       });
       const d = await r.json();
       if (!d.ok) throw 0;
@@ -3140,7 +3143,8 @@ function initReports() {
     }
     $('reportSave').disabled = true;
     try {
-      const r = await fetch('/api/books/' + encodeURIComponent(reportBookId) + '/report', {
+      // v164: timeout anti-cuelgue (15s); el servidor ya dedupea por reportero (409)
+      const r = await fetchTimeout('/api/books/' + encodeURIComponent(reportBookId) + '/report', 15000, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: myName, reason: reportReason, text: $('reportOther').value.trim() }),
       });
@@ -4098,10 +4102,12 @@ async function initCheckoutReturn() {
 }
 /* Finaliza un destacado al volver de Stripe */
 async function finalizeFeature(bookId, plan, author, sessionId) {
-  const r = await fetch('/api/books/' + encodeURIComponent(bookId) + '/feature', {
+  // v164: timeout anti-cuelgue (20s); claimPayment en el servidor ya evita doble cobro
+  const r = await fetchTimeout('/api/books/' + encodeURIComponent(bookId) + '/feature', 20000, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ plan, author, sessionId }),
   });
+  if (needLogin(r)) return; // 401: aviso honesto, sin doble toast
   const d = await r.json().catch(() => ({}));
   if (!d.ok) throw new Error(d.error || 'feature-failed');
   toast('⭐ ¡Tu libro está destacado en portada!');
@@ -4109,10 +4115,12 @@ async function finalizeFeature(bookId, plan, author, sessionId) {
 }
 /* Finaliza un anuncio pagado al volver de Stripe (sube la foto si se eligió una) */
 async function finalizeAd(params, sessionId) {
-  const r = await fetch('/api/ads', {
+  // v164: timeout anti-cuelgue (20s) + cid para no duplicar el anuncio ante reintento
+  const r = await fetchTimeout('/api/ads', 20000, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...params, sessionId }),
+    body: JSON.stringify({ ...params, sessionId, cid: makeCid() }),
   });
+  if (needLogin(r)) return; // 401: aviso honesto, sin doble toast
   const d = await r.json().catch(() => ({}));
   if (!d.ok) throw new Error(d.error || 'ad-failed');
   const adId = (d.ad && d.ad.id) || params.id;
@@ -4124,7 +4132,7 @@ async function finalizeAd(params, sessionId) {
       const fd = new FormData();
       fd.append('photo', blob, 'foto.jpg');
       fd.append('advertiser', params.advertiser);
-      await fetch('/api/ads/' + encodeURIComponent(adId) + '/photo', { method: 'POST', body: fd });
+      await fetchTimeout('/api/ads/' + encodeURIComponent(adId) + '/photo', 30000, { method: 'POST', body: fd });
     } catch (e) { /* la foto es opcional */ }
   }
   toast(params.id ? t('adRenewed') : t('adOk'));
@@ -4345,10 +4353,13 @@ function initLibrary() {
     }
     $('pubSave').disabled = true;
     try {
-      const r = await fetch('/api/books', {
+      // v164: timeout anti-cuelgue (20s) + cid para no duplicar ante reintento tras timeout
+      const pubCid = makeCid();
+      const r = await fetchTimeout('/api/books', 20000, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, author: myName, price, text, ageRating }),
+        body: JSON.stringify({ title, author: myName, price, text, ageRating, cid: pubCid }),
       });
+      if (needLogin(r)) { $('pubSave').disabled = false; return; }
       const d = await r.json().catch(() => ({}));
       if (!d.ok) {
         if (d.error === 'plagiarism') { toast(`⚠️ Este texto coincide ${d.score || 70}% con otro libro — debe ser original`); }
@@ -4361,7 +4372,7 @@ function initLibrary() {
         const fd = new FormData();
         fd.append('cover', coverFile);
         fd.append('author', myName);
-        const cr = await fetch('/api/books/' + encodeURIComponent(d.book.id) + '/cover', {
+        const cr = await fetchTimeout('/api/books/' + encodeURIComponent(d.book.id) + '/cover', 30000, {
           method: 'POST', body: fd,
         });
         const cd = await cr.json().catch(() => ({}));
@@ -4378,7 +4389,7 @@ function initLibrary() {
         }
         if (okImg) {
           fd2.append('author', myName);
-          const ir = await fetch('/api/books/' + encodeURIComponent(d.book.id) + '/images', { method: 'POST', body: fd2 });
+          const ir = await fetchTimeout('/api/books/' + encodeURIComponent(d.book.id) + '/images', 30000, { method: 'POST', body: fd2 });
           const id2 = await ir.json().catch(() => ({}));
           if (!id2.ok) toast('Libro publicado, pero algunas fotos no se pudieron subir');
         }
@@ -4653,10 +4664,12 @@ function initWriting() {
     if (!title || !text) { toast('Ponle título y texto'); return; }
     $('wrSave').disabled = true;
     try {
-      const r = await fetch('/api/writings', {
+      // v164: timeout anti-cuelgue (15s) + cid para no duplicar ante reintento tras timeout
+      const r = await fetchTimeout('/api/writings', 15000, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, text, author: myName }),
+        body: JSON.stringify({ title, text, author: myName, cid: makeCid() }),
       });
+      if (needLogin(r)) { $('wrSave').disabled = false; return; }
       const d = await r.json();
       if (!d.ok) throw 0;
       $('wrTitle').value = ''; $('wrText').value = '';

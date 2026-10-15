@@ -571,6 +571,15 @@ app.post('/api/books', requireLogin, (req, res) => {
   const title = String((req.body && req.body.title) || '').trim().slice(0, 120);
   const author = String((req.body && req.body.author) || '').trim().slice(0, 60) || 'Anónimo';
   const price = 0; // todos los libros son gratis — no se vende
+  // v164: idempotencia por cid — si el cliente reintenta tras un timeout, no se
+  // duplica el libro (antes el reintento caía en "plagiarism" bloqueado por su
+  // propio texto ya guardado). Va ANTES de la validación anti-plagio.
+  const cid = cidOf(req);
+  if (cid) {
+    const dup = [...books.values()].find((b) => b.cid === cid && b.author === author);
+    if (dup) return res.json({ ok: true, status: dup.status, duplicate: true,
+      book: { id: dup.id, title: dup.title, author: dup.author, price: dup.price } });
+  }
   if (price > 0 && price < MIN_BOOK_PRICE) return res.status(400).json({ ok: false, error: 'min-price', minPrice: MIN_BOOK_PRICE });
   const text = String((req.body && req.body.text) || '').trim();
   if (!title || !text) return res.status(400).json({ ok: false, error: 'bad-book' });
@@ -588,6 +597,7 @@ app.post('/api/books', requireLogin, (req, res) => {
   const book = { id, title, author, price, createdAt: Date.now(), sales: 0,
     status: 'pending', ageRating,
     chapters: [{ title: 'Capítulo 1', paragraphs }] };
+  if (cid) book.cid = cid; // v164: idempotencia ante reintentos del cliente
   books.set(id, book);
   wordsCache.delete(id); // la caché se reconstruye con el texto real
   saveBooks();
@@ -668,8 +678,15 @@ app.post('/api/books/:id/reviews', (req, res) => {
   if (stars < 1 || stars > 5) return res.status(400).json({ ok: false, error: 'bad-stars' });
   const name = cleanName(req.body && req.body.name) || 'Lector';
   const comment = String((req.body && req.body.comment) || '').trim().slice(0, 300);
+  // v164: idempotencia por cid — un reintento tras timeout no crea la reseña dos veces
+  const cid = cidOf(req);
+  if (cid) {
+    const dup = (reviews.get(bid) || []).find((x) => x.cid === cid);
+    if (dup) return res.json({ ok: true, review: dup, duplicate: true, ...reviewSummary(bid) });
+  }
   const r = { id: 'R' + Date.now().toString(36) + Math.floor(Math.random() * 999),
     bookId: bid, name, stars, comment, ts: Date.now() };
+  if (cid) r.cid = cid;
   if (!reviews.has(bid)) reviews.set(bid, []);
   reviews.get(bid).push(r);
   saveReviews();
@@ -1018,6 +1035,14 @@ app.post('/api/ads', requireLogin, async (req, res) => {
   if (!AD_BADGES.includes(badge)) return res.status(400).json({ ok: false, error: 'bad-badge' });
   const emoji = String(body.emoji || '');
   if (!AD_EMOJIS.includes(emoji)) return res.status(400).json({ ok: false, error: 'bad-emoji' });
+  // v164: idempotencia por cid — en el flujo simulado (sin paidId) un reintento
+  // tras timeout no crea el anuncio dos veces (la vía con pago ya la cubre claimPayment)
+  const cid = cidOf(req);
+  if (cid) {
+    const dup = [...ads.values()].find((a) => a.cid === cid && a.advertiser === advertiser);
+    if (dup) return res.json({ ok: true, renewed: false, duplicate: true,
+      ad: { id: dup.id, until: dup.until }, price: AD_PRICES[dup.plan] });
+  }
   // Pago real con Stripe (en TEST no se cobra dinero de verdad)
   let paidId = '';
   if (stripePay.isEnabled()) {
@@ -1060,6 +1085,7 @@ app.post('/api/ads', requireLogin, async (req, res) => {
   const nid = genAdId();
   const ad = { id: nid, name, emoji, badge, plan, advertiser, url,
     until: now + AD_MS[plan], createdAt: now };
+  if (cid) ad.cid = cid; // v164: idempotencia ante reintentos del cliente
   ads.set(nid, ad);
   saveAds();
   if (paidId) { const rec = completedPayments.get(paidId); if (rec) rec.adId = nid; }
@@ -1115,8 +1141,16 @@ app.post('/api/writings', requireLogin, (req, res) => {
   const text = String(body.text || '').trim().slice(0, 20000);
   const author = cleanName(body.author) || 'Anónimo';
   if (!title || !text) return res.status(400).json({ ok: false, error: 'bad-writing' });
+  // v164: idempotencia por cid — un reintento tras timeout no duplica el escrito
+  const cid = cidOf(req);
+  if (cid) {
+    const dup = [...writings.values()].find((w) => w.cid === cid && w.author === author);
+    if (dup) return res.json({ ok: true, duplicate: true,
+      writing: { id: dup.id, title: dup.title, author: dup.author, createdAt: dup.createdAt } });
+  }
   const id = genWritingId();
   const w = { id, title, text, author, createdAt: Date.now() };
+  if (cid) w.cid = cid;
   writings.set(id, w);
   saveWritings();
   res.json({ ok: true, writing: { id, title, author, createdAt: w.createdAt } });
