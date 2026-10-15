@@ -1051,6 +1051,9 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   padding: 12px 16px;
   box-shadow: 0 10px 36px rgba(0,0,0,.08);
 }
+/* v163: en la sala la barra de la biblioteca se oculta de verdad — en Safari
+   móvil el sticky dejaba un fantasma pintado sobre el encabezado de la sala. */
+body.in-room #imdbBar { display: none !important; }
 #library .imdb-logo {
   font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700;
   letter-spacing: -.5px; padding: 7px 13px; color: #1a1a1a; background: transparent;

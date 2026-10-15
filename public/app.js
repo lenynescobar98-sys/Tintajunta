@@ -333,7 +333,8 @@ function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
   paraQueue = paragraphs || [];
   queuePos = 0;
   wordBase = 0;
-  totalParas = paraQueue.length;
+  /* v163: el total NUNCA se adivina de la cola — lo pone bootBook desde el
+     meta y queda estable (antes brincaba "1 de 19" → "1 de 10"). */
   wordCount = 0;
   for (const t of paraQueue) wordCount += String(t).split(/\s+/).length; // total, sin DOM
   renderMoreParas(paras, CHUNK_FIRST, true);
@@ -376,11 +377,125 @@ function renderMoreParas(paras, count, skipRepaint) {
   if (!skipRepaint) repaintAll(); // aplica marcas/notas a lo recién pintado
   return added;
 }
+/* v163: caché offline-first en IndexedDB — la conexión se cae a cada rato;
+   lo ya descargado (meta + rangos de párrafos) se lee sin red. La caché es
+   best-effort: cualquier fallo de IDB se ignora en silencio y la app sigue
+   igual que antes. */
+const idbCache = (() => {
+  const DBN = 'tintajunta', VER = 1;
+  let dbp = null;
+  function openDb() {
+    if (dbp) return dbp;
+    dbp = new Promise((resolve, reject) => {
+      let req;
+      try { req = indexedDB.open(DBN, VER); }
+      catch (e) { reject(e); return; }
+      req.onupgradeneeded = (ev) => {
+        const d = ev.target.result;
+        if (!d.objectStoreNames.contains('meta')) d.createObjectStore('meta', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('paras')) d.createObjectStore('paras', { keyPath: 'key' });
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('idb-open'));
+    }).catch((e) => { dbp = null; throw e; });
+    return dbp;
+  }
+  function get(store, key) {
+    return openDb().then((d) => new Promise((resolve) => {
+      let done = false;
+      const fin = (v) => { if (!done) { done = true; resolve(v); } };
+      try {
+        const t = d.transaction(store, 'readonly');
+        const r = t.objectStore(store).get(key);
+        r.onsuccess = () => fin(r.result || null);
+        r.onerror = () => fin(null);
+        t.onerror = () => fin(null);
+      } catch (e) { fin(null); }
+    })).catch(() => null);
+  }
+  function put(store, val) {
+    return openDb().then((d) => new Promise((resolve) => {
+      let done = false;
+      const fin = (v) => { if (!done) { done = true; resolve(v); } };
+      try {
+        const t = d.transaction(store, 'readwrite');
+        t.objectStore(store).put(val);
+        t.oncomplete = () => fin(true);
+        t.onerror = () => fin(false);
+      } catch (e) { fin(false); }
+    })).catch(() => false);
+  }
+  function count(store) {
+    return openDb().then((d) => new Promise((resolve) => {
+      try {
+        const t = d.transaction(store, 'readonly');
+        const r = t.objectStore(store).count();
+        r.onsuccess = () => resolve(r.result || 0);
+        r.onerror = () => resolve(0);
+      } catch (e) { resolve(0); }
+    })).catch(() => 0);
+  }
+  function del(store, key) {
+    return openDb().then((d) => new Promise((resolve) => {
+      try {
+        const t = d.transaction(store, 'readwrite');
+        t.objectStore(store).delete(key);
+        t.oncomplete = () => resolve(true);
+        t.onerror = () => resolve(false);
+      } catch (e) { resolve(false); }
+    })).catch(() => false);
+  }
+  function oldestKeys(store, n) {
+    return openDb().then((d) => new Promise((resolve) => {
+      const out = [];
+      try {
+        const t = d.transaction(store, 'readonly');
+        const r = t.objectStore(store).openCursor();
+        r.onsuccess = (ev) => {
+          const c = ev.target.result;
+          if (c) { out.push({ key: c.key, ts: (c.value && c.value.ts) || 0 }); c.continue(); }
+          else { out.sort((a, b) => a.ts - b.ts); resolve(out.slice(0, n).map((x) => x.key)); }
+        };
+        r.onerror = () => resolve([]);
+      } catch (e) { resolve([]); }
+    })).catch(() => []);
+  }
+  let evicting = false;
+  async function evict() {
+    if (evicting) return;
+    evicting = true;
+    try {
+      const n = await count('paras');
+      if (n > 400) {
+        const keys = await oldestKeys('paras', n - 400);
+        for (const k of keys) await del('paras', k);
+      }
+      const nm = await count('meta');
+      if (nm > 60) {
+        const keys = await oldestKeys('meta', nm - 60);
+        for (const k of keys) await del('meta', k);
+      }
+    } catch (e) {}
+    evicting = false;
+  }
+  return { get, put, evict };
+})();
+function scheduleIdbEvict() {
+  try { setTimeout(() => { try { idbCache.evict(); } catch (e) {} }, 5000); } catch (e) {}
+}
 /* v162: trae el siguiente rango de párrafos del servidor y lo agrega a la
    cola (rangos pequeños: ~40-90KB crudos, ~10-20KB con gzip). Con guardia
    anti-doble-fetch y anti-libro-viejo (si el usuario salió del libro a
    mitad de la descarga, el trozo se descarta). */
 async function fetchBookParas(id, from, count) {
+  id = String(id || '').toUpperCase(); // v163: misma normalización que el servidor
+  const key = id + ':' + from + ':' + count;
+  /* v163: caché primero — si el rango ya se descargó, no toca la red */
+  try {
+    const hit = await idbCache.get('paras', key);
+    if (hit && Array.isArray(hit.paragraphs) && hit.paragraphs.length)
+      return { ok: true, from, count: hit.paragraphs.length, total: hit.total, paragraphs: hit.paragraphs, cached: true };
+  } catch (e) {}
   let lastErr = null;
   for (let intento = 0; intento < 2; intento++) {
     try {
@@ -390,6 +505,8 @@ async function fetchBookParas(id, from, count) {
       if (!r.ok) throw r.status;
       const d = await r.json();
       if (!d.ok || !Array.isArray(d.paragraphs)) throw 'bad-paras';
+      /* v163: escritura directa a caché */
+      try { idbCache.put('paras', { key, bookId: id, from, count, total: d.total, paragraphs: d.paragraphs, ts: Date.now() }); } catch (e) {}
       return d;
     } catch (e) {
       lastErr = e;
@@ -397,6 +514,12 @@ async function fetchBookParas(id, from, count) {
       if (intento === 0) await new Promise((res) => setTimeout(res, 1200));
     }
   }
+  /* v163: último recurso — otro intento paralelo pudo haberlo guardado */
+  try {
+    const hit2 = await idbCache.get('paras', key);
+    if (hit2 && Array.isArray(hit2.paragraphs) && hit2.paragraphs.length)
+      return { ok: true, from, count: hit2.paragraphs.length, total: hit2.total, paragraphs: hit2.paragraphs, cached: true };
+  } catch (e) {}
   throw lastErr;
 }
 async function loadMoreBookParas(count) {
@@ -412,22 +535,36 @@ async function loadMoreBookParas(count) {
   const slot = { id, from, promise: null };
   bookParaLoading = slot;
   slot.promise = (async () => {
-    try {
-      const d = await fetchBookParas(id, from, n);
-      if (!currentBook || currentBook.id !== id) return 0; // ya salió del libro
-      const ps = d.paragraphs || [];
-      for (const p of ps) {
-        paraQueue.push(p);
-        wordCount += String(p).split(/\s+/).length;
+    /* v163: reintentos automáticos con backoff (inmediato, 2s, 6s) — la
+       conexión se cae a cada rato; no se le pide al usuario que haga scroll
+       para reintentar. Silencioso: un solo aviso al final, y solo si de
+       verdad no hay nada que mostrar (la caché ya habría respondido). */
+    const delays = [0, 2000, 6000];
+    for (let a = 0; a < delays.length; a++) {
+      if (a > 0) {
+        await new Promise((res) => setTimeout(res, delays[a]));
+        if (!currentBook || currentBook.id !== id || bookParaLoading !== slot) return 0;
       }
-      return ps.length;
-    } catch (e) {
-      return 0;
-    } finally {
-      if (bookParaLoading === slot) bookParaLoading = null;
+      try {
+        const d = await fetchBookParas(id, from, n);
+        if (!currentBook || currentBook.id !== id) return 0;
+        if (bookParaLoading !== slot) return 0;
+        const ps = d.paragraphs || [];
+        for (const p of ps) {
+          paraQueue.push(p);
+          wordCount += String(p).split(/\s+/).length;
+        }
+        if (ps.length > 0 && !d.cached) scheduleIdbEvict();
+        return ps.length;
+      } catch (e) { /* siguiente intento */ }
     }
+    if (currentBook && currentBook.id === id && bookParaLoading === slot) toast(t('bookTimeout'));
+    return 0;
   })();
-  return slot.promise;
+  const p = slot.promise;
+  p.then(() => { if (bookParaLoading === slot) bookParaLoading = null; },
+        () => { if (bookParaLoading === slot) bookParaLoading = null; });
+  return p;
 }
 /* v162: pinta lo que haya en cola; si se acabó pero el servidor tiene más,
    descarga el siguiente rango y sigue. */
@@ -437,7 +574,8 @@ async function paintMoreOrFetch() {
   if (n === 0 && paraQueue.length < bookParaTotal) {
     const added = await loadMoreBookParas();
     if (added > 0 && queuePos < paraQueue.length) n = renderMoreParas(null, CHUNK_NEXT);
-    else if (added === 0 && currentBook && currentBook.id === id) toast(t('bookTimeout'));
+    /* v163: sin aviso aquí — loadMoreBookParas ya avisa una sola vez al final
+       de sus reintentos (antes se duplicaba el "Tardó demasiado"). */
   }
   if (chunkObs && queuePos >= paraQueue.length && paraQueue.length >= bookParaTotal) {
     try { chunkObs.disconnect(); } catch (err) {}
@@ -702,6 +840,16 @@ function toast(msg) {
   }
   const timer = setTimeout(() => { t.remove(); toastTimers.delete(msg); }, 3200);
   toastTimers.set(msg, { el: t, timer });
+}
+/* v163: quitar un aviso específico (ej. "Abriendo libro…" cuando el libro ya abrió) */
+function dismissToast(msg) {
+  try {
+    const rec = toastTimers.get(msg);
+    if (!rec) return;
+    clearTimeout(rec.timer);
+    toastTimers.delete(msg);
+    if (rec.el && rec.el.remove) rec.el.remove();
+  } catch (e) {}
 }
 
 /* ----------------------------- selección ------------------------------ */
@@ -1105,6 +1253,13 @@ function setOnline(on) {
     clearTimeout(offlineToastTimer);
     if (offlineSince && Date.now() - offlineSince >= 5000) toast(t('netBack'));
     offlineSince = 0;
+    /* v163: al recuperar la conexión, reintentar rangos de párrafos pendientes
+       sin esperar a que el usuario haga scroll */
+    try {
+      if (currentBook && currentBook.id && paraQueue.length < bookParaTotal && !bookParaLoading) {
+        setTimeout(() => { try { paintMoreOrFetch(); } catch (e) {} }, 800);
+      }
+    } catch (e) {}
   }
 }
 
@@ -1505,9 +1660,11 @@ function paraCount() {
   return document.querySelectorAll('#paras p[data-para]').length;
 }
 function paraLabel() {
-  const n = totalParas > 0 ? totalParas : paraCount(); // v146: N total aunque falte por pintar
-  const i = Math.min(roomPara.idx, Math.max(0, n - 1));
-  return n > 0 ? t('paraOf', { i: i + 1, n }) : t('paraDash');
+  /* v163: el total viene del meta y es estable; sin meta no se muestra
+     número (antes adivinaba con lo pintado y brincaba). */
+  if (!(totalParas > 0)) return t('paraDash');
+  const i = Math.min(roomPara.idx, totalParas - 1);
+  return t('paraOf', { i: i + 1, n: totalParas });
 }
 function renderParaBar() {
   const bar = $('paraBar');
@@ -1515,8 +1672,9 @@ function renderParaBar() {
   const show = currentView === 'room' && (isTeacher || roomPara.ts > 0);
   bar.classList.toggle('hidden', !show);
   if (!show) return;
-  const n = paraCount();
-  const i = Math.min(roomPara.idx, Math.max(0, n - 1));
+  /* v163: límites con el total del meta (estable), no con lo pintado */
+  const n = totalParas > 0 ? totalParas : 0;
+  const i = n > 0 ? Math.min(roomPara.idx, n - 1) : 0;
   $('paraLabel').textContent = paraLabel();
   const prev = $('paraPrev'), next = $('paraNext');
   if (isTeacher) {
@@ -1528,9 +1686,11 @@ function renderParaBar() {
 }
 function setRoomPara(idx) {
   if (!isTeacher) return;
-  if (idx >= queuePos && queuePos < paraQueue.length) renderMoreParas(null, CHUNK_NEXT); // v146: no frenar al avanzar
-  const n = paraCount();
+  /* v163: el límite es el total del meta (estable); lo que falte se descarga
+     solo vía ensureParaRendered en focusPara */
+  const n = totalParas > 0 ? totalParas : paraCount();
   idx = Math.max(0, Math.min(n - 1, idx));
+  if (idx >= queuePos && queuePos < paraQueue.length) renderMoreParas(null, CHUNK_NEXT); // v146: no frenar al avanzar
   if (idx === roomPara.idx && roomPara.ts > 0) return;
   apiPost(roomBase() + '/para', { idx })
     .then(async (s) => {
@@ -2110,10 +2270,9 @@ async function bootBook(meta, push) {
   try {
     const n = await loadMoreBookParas(PARA_FIRST);
     if (n > 0) renderMoreParas(null, CHUNK_FIRST);
-    else toast(t('bookTimeout'));
-  } catch (e) {
-    toast(t('bookTimeout'));
-  }
+    /* v163: sin aviso aquí — loadMoreBookParas avisa una sola vez al final */
+  } catch (e) {}
+  dismissToast(t('openingBook')); // v163: el libro abrió, fuera el aviso
   setupChunkObserver();
   clog('libro abierto: ' + meta.title + ' (meta+paginado), párrafos=' + bookParaTotal);
   restoreProgress(meta.id);
@@ -3778,28 +3937,43 @@ async function openBook(id, push) {
   syncNameFromLib();
   if (openingBooks.has(id)) return;
   openingBooks.add(id);
-  toast(t('openingBook')); // v162: el tap nunca se ve muerto — el meta abre el libro al instante
+  /* v163: el aviso solo si tarda — desde caché el libro abre al instante y
+     no necesita aviso (antes se apilaba con "Conexión recuperada", etc.). */
+  let openToastT = null;
+  try { openToastT = setTimeout(() => toast(t('openingBook')), 300); } catch (e) {}
+  const clearOpenToast = () => { try { if (openToastT) clearTimeout(openToastT); } catch (e) {} };
   /* v162: primero el META (pocos KB); el texto completo (~3MB) es lo que
      mataba la apertura en señal débil. Errores distintos para diagnósticos
      distintos: 404 = no existe, timeout = tardó demasiado, resto = red. */
   let meta = null, failKind = 'net';
+  const cacheId = String(id || '').toUpperCase(); // v163: clave de caché normalizada
   try {
-    for (let intento = 0; intento < 2 && !meta; intento++) {
-      try {
-        const r = await fetchTimeout('/api/books/' + encodeURIComponent(id) + '/meta', 15000);
-        if (r.status === 404) { failKind = 'missing'; break; }
-        if (!r.ok) throw r.status;
-        const d = await r.json();
-        if (!d.ok || !d.meta) throw 'bad-meta';
-        meta = d.meta;
-      } catch (e) {
-        if (failKind === 'missing') break;
-        failKind = (e && e.name === 'AbortError') ? 'timeout' : 'net';
-        if (intento === 0) await new Promise((res) => setTimeout(res, 1200));
+    /* v163: meta desde caché primero — sin red también abre */
+    try {
+      const cm = await idbCache.get('meta', cacheId);
+      if (cm && cm.meta) meta = cm.meta;
+    } catch (e) {}
+    if (!meta) {
+      for (let intento = 0; intento < 2 && !meta; intento++) {
+        try {
+          const r = await fetchTimeout('/api/books/' + encodeURIComponent(id) + '/meta', 15000);
+          if (r.status === 404) { failKind = 'missing'; break; }
+          if (!r.ok) throw r.status;
+          const d = await r.json();
+          if (!d.ok || !d.meta) throw 'bad-meta';
+          meta = d.meta;
+        } catch (e) {
+          if (failKind === 'missing') break;
+          failKind = (e && e.name === 'AbortError') ? 'timeout' : 'net';
+          if (intento === 0) await new Promise((res) => setTimeout(res, 1200));
+        }
       }
+      if (meta) { try { idbCache.put('meta', { id: cacheId, meta, ts: Date.now() }); } catch (e) {} }
     }
     if (!meta) throw failKind;
   } catch (e) {
+    clearOpenToast();
+    dismissToast(t('openingBook'));
     if (failKind === 'missing') { clearProgress(id); toast(t('bookNotFound')); } // v145: el libro ya no existe, no dejar tarjeta huérfana
     else if (failKind === 'timeout') toast(t('bookTimeout'));
     else toast(t('buyLoadErr'));
@@ -3807,9 +3981,11 @@ async function openBook(id, push) {
   } finally {
     openingBooks.delete(id);
   }
+  clearOpenToast();
   // Todos los libros son gratis: se abren directo
   // Advertencia de contenido adulto
   if (meta.ageRating === '18' && !sessionStorage.getItem('tj_age_ok_' + meta.id)) {
+    dismissToast(t('openingBook'));
     $('ageText').textContent = t('buyRated18', { title: meta.title });
     $('agePop').classList.remove('hidden');
     $('ageCancel').onclick = () => $('agePop').classList.add('hidden');
