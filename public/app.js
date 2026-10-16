@@ -478,7 +478,26 @@ const idbCache = (() => {
     } catch (e) {}
     evicting = false;
   }
-  return { get, put, evict };
+  /* v167: borra todos los rangos cacheados de un libro (por bookId). Se usa
+     cuando el contentHash del servidor cambió: el texto se actualizó y los
+     rangos viejos quedarían rancios para siempre. */
+  function delBook(store, bookId) {
+    return openDb().then((d) => new Promise((resolve) => {
+      try {
+        const t = d.transaction(store, 'readwrite');
+        const r = t.objectStore(store).openCursor();
+        r.onsuccess = (ev) => {
+          const c = ev.target.result;
+          if (c) {
+            if ((c.value || {}).bookId === bookId) { try { c.delete(); } catch (e) {} }
+            c.continue();
+          } else resolve(true);
+        };
+        r.onerror = () => resolve(false);
+      } catch (e) { resolve(false); }
+    })).catch(() => false);
+  }
+  return { get, put, del, evict, delBook };
 })();
 function scheduleIdbEvict() {
   try { setTimeout(() => { try { idbCache.evict(); } catch (e) {} }, 5000); } catch (e) {}
@@ -487,14 +506,27 @@ function scheduleIdbEvict() {
    cola (rangos pequeños: ~40-90KB crudos, ~10-20KB con gzip). Con guardia
    anti-doble-fetch y anti-libro-viejo (si el usuario salió del libro a
    mitad de la descarga, el trozo se descarta). */
+/* v167: huella del texto que estamos leyendo ahora (del meta en memoria).
+   Un rango cacheado con otra huella es de una versión vieja del libro y se
+   descarta — el servidor la actualiza cuando merge-books trae texto nuevo. */
+function rangeBookHash(id) {
+  return (currentBook && currentBook.id === id && currentBook.contentHash) || null;
+}
+function staleRangeHit(hit, id) {
+  const h = rangeBookHash(id);
+  return !!(h && hit && hit.contentHash && hit.contentHash !== h);
+}
 async function fetchBookParas(id, from, count) {
   id = String(id || '').toUpperCase(); // v163: misma normalización que el servidor
   const key = id + ':' + from + ':' + count;
+  const myHash = rangeBookHash(id);
   /* v163: caché primero — si el rango ya se descargó, no toca la red */
   try {
     const hit = await idbCache.get('paras', key);
-    if (hit && Array.isArray(hit.paragraphs) && hit.paragraphs.length)
-      return { ok: true, from, count: hit.paragraphs.length, total: hit.total, paragraphs: hit.paragraphs, cached: true };
+    if (hit && Array.isArray(hit.paragraphs) && hit.paragraphs.length) {
+      if (staleRangeHit(hit, id)) { try { idbCache.del('paras', key); } catch (e) {} } // v167: versión vieja, rancio
+      else return { ok: true, from, count: hit.paragraphs.length, total: hit.total, paragraphs: hit.paragraphs, cached: true };
+    }
   } catch (e) {}
   let lastErr = null;
   for (let intento = 0; intento < 2; intento++) {
@@ -505,8 +537,9 @@ async function fetchBookParas(id, from, count) {
       if (!r.ok) throw r.status;
       const d = await r.json();
       if (!d.ok || !Array.isArray(d.paragraphs)) throw 'bad-paras';
-      /* v163: escritura directa a caché */
-      try { idbCache.put('paras', { key, bookId: id, from, count, total: d.total, paragraphs: d.paragraphs, ts: Date.now() }); } catch (e) {}
+      /* v163: escritura directa a caché. v167: se guarda la huella del texto
+         para invalidar el rango si el libro se actualiza en el servidor. */
+      try { idbCache.put('paras', { key, bookId: id, from, count, total: d.total, paragraphs: d.paragraphs, contentHash: myHash, ts: Date.now() }); } catch (e) {}
       return d;
     } catch (e) {
       lastErr = e;
@@ -517,8 +550,10 @@ async function fetchBookParas(id, from, count) {
   /* v163: último recurso — otro intento paralelo pudo haberlo guardado */
   try {
     const hit2 = await idbCache.get('paras', key);
-    if (hit2 && Array.isArray(hit2.paragraphs) && hit2.paragraphs.length)
-      return { ok: true, from, count: hit2.paragraphs.length, total: hit2.total, paragraphs: hit2.paragraphs, cached: true };
+    if (hit2 && Array.isArray(hit2.paragraphs) && hit2.paragraphs.length) {
+      if (staleRangeHit(hit2, id)) { try { idbCache.del('paras', key); } catch (e) {} } // v167: versión vieja
+      else return { ok: true, from, count: hit2.paragraphs.length, total: hit2.total, paragraphs: hit2.paragraphs, cached: true };
+    }
   } catch (e) {}
   throw lastErr;
 }
@@ -3290,8 +3325,14 @@ function restoreProgress(bookId) {
         await new Promise((r) => setTimeout(r, 0));
       }
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        window.scrollTo(0, y);
-        toast(t('continueReading'));
+        /* v167: avisar solo si de verdad se llegó a la posición guardada. Si la
+           descarga falló a mitad (loadMoreBookParas devolvió 0), scrollTo sería
+           un no-op silencioso y el aviso mentiría — el 'Tardó demasiado' del
+           intento ya avisó con honestidad. */
+        if (document.documentElement.scrollHeight >= y) {
+          window.scrollTo(0, y);
+          toast(t('continueReading'));
+        }
       }));
     })();
   }
@@ -3963,7 +4004,11 @@ function bookCard(b, isFeat) {
 /* v157: toques repetidos sobre el mismo libro mientras carga no lanzan
    fetches paralelos (cada fallo era un aviso apilado). */
 const openingBooks = new Set();
+let openBookSeq = 0; // v167: número de secuencia — la última apertura pedida gana
 async function openBook(id, push) {
+  const mySeq = ++openBookSeq; // v167: si el usuario toca otro libro mientras
+  // este carga (señal débil: el meta tarda 15s+reintento), la apertura vieja
+  // se retira en silencio en vez de pisar el libro que sí se pidió al final.
   syncNameFromLib();
   if (openingBooks.has(id)) return;
   openingBooks.add(id);
@@ -3999,11 +4044,18 @@ async function openBook(id, push) {
         }
       }
       if (meta) { try { idbCache.put('meta', { id: cacheId, meta, ts: Date.now() }); } catch (e) {} }
+    } else {
+      /* v167: el meta vino de caché — revalidar la huella en segundo plano.
+         Sin esto, un texto actualizado en el servidor (merge-books) nunca
+         llegaría a quien ya abrió el libro una vez: "si hubo caché, la red
+         ni se toca" era verdad también para el meta fresco. */
+      revalidateBookMeta(cacheId, meta);
     }
     if (!meta) throw failKind;
   } catch (e) {
     clearOpenToast();
     dismissToast(t('openingBook'));
+    if (mySeq !== openBookSeq) return; // v167: apertura vieja, silencio
     if (failKind === 'missing') { clearProgress(id); toast(t('bookNotFound')); } // v145: el libro ya no existe, no dejar tarjeta huérfana
     else if (failKind === 'timeout') toast(t('bookTimeout'));
     else toast(t('buyLoadErr'));
@@ -4012,6 +4064,7 @@ async function openBook(id, push) {
     openingBooks.delete(id);
   }
   clearOpenToast();
+  if (mySeq !== openBookSeq) return; // v167: otra apertura tomó el control
   // Todos los libros son gratis: se abren directo
   // Advertencia de contenido adulto
   if (meta.ageRating === '18' && !sessionStorage.getItem('tj_age_ok_' + meta.id)) {
@@ -4020,13 +4073,34 @@ async function openBook(id, push) {
     $('agePop').classList.remove('hidden');
     $('ageCancel').onclick = () => $('agePop').classList.add('hidden');
     $('ageConfirm').onclick = () => {
-      sessionStorage.setItem('tj_age_ok_' + meta.id, '1');
       $('agePop').classList.add('hidden');
+      if (mySeq !== openBookSeq) return; // v167: la confirmación tardía no pisa
+      sessionStorage.setItem('tj_age_ok_' + meta.id, '1');
       bootBook(meta, push);
     };
     return;
   }
   bootBook(meta, push);
+}
+/* v167: revalidación silenciosa del meta cuando se abrió desde caché.
+   Compara contentHash con el servidor; si el texto cambió, purga los rangos
+   cacheados y avisa para reabrir (no se recarga a mitad de lectura: la vista
+   actual sigue intacta, nada se pierde). Sin red falla en silencio. */
+async function revalidateBookMeta(cacheId, cachedMeta) {
+  try {
+    const r = await fetchTimeout('/api/books/' + encodeURIComponent(cacheId) + '/meta', 8000);
+    if (!r.ok) return;
+    const d = await r.json();
+    const fresh = d && d.ok && d.meta;
+    if (!fresh) return;
+    if (fresh.contentHash && cachedMeta.contentHash && fresh.contentHash !== cachedMeta.contentHash) {
+      try { await idbCache.delBook('paras', cacheId); } catch (e) {}
+      try { await idbCache.put('meta', { id: cacheId, meta: fresh, ts: Date.now() }); } catch (e) {}
+      if (currentBook && currentBook.id === cacheId) toast(t('bookUpdated'));
+    } else if (fresh.contentHash && !cachedMeta.contentHash) {
+      try { await idbCache.put('meta', { id: cacheId, meta: fresh, ts: Date.now() }); } catch (e) {}
+    }
+  } catch (e) { /* sin red: la caché sigue valiendo, sin aviso */ }
 }
 
 /* Pagos reales con Stripe. En la versión real aquí va Stripe */

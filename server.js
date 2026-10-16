@@ -1172,6 +1172,7 @@ app.get('/api/books/:id/meta', (req, res) => {
     id: b.id, title: b.title, author: b.author, language: b.language || 'es',
     price: b.price || 0, ageRating: b.ageRating || 'all', classic: !!b.classic,
     coverUrl: b.coverUrl || null, createdAt: b.createdAt,
+    contentHash: contentHash(b), // v167: huella del texto (invalida la caché offline si cambia)
     chapters: (b.chapters || []).map((c, n) => ({
       n, title: c.title || '',
       paragraphs: (c.paragraphs || []).length,
@@ -1179,6 +1180,31 @@ app.get('/api/books/:id/meta', (req, res) => {
     })),
   }});
 });
+/* v167: huella del contenido de un libro (FNV-1a sobre títulos + textos).
+   La caché offline del cliente (IndexedDB) necesita saber si el texto cambió
+   en el servidor: scripts/merge-books.js actualiza los clásicos desde el repo
+   en cada arranque, y sin huella el cliente leería el texto viejo para
+   siempre. Se calcula una vez por arranque y por libro (~24ms en el libro
+   más grande: 18.608 párrafos) y se memoiza — los datos no cambian durante
+   un arranque porque la fusión corre antes de levantar el servidor. */
+const contentHashCache = new Map();
+function contentHash(b) {
+  const id = b && b.id;
+  if (!id) return '0';
+  if (contentHashCache.has(id)) return contentHashCache.get(id);
+  let h = 0x811c9dc5;
+  const mix = (s) => {
+    s = String(s == null ? '' : s);
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  };
+  for (const c of (b.chapters || [])) {
+    mix(c.title); mix('|'); mix((c.paragraphs || []).length); mix('|');
+    for (const p of (c.paragraphs || [])) { mix(p); mix('\n'); }
+  }
+  const out = h.toString(36);
+  contentHashCache.set(id, out);
+  return out;
+}
 app.get('/api/books/:id/paras', (req, res) => {
   const b = books.get(String(req.params.id || '').toUpperCase());
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
