@@ -1696,6 +1696,10 @@ main.layout article.chapter .paras p {
   background: #faf8f3; border: 1px solid #e8e0cf; border-radius: 10px;
 }
 .para-label { font-weight: 700; font-size: 14px; color: #8a5a1e; letter-spacing: .3px; }
+/* v168: pulso en la barra de párrafo cuando el profesor lo mueve — la info
+   ya vive en la barra, así el toast se limita a 1 cada 6s sin perder aviso */
+.para-bar.flash { background: #fff3d6; transition: background .25s ease; }
+@media (prefers-reduced-motion: reduce) { .para-bar.flash { background: #faf8f3; transition: none; } }
 /* 📄 Paginación inferior: Anterior / Siguiente — siempre visible al final de la lectura */
 .page-nav { display: flex; gap: 12px; margin: 24px 0 12px; }
 .page-nav-btn {

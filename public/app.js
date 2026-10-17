@@ -306,6 +306,11 @@ let chunkObs = null, chunkSentinel = null;
    no abre en señal débil). */
 let bookParaTotal = 0, bookParaLoading = null;
 const PARA_FIRST = 200, PARA_NEXT = 400;
+/* v168: cooldown tras fallo total de rangos — con la red muerta, cada
+   movimiento al pie del libro re-disparaba el ciclo completo de reintentos
+   (0s/2s/6s) + otro aviso "Tardó demasiado". 30s de pausa tras el fallo. */
+let bookParaFailAt = 0;
+const BOOKPARA_COOLDOWN = 30000;
 function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
   $('chapterTitle').textContent = chapterTitle;
   $('bookLine').textContent = bookLine || '';
@@ -593,7 +598,10 @@ async function loadMoreBookParas(count) {
         return ps.length;
       } catch (e) { /* siguiente intento */ }
     }
-    if (currentBook && currentBook.id === id && bookParaLoading === slot) toast(t('bookTimeout'));
+    if (currentBook && currentBook.id === id && bookParaLoading === slot) {
+      bookParaFailAt = Date.now(); // v168: enfriar el sentinel tras el fallo total
+      toast(t('bookTimeout'));
+    }
     return 0;
   })();
   const p = slot.promise;
@@ -631,6 +639,9 @@ function setupChunkObserver() {
   chunkObs = new IntersectionObserver((entries) => {
     for (const e of entries) {
       if (!e.isIntersecting) continue;
+      /* v168: cooldown tras fallo total — no re-disparar el ciclo de
+         reintentos en cada movimiento al pie del libro con la red muerta */
+      if (Date.now() - bookParaFailAt < BOOKPARA_COOLDOWN) continue;
       paintMoreOrFetch(); // v162: trae más del servidor si la cola se vació
     }
   }, { rootMargin: '1200px' });
@@ -639,6 +650,9 @@ function setupChunkObserver() {
 /* v146: garantiza que el párrafo idx esté pintado (Modo Sígueme, pizarra) —
    v162: ahora también descarga del servidor lo que falte. */
 async function ensureParaRendered(idx) {
+  /* v168: respetar el cooldown tras fallo total — el modo Sígueme puede
+     llamar esto en cada movimiento del profesor con la red muerta */
+  if (Date.now() - bookParaFailAt < BOOKPARA_COOLDOWN) return;
   let guard = 0;
   while (queuePos <= idx && guard++ < 60) {
     if (queuePos < paraQueue.length) renderMoreParas(null, CHUNK_NEXT);
@@ -1058,6 +1072,10 @@ function initSelection() {
     setTimeout(() => { suppressSel = false; }, 150);
   }
   let noteTimer = null, justLongPressedAt = 0, justMarkedAt = 0;
+  /* v168: anti-doble-toque — dos toques discretos (~300ms) en la misma palabra
+     sin marcar publicaban dos subrayados idénticos (el segundo no ve la marca
+     del primero porque aún no se pintó). Se recuerda el último toque-marca. */
+  let lastTapMark = { i: -1, at: 0 };
   parasEl.addEventListener('touchstart', (e) => {
     if (!pencilMode) return; // lápiz apagado: solo lectura
     if (e.touches.length !== 1) { cancelMarking(); return; }
@@ -1187,6 +1205,10 @@ function initSelection() {
       }
     }
     // Tocar palabra suelta: marcarla al instante
+    // v168: si se tocó la misma palabra hace <1.2s, es doble-toque accidental —
+    // el primer toque ya publicó la marca (aún sin pintar). No duplicar.
+    if (i === lastTapMark.i && Date.now() - lastTapMark.at < 1200) return;
+    lastTapMark = { i, at: Date.now() };
     postHighlight({ start: i, end: i });
   });
 
@@ -1290,6 +1312,7 @@ function setOnline(on) {
     offlineSince = 0;
     /* v163: al recuperar la conexión, reintentar rangos de párrafos pendientes
        sin esperar a que el usuario haga scroll */
+    bookParaFailAt = 0; // v168: volvió la red — se acabó el cooldown del sentinel
     try {
       if (currentBook && currentBook.id && paraQueue.length < bookParaTotal && !bookParaLoading) {
         setTimeout(() => { try { paintMoreOrFetch(); } catch (e) {} }, 800);
@@ -1690,6 +1713,11 @@ function initFollow() {
    Regla permanente: cada quien escribe con SU color; el profesor SIEMPRE negro. */
 let roomPara = { idx: 0, ts: 0 };
 let lastParaTs = 0;
+/* v168: el aviso "el profesor movió el párrafo" se limita a 1 cada 6s — el
+   profesor puede pasar 20 párrafos seguidos y cada toast era distinto
+   ("párrafo 3 de 40", "párrafo 4 de 40"…), así que la deduplicación de
+   toasts nunca los colapsaba. La barra ya muestra el dato en pantalla. */
+let lastParaToastAt = 0;
 
 function paraCount() {
   return document.querySelectorAll('#paras p[data-para]').length;
@@ -1754,7 +1782,20 @@ function checkPara(s) {
   roomPara = pa;
   renderParaBar();
   focusPara(pa.idx, true).catch(() => {});
-  if (!isTeacher) toast(t('paraTeacherMoved') + paraLabel().toLowerCase());
+  if (!isTeacher) {
+    /* v168: toast limitado a 1 cada 6s + pulso visual en la barra (que ya
+       muestra "párrafo X de Y" de forma permanente) */
+    const now = Date.now();
+    if (now - lastParaToastAt >= 6000) {
+      lastParaToastAt = now;
+      toast(t('paraTeacherMoved') + paraLabel().toLowerCase());
+    }
+    const bar = $('paraBar');
+    if (bar) {
+      bar.classList.remove('flash'); void bar.offsetWidth; bar.classList.add('flash');
+      setTimeout(() => { try { bar.classList.remove('flash'); } catch (e) {} }, 700);
+    }
+  }
 }
 function initParaBar() {
   const prev = $('paraPrev'), next = $('paraNext');
@@ -2254,6 +2295,7 @@ function clearRoomText() {
   notes = [];
   paraQueue = []; queuePos = 0; wordBase = 0; totalParas = 0; wordCount = 0;
   bookParaTotal = 0; bookParaLoading = null; // v162: sin libro no hay rangos pendientes
+  bookParaFailAt = 0; // v168: sin libro no hay cooldown de rangos
   const ct = $('chapterTitle'); if (ct) ct.textContent = '';
   const bl = $('bookLine'); if (bl) bl.textContent = '';
   const sn = $('sampleNote'); if (sn) sn.textContent = '';
@@ -2286,6 +2328,7 @@ async function bootBook(meta, push) {
   updateRoomLabel();
   const ch = (meta.chapters && meta.chapters[0]) || { title: '', paragraphs: 0, images: [] };
   bookParaTotal = ch.paragraphs || 0; // v162: el N total viene del meta
+  bookParaFailAt = 0; // v168: libro nuevo — sin cooldown heredado del anterior
   const kindNote = meta.classic
     ? t('classicInfo')
     : meta.price > 0 ? t('bookBoughtInfo') : t('bookFreeInfo');
