@@ -1910,6 +1910,9 @@ let chatSeen = 0;
 function renderChat() {
   const box = $('chatBox');
   if (!box) return;
+  /* v169: si estás viendo la pestaña del chat, los mensajes que llegan por el
+     poll ya los viste — no deben contar como "no leídos" al cambiar de pestaña */
+  if (chatTab === 'chat') chatSeen = chat.length;
   const unread = chat.length - chatSeen;
   $('chatCount').textContent = (chatTab !== 'chat' && unread > 0) ? `(${unread})` : '';
   // v158: no arrastrar al final si el lector está viendo mensajes viejos —
@@ -2250,10 +2253,15 @@ function joinRoom() {
           try { localStorage.setItem('tj_teacher', '1'); } catch (e) {}
         }
       }
+      /* v169: sincronizar en silencio el párrafo del profesor ANTES de
+         applyState — en carga fresca lastParaTs=0 y un para guardado de una
+         sesión anterior disparaba toast + auto-scroll por un movimiento
+         pasado. La barra sigue mostrando dónde está el profesor; el toast
+         solo salta por movimientos nuevos mientras estás dentro. */
+      if (s.para && s.para.ts) { lastParaTs = s.para.ts; roomPara = s.para; }
       applyState(s);
       setOnline(true);
-      clog('red: dentro de ' + myRoom);
-    })
+      clog('red: dentro de ' + myRoom);    })
     .catch(() => { setOnline(false); toast(t('enterErr')); });
   pollState();
 }
@@ -2403,6 +2411,9 @@ function exitRoom() {
     localStorage.removeItem('tj_lastBook');
   } catch (e) {}
   hideUndoPill(); // la pila de deshacer no sobrevive el cambio de sala
+  /* v169: resetear la referencia del párrafo del profesor al salir — cada
+     entrada a una sala parte de cero y solo los movimientos nuevos avisan */
+  lastParaTs = 0; roomPara = { idx: 0, ts: 0 };
   toast(t('exitedRoom'));
   showLibrary(true);
 }
@@ -3712,7 +3723,10 @@ function showImmersiveBook(b) {
     onCta: () => { closeImmersive(); openBook(b.id); },
   });
   const ir = $('immRating');
-  if (ir) ir.onclick = (e) => { e.stopPropagation(); closeImmersive(); showReportModal(b.id, b.title); };
+  /* v169: las estrellas de la inmersiva abrían "Reportar libro" (copy-paste);
+     como en las tarjetas, deben abrir las reseñas. El 🚩 discreto sigue
+     siendo la vía para reportar. */
+  if (ir) ir.onclick = (e) => { e.stopPropagation(); closeImmersive(); showReviewModal(b.id, b.title); };
   // Botón discreto 🚩 Reportar en la inmersiva
   const imm = $('immersive');
   let rb = $('immReport');
