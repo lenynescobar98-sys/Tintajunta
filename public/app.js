@@ -2323,6 +2323,12 @@ async function boot() {
    v162: recibe el META (pequeño); los párrafos llegan por rangos desde
    /api/books/:id/paras para que el libro abra hasta en señal débil. */
 async function bootBook(meta, push) {
+  // v172: la píldora "↩ Deshacer" no sobrevive al cambiar de libro — su id
+  // pertenece a la sala anterior y el /del iría a la sala nueva (404 que se
+  // "confirmaba" en silencio sin borrar la marca vieja). Tampoco se hereda
+  // el párrafo del profesor del libro anterior.
+  hideUndoPill();
+  lastParaTs = 0; roomPara = { idx: 0, ts: 0 };
   myRoom = meta.id; // el id del libro ES su sala de marcas
   currentBook = meta;
   readingType = meta.classic ? 'classic' : 'book';
@@ -3140,7 +3146,9 @@ async function loadBookReviews(bookId) {
   const list = $('reviewList');
   list.innerHTML = '<p class="join-note">' + t('revLoading') + '</p>';
   try {
-    const r = await fetch('/api/books/' + encodeURIComponent(bookId) + '/reviews', { cache: 'no-store' });
+    // v172: timeout anti-cuelgue (10s) — antes el "Cargando reseñas…" quedaba
+    // indefinido si la red se colgaba; el POST del mismo modal ya lo tiene (v164)
+    const r = await fetchTimeout('/api/books/' + encodeURIComponent(bookId) + '/reviews', 10000, { cache: 'no-store' });
     const d = await r.json();
     if (!d.ok) throw 0;
     if (!d.reviews.length) { list.innerHTML = '<p class="join-note">' + t('revEmpty') + '</p>'; return; }
