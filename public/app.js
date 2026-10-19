@@ -3834,8 +3834,11 @@ function renderHero(featBooks) {
   paidAds.slice(0, 2).forEach((a) => heroSlides.push({ html: heroSlideAd(a, true), ad: a, adPaid: true }));
   if (!heroSlides.length) { car.classList.add('hidden'); return; }
   car.classList.remove('hidden');
+  // v171: conserva la posición manual del usuario entre re-renders (nada se mueve solo):
+  // si deslizó al slide 2 y una acción re-renderiza, el hero ya no salta al slide 0.
+  heroIdx = Math.max(0, Math.min(heroIdx, heroSlides.length - 1));
   track.innerHTML = heroSlides.map((s) => s.html).join('');
-  dots.innerHTML = heroSlides.map((_, i) => `<span class="hero-dot${i === 0 ? ' on' : ''}" data-i="${i}"></span>`).join('');
+  dots.innerHTML = heroSlides.map((_, i) => `<span class="hero-dot${i === heroIdx ? ' on' : ''}" data-i="${i}"></span>`).join('');
   track.querySelectorAll('.hero-cta-round').forEach((btn) => {
     btn.onclick = (e) => { e.stopPropagation(); openBook(btn.dataset.book); };
   });
@@ -3864,8 +3867,9 @@ function renderHero(featBooks) {
     if (Math.abs(dx) > 50) { heroSwipedAt = Date.now(); heroGo(heroIdx + (dx < 0 ? 1 : -1)); sx = null; }
   };
   track.ontouchend = () => { sx = null; };
-  heroIdx = 0;
-  heroGo(0);
+  // Posición conservada en heroIdx (ver arriba); sincroniza el track sin disparar
+  // la guardia anti-rotación de toques (esto no es una rotación, es un re-render).
+  track.style.transform = `translateX(-${heroIdx * 100}%)`;
   paintLevelBadges(car);
 }
 function heroGo(i) {
