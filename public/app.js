@@ -820,10 +820,12 @@ function currentParaIdx() {
   });
   return best;
 }
+/* v173: firma del mapeo párrafo→nombres para no reconstruir los chips si
+   nadie cambió de párrafo (renderRoster corre cada pocos segundos). */
+let lastParaEyesSig = '';
 function renderParaPresence(roster) {
   const paras = $('paras');
   if (!paras || currentView !== 'room') return;
-  paras.querySelectorAll('.para-eyes').forEach((e) => e.remove());
   const mine = (myName || '').trim();
   const byPara = {};
   (roster || []).forEach((p) => {
@@ -832,17 +834,26 @@ function renderParaPresence(roster) {
     if (!Number.isFinite(pi) || pi < 0) return;
     (byPara[pi] = byPara[pi] || []).push(p);
   });
-  Object.keys(byPara).forEach((pi) => {
-    const pEl = paras.querySelector(`p[data-para="${pi}"]`);
-    if (!pEl) return;
-    const chip = document.createElement('span');
-    chip.className = 'para-eyes';
-    const names = byPara[pi].slice(0, 3).map((p) =>
-      `<span class="dot" style="background:${COLORS[p.color] || COLORS.azul}"></span>${esc(p.name)}`).join('');
-    const more = byPara[pi].length > 3 ? ` <b>+${byPara[pi].length - 3}</b>` : '';
-    chip.innerHTML = t('presenceHere', { names, more });
-    pEl.appendChild(chip);
-  });
+  /* Firma insensible al orden (el roster del servidor no garantiza orden
+     estable). Si no cambió nada, se salta el remove/re-add del DOM; el aviso
+     de "leyendo juntos" sigue evaluándose siempre. */
+  const sig = JSON.stringify(Object.keys(byPara).sort().map((pi) =>
+    [pi, byPara[pi].map((p) => p.name).sort()]));
+  if (sig !== lastParaEyesSig) {
+    lastParaEyesSig = sig;
+    paras.querySelectorAll('.para-eyes').forEach((e) => e.remove());
+    Object.keys(byPara).forEach((pi) => {
+      const pEl = paras.querySelector(`p[data-para="${pi}"]`);
+      if (!pEl) return;
+      const chip = document.createElement('span');
+      chip.className = 'para-eyes';
+      const names = byPara[pi].slice(0, 3).map((p) =>
+        `<span class="dot" style="background:${COLORS[p.color] || COLORS.azul}"></span>${esc(p.name)}`).join('');
+      const more = byPara[pi].length > 3 ? ` <b>+${byPara[pi].length - 3}</b>` : '';
+      chip.innerHTML = t('presenceHere', { names, more });
+      pEl.appendChild(chip);
+    });
+  }
   // v68: aviso sutil cuando alguien llega a TU párrafo (máx 1 cada 45s, sin spam)
   try {
     const myPara = String(currentParaIdx());
@@ -1381,7 +1392,10 @@ function outboxApplyFor(item) {
       if (s.msg && !chat.some((m) => m.id === s.msg.id)) {
         chat.push(s.msg);
         if (chat.length > 50) chat = chat.slice(-50);
-        chatSeen = chat.length;
+        /* v173: solo MI mensaje cuenta como visto (+1). Antes chatSeen =
+           chat.length borraba el (N) de mensajes ajenos no leídos cuando el
+           mensaje encolado se enviaba al reconectar. */
+        chatSeen += 1;
         renderChat();
       }
     };
@@ -1955,7 +1969,9 @@ function sendChat() {
     if (s.msg && !chat.some((m) => m.id === s.msg.id)) {
       chat.push(s.msg);
       if (chat.length > 50) chat = chat.slice(-50);
-      chatSeen = chat.length;
+      /* v173: +1 en vez de =chat.length (ver outboxApplyFor): no borrar el
+         (N) de mensajes ajenos que llegaron mientras tanto. */
+      chatSeen += 1;
       renderChat();
     }
   }).then((r) => {
@@ -2231,6 +2247,10 @@ function initNet() {
 /* Entrar (o re-entrar) a la sala actual: registra presencia y trae el estado */
 function joinRoom() {
   boardSeenMaxTs = 0; // v87: resetear animación de pizarra al entrar a la sala
+  /* v173: el contador de chat visto es por sala — sin esto heredaba el valor
+     de la sala anterior y los mensajes previos nunca mostraban su (N). */
+  chatSeen = 0;
+  lastParaEyesSig = ''; // v173: forzar re-pintado de presencia en la sala nueva
   apiPost(roomBase() + '/join', {})
     .then((s) => {
       if (s.room) { myRoom = s.room; updateRoomLabel(); }
@@ -2674,6 +2694,7 @@ function langBadge(b) {
   return `<span class="lang-badge" title="${{en:'English',fr:'Français',pt:'Português',ar:'العربية',it:'Italiano',de:'Deutsch',ru:'Русский',ja:'日本語',el:'Ελληνικά'}[l] || l}">${LANG_FLAGS[l] || '🌍'}</span>`;
 }
 let libQuery = '';
+let searchDeb = null; // v173: debounce del filtro de búsqueda
 let libBooksCache = []; // todos los libros cargados (para filtrar sin recargar)
 /* ------------------------------ ⭐ reseñas ------------------------------
    Estrellas + contador en tarjetas e inmersiva; modal para dejar reseña. */
@@ -4736,7 +4757,11 @@ function initImdbBar() {
   };
   $('searchInput').addEventListener('input', (e) => {
     libQuery = e.target.value;
-    renderRows();
+    /* v173: debounce 200ms — renderRows() reconstruye todas las filas por
+       tecla; en teléfonos débiles el tecleo se trababa. El render final es
+       idéntico. */
+    clearTimeout(searchDeb);
+    searchDeb = setTimeout(renderRows, 200);
   });
   $('enterBtn').onclick = goLiveRoom;
   // Campo discreto "Código de sala" en el footer — única entrada pública a la sala privada
