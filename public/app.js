@@ -789,7 +789,13 @@ function renderNotes() {
    Rediseño: avatares con la inicial en el color de tinta de cada uno;
    el profesor lleva aro dorado + 🎓. paintHandsInRoster sigue usando
    .chip / data-name, sin cambios de lógica. */
+/* v174: el último roster se conserva — renderRoster() se llama sin argumento al
+   levantar/bajar la mano; antes eso lanzaba TypeError (roster undefined) y el
+   catch mostraba un error falso con punto rojo aunque el servidor había aceptado. */
+let lastRoster = [];
 function renderRoster(roster) {
+  roster = roster || lastRoster || [];
+  lastRoster = roster;
   const box = $('presence');
   box.innerHTML = `<span class="roster-count">${t('rosterInRoom', { n: roster.length })}</span>` +
     roster.map((p) => {
@@ -1346,7 +1352,7 @@ const OUTBOX_MAX = 100;
    vaciar la cola según el kind derivado de la ruta. */
 const OUTBOX_KEY = 'tj_outbox';
 function outboxKindOf(path) {
-  const m = /\/api\/rooms\/[^/]+\/(highlight|note|chat|reaction|board)$/.exec(String(path || ''));
+  const m = /\/api\/rooms\/[^/]+\/(highlight|note|chat|reaction|board|del)$/.exec(String(path || '')); // v174: +del
   return m ? m[1] : '';
 }
 function persistOutbox() {
@@ -1407,6 +1413,13 @@ function outboxApplyFor(item) {
       }
     };
     case 'reaction': return () => { pollState(); };
+    case 'del': return () => { // v174: borrado de subrayado encolado que se envía tras recarga
+      const id = item.body && item.body.id;
+      if (id && item.body.kind === 'highlight') {
+        highlights = highlights.filter((h) => h.id !== id);
+        repaintAll();
+      }
+    };
     default: return null;
   }
 }
@@ -1433,7 +1446,10 @@ async function netPost(path, body, apply) {
     }
     return { ok: false, queued: false };
   } catch (e) {
-    if (isHttpErr(e)) return { ok: false, queued: false }; // 4xx/5xx: no reintentar
+    /* v174: exponer el código HTTP — el /del trata 404 como "ya borrado"
+       (éxito), así que los callers necesitan el status. */
+    const hm = String((e && e.message) || '').match(/^http (\d+)/);
+    if (hm) return { ok: false, queued: false, status: Number(hm[1]) }; // 4xx/5xx: no reintentar
     if (outbox.length >= OUTBOX_MAX) outbox.shift(); // tope de seguridad
     outbox.push({ path, body: payload, apply, room: myRoom, kind: outboxKindOf(path) });
     persistOutbox(); // v151: la cola sobrevive a recargas
@@ -2097,7 +2113,7 @@ function paintHandsInRoster() {
         chip.onclick = () => {
           apiPost(roomBase() + '/hand', { up: false, target: name })
             .then((s) => { if (s && s.ok) { hands = s.hands || []; renderHands(); renderRoster(); } })
-            .catch(() => toast('No se pudo bajar la mano'));
+            .catch(() => toast(t('handLowerErr'))); // v174: clave i18n (antes español hardcodeado)
         };
       }
     }
@@ -2159,23 +2175,19 @@ function renderUndoPill() {
   el.textContent = undoStack.length > 1 ? t('undoMarkN', { n: undoStack.length }) : t('undoMark');
   el.onclick = async () => {
     const id = undoStack.pop();
-    try {
-      await apiPost(roomBase() + '/del', { kind: 'highlight', id });
-      if (navigator.vibrate) navigator.vibrate(15);
+    /* v174: el borrado va por netPost (outbox) — en señal débil se encola y
+       se reintenta solo al reconectar en vez de perderse con un toast de error.
+       404 = el id ya se borró con otro gesto: confirmar en silencio. */
+    const r = await netPost(roomBase() + '/del', { kind: 'highlight', id }, null);
+    if (navigator.vibrate) navigator.vibrate(15);
+    if (r.ok || r.queued || r.status === 404) {
       highlights = highlights.filter((h) => h.id !== id);
       repaintAll();
-      toast(t('markUndone'));
-    } catch (e) {
-      if (String(e && e.message).indexOf('404') >= 0) {
-        // el id ya se borró con otro gesto: confirmar localmente y descartar
-        highlights = highlights.filter((h) => h.id !== id);
-        repaintAll();
-      } else {
-        // fallo de red: NO borrar localmente; devolver el intento a la pila
-        // para poder reintentarlo y avisar con honestidad
-        undoStack.push(id);
-        toast(t('hlDelErr'));
-      }
+      toast(r.queued ? t('actQueued') : t('markUndone'));
+    } else {
+      // error HTTP real (no reintentable): devolver el intento a la pila y avisar
+      undoStack.push(id);
+      toast(t('hlDelErr'));
     }
     renderUndoPill(); // sigue ofreciendo deshacer las anteriores, o se oculta
   };
@@ -2196,22 +2208,29 @@ async function eraseInRange(range) {
     h.name === displayName() && h.start <= range.end && h.end >= range.start);
   if (!mine.length) return;
   clog('borrador: borrando ' + mine.length + ' marca(s)');
-  const deletedIds = new Set();
+  const deletedIds = new Set(), queuedIds = new Set();
   // v156: borrados en paralelo — antes en serie, con red caída un párrafo con
   // N marcas propias tardaba N×15s sin feedback antes del toast de error.
-  const deleted = await Promise.all(mine.map(async (h) => {
-    try { await apiPost(roomBase() + '/del', { kind: 'highlight', id: h.id }); return h.id; }
-    catch (e) { return null; } // seguir con las demás
+  // v174: por netPost — en señal débil se encolan y se reintentan solos al
+  // reconectar en vez de perderse; 404 = ya borrado (éxito).
+  await Promise.all(mine.map(async (h) => {
+    const r = await netPost(roomBase() + '/del', { kind: 'highlight', id: h.id }, null);
+    if (r.queued) queuedIds.add(h.id);
+    else if (r.ok || r.status === 404) deletedIds.add(h.id);
   }));
-  for (const id of deleted) if (id) deletedIds.add(id);
-  if (deletedIds.size) {
-    highlights = highlights.filter((h) => !deletedIds.has(h.id));
+  const doneIds = new Set([...deletedIds, ...queuedIds]);
+  if (doneIds.size) {
+    highlights = highlights.filter((h) => !doneIds.has(h.id));
     repaintAll();
-    toast(deletedIds.size === 1 ? 'Subrayado borrado' : deletedIds.size + ' subrayados borrados');
+    toast(queuedIds.size ? t('actQueued')
+      : doneIds.size === 1 ? t('markErased') : t('marksErased', { n: doneIds.size }));
   } else {
     toast(t('hlDelErr'));
   }
-  setOnline(deletedIds.size > 0);
+  // netPost ya gestionó el estado de red de cada intento; aquí solo el
+  // veredicto final: verde si algo se confirmó, rojo solo si todo quedó encolado
+  if (deletedIds.size) setOnline(true);
+  else if (queuedIds.size) setOnline(false);
 }
 
 let netInitDone = false;
@@ -2349,6 +2368,7 @@ async function bootBook(meta, push) {
   // el párrafo del profesor del libro anterior.
   hideUndoPill();
   lastParaTs = 0; roomPara = { idx: 0, ts: 0 };
+  lastRoster = []; // v174: la presencia no se hereda del libro anterior
   myRoom = meta.id; // el id del libro ES su sala de marcas
   currentBook = meta;
   readingType = meta.classic ? 'classic' : 'book';
@@ -2440,6 +2460,7 @@ function exitRoom() {
   /* v169: resetear la referencia del párrafo del profesor al salir — cada
      entrada a una sala parte de cero y solo los movimientos nuevos avisan */
   lastParaTs = 0; roomPara = { idx: 0, ts: 0 };
+  lastRoster = []; // v174: la presencia no se hereda de la sala anterior
   toast(t('exitedRoom'));
   showLibrary(true);
 }
