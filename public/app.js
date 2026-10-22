@@ -686,6 +686,7 @@ function repaintAll() {
   highlights.forEach(paintHighlight);
   paintNoteMarks();
   paintNoteBadges(); // v68
+  pendingMarks.forEach(paintPendingVisual); // v175: la marca provisional sobrevive a los re-pintados del poll
 }
 /* Marca visual en palabras con nota: subrayado punteado del color del autor */
 /* v68 — Insignias 💬 por párrafo (patrón Wattpad): los párrafos con notas muestran
@@ -1225,6 +1226,9 @@ function initSelection() {
     // v168: si se tocó la misma palabra hace <1.2s, es doble-toque accidental —
     // el primer toque ya publicó la marca (aún sin pintar). No duplicar.
     if (i === lastTapMark.i && Date.now() - lastTapMark.at < 1200) return;
+    // v175: la palabra ya está en camino al servidor (tinta provisional
+    // visible) — no publicar de nuevo mientras se confirma
+    if (pendingAt(i)) return;
     lastTapMark = { i, at: Date.now() };
     postHighlight({ start: i, end: i });
   });
@@ -2142,18 +2146,68 @@ async function pollState() {
   }
 }
 
+/* v175 — marca provisional ("guardando…"): en señal débil el POST /highlight
+   puede tardar segundos y el usuario cree que el gesto se perdió (y lo repite).
+   Al publicar, el rango se pinta al instante con tinta clara + borde punteado
+   (SIN animación: nada se mueve solo) hasta que el servidor confirma la marca
+   real, el gesto queda encolado o falla. Puramente visual: no entra en
+   `cover` ni en `highlights` hasta la confirmación. */
+let pendingMarks = []; // {start, end, color}
+function paintPendingVisual(p) {
+  const base = COLORS[p.color] || COLORS.azul;
+  for (let i = p.start; i <= p.end; i++) {
+    const s = spanByIdx[i];
+    if (!s || s.classList.contains('mk')) continue; // la marca real manda
+    s.classList.add('mk-pending');
+    s.style.setProperty('--pend-c', base);
+    s.style.background = hexA(base, 0.16);
+  }
+}
+function paintPendingMark(r, color) {
+  const p = { start: r.start, end: r.end, color };
+  pendingMarks.push(p);
+  paintPendingVisual(p);
+}
+function pendingAt(i) {
+  return pendingMarks.some((p) => i >= p.start && i <= p.end);
+}
+function clearPendingMark(start, end) {
+  pendingMarks = pendingMarks.filter((p) => !(p.start === start && p.end === end));
+  for (let i = start; i <= end; i++) {
+    const s = spanByIdx[i];
+    if (!s) continue;
+    s.classList.remove('mk-pending');
+    s.style.setProperty('--pend-c', '');
+    // no pisar la tinta de una marca real ni de otro provisional que se solape
+    if (!s.classList.contains('mk') && !pendingAt(i)) s.style.background = '';
+  }
+}
+function clearAllPendingMarks() {
+  pendingMarks = [];
+  spanByIdx.forEach((s) => {
+    if (!s) return;
+    s.classList.remove('mk-pending');
+    s.style.setProperty('--pend-c', '');
+    if (!s.classList.contains('mk')) s.style.background = '';
+  });
+}
 /* Publica un subrayado. v145: si falla la red, el gesto se encola y se reintenta
-   solo al reconectar (outbox) — ya no se pierde con solo un toast. */
+   solo al reconectar (outbox) — ya no se pierde con solo un toast.
+   v175: pinta la marca provisional al instante — se ve aunque el POST tarde. */
 async function postHighlight(range) {
+  paintPendingMark(range, myColor);
   const r = await netPost(roomBase() + '/highlight', range, (s) => {
     if (s.highlight && !highlights.some((h) => h.id === s.highlight.id)) {
       highlights.push(s.highlight);
       paintHighlight(s.highlight);
       showUndoPill(s.highlight.id); // v118: deshacer la última marca (toques accidentales en móvil)
     }
+    // v175: el servidor confirmó (o devolvió la marca ya existente por dedupe
+    // v156) — se retira lo provisional y queda la tinta real
+    if (s.highlight) clearPendingMark(s.highlight.start, s.highlight.end);
   });
-  if (r.queued) toast(t('actQueued'));
-  else if (!r.ok) toast(t('hlSaveErr'));
+  if (r.queued) toast(t('actQueued')); // lo provisional sigue visible hasta que se envíe al reconectar
+  else if (!r.ok) { clearPendingMark(range.start, range.end); toast(t('hlSaveErr')); }
   return r.ok;
 }
 
@@ -2340,6 +2394,7 @@ function clearRoomText() {
   cover.clear();
   highlights = [];
   notes = [];
+  pendingMarks = []; // v175: sin texto no hay tinta provisional
   paraQueue = []; queuePos = 0; wordBase = 0; totalParas = 0; wordCount = 0;
   bookParaTotal = 0; bookParaLoading = null; // v162: sin libro no hay rangos pendientes
   bookParaFailAt = 0; // v168: sin libro no hay cooldown de rangos
@@ -2367,6 +2422,7 @@ async function bootBook(meta, push) {
   // "confirmaba" en silencio sin borrar la marca vieja). Tampoco se hereda
   // el párrafo del profesor del libro anterior.
   hideUndoPill();
+  clearAllPendingMarks(); // v175: lo provisional es de la sala anterior
   lastParaTs = 0; roomPara = { idx: 0, ts: 0 };
   lastRoster = []; // v174: la presencia no se hereda del libro anterior
   myRoom = meta.id; // el id del libro ES su sala de marcas
@@ -2457,6 +2513,7 @@ function exitRoom() {
     localStorage.removeItem('tj_lastBook');
   } catch (e) {}
   hideUndoPill(); // la pila de deshacer no sobrevive el cambio de sala
+  clearAllPendingMarks(); // v175: la tinta provisional tampoco sobrevive el cambio de sala
   /* v169: resetear la referencia del párrafo del profesor al salir — cada
      entrada a una sala parte de cero y solo los movimientos nuevos avisan */
   lastParaTs = 0; roomPara = { idx: 0, ts: 0 };

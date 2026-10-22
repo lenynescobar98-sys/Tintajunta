@@ -585,6 +585,9 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
 .note-code { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .4px; margin-left: 6px; }
 /* Palabra con nota: subrayado punteado del color del autor */
 .w.has-note { border-bottom: 2px dotted var(--note-c, var(--accent)); cursor: pointer; }
+/* v175: marca provisional ("guardando…") — tinta clara + borde rayado del color
+   de la tinta, SIN animación (nada se mueve solo) */
+.w.mk-pending { border-bottom: 2px dashed var(--pend-c, var(--accent)); border-radius: 2px; }
 
 /* ---------- avisos ---------- */
 .toasts { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 60; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
