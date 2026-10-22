@@ -767,10 +767,18 @@ function renderNotes() {
     box.appendChild(card);
   });
   box.querySelectorAll('.note-del').forEach((b) => {
-    b.onclick = () => {
-      apiPost(roomBase() + '/del', { kind: 'note', id: b.dataset.id })
-        .then(() => { notes = notes.filter((n) => n.id !== b.dataset.id); renderNotes(); paintNoteMarks(); })
-        .catch(() => toast(t('noteDelErr')));
+    b.onclick = async () => {
+      /* v176: el borrado de nota va por netPost (outbox) — en señal débil se
+         encola y reintenta solo al reconectar en vez de perderse con un toast.
+         404 = la nota ya se borró con otro gesto: confirmar en silencio. */
+      const r = await netPost(roomBase() + '/del', { kind: 'note', id: b.dataset.id }, null);
+      if (r.ok || r.queued || r.status === 404) {
+        notes = notes.filter((n) => n.id !== b.dataset.id);
+        renderNotes(); paintNoteMarks(); paintNoteBadges(); // v176 C4: las insignias 💬 también se actualizan
+        if (r.queued) toast(t('actQueued'));
+      } else {
+        toast(t('noteDelErr'));
+      }
     };
   });
   box.querySelectorAll('.note-quote').forEach((q) => {
@@ -1261,12 +1269,18 @@ function initSelection() {
     hideToolbar();
     setTimeout(() => $('noteText').focus(), 50);
   };
-  $('btnRemove').onclick = () => {
+  $('btnRemove').onclick = async () => {
     const hid = $('toolbar').dataset.hid;
     if (hid) {
-      apiPost(roomBase() + '/del', { kind: 'highlight', id: hid })
-        .then(() => { highlights = highlights.filter((h) => h.id !== hid); repaintAll(); })
-        .catch(() => toast(t('hlEraseErr')));
+      /* v176: por netPost (outbox) como el resto de los borrados (v174) —
+         en señal débil se encola y reintenta solo al reconectar */
+      const r = await netPost(roomBase() + '/del', { kind: 'highlight', id: hid }, null);
+      if (r.ok || r.queued || r.status === 404) {
+        highlights = highlights.filter((h) => h.id !== hid); repaintAll();
+        if (r.queued) toast(t('actQueued'));
+      } else {
+        toast(t('hlEraseErr'));
+      }
     }
     window.getSelection().removeAllRanges();
     hideToolbar();
@@ -1356,7 +1370,7 @@ const OUTBOX_MAX = 100;
    vaciar la cola según el kind derivado de la ruta. */
 const OUTBOX_KEY = 'tj_outbox';
 function outboxKindOf(path) {
-  const m = /\/api\/rooms\/[^/]+\/(highlight|note|chat|reaction|board|del)$/.exec(String(path || '')); // v174: +del
+  const m = /\/api\/rooms\/[^/]+\/(highlight|note|chat|reaction|board|del|hand|boardClear)$/.exec(String(path || '')); // v174: +del · v176: +hand +boardClear
   return m ? m[1] : '';
 }
 function persistOutbox() {
@@ -1422,7 +1436,16 @@ function outboxApplyFor(item) {
       if (id && item.body.kind === 'highlight') {
         highlights = highlights.filter((h) => h.id !== id);
         repaintAll();
+      } else if (id && item.body.kind === 'note') { // v176: borrado de nota encolado
+        notes = notes.filter((n) => n.id !== id);
+        renderNotes(); paintNoteMarks(); paintNoteBadges();
       }
+    };
+    case 'hand': return (s) => { // v176: mano encolada que se envía al reconectar
+      if (s && s.ok) { hands = s.hands || []; renderHands(); renderRoster(); }
+    };
+    case 'boardClear': return (s) => { // v176: limpiado de pizarra encolado
+      if (s && s.ok) { board = []; renderBoard(); }
     };
     default: return null;
   }
@@ -1631,12 +1654,16 @@ function initBoard() {
   edit.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
   });
-  if (clear) clear.onclick = () => {
+  if (clear) clear.onclick = async () => {
     if (!isTeacher) return;
     if (!confirm(t('boardConfirm'))) return;
-    apiPost(roomBase() + '/boardClear', {})
-      .then((s) => { if (s && s.ok) { board = []; renderBoard(); } })
-      .catch(() => toast(t('boardCleanErr')));
+    /* v176: el limpiado va por netPost (outbox) como el envío de texto (v158) —
+       en señal débil se encola y se ejecuta solo al reconectar */
+    const r = await netPost(roomBase() + '/boardClear', {}, (s) => {
+      if (s && s.ok) { board = []; renderBoard(); }
+    });
+    if (r.queued) toast(t('actQueued'));
+    else if (!r.ok) toast(t('boardCleanErr'));
   };
   renderBoard();
 }
@@ -2079,19 +2106,17 @@ function renderHands() {
 
 function initHands() {
   const btn = $('handBtn');
-  if (btn) btn.onclick = () => {
+  if (btn) btn.onclick = async () => {
     const up = !myHandUp();
-    apiPost(roomBase() + '/hand', { up })
-      .then((s) => {
-        if (s && s.ok) {
-          hands = s.hands || []; renderHands(); renderRoster();
-          toast(up ? t('handRaised') : t('handLowered'));
-          setOnline(true);
-        } else {
-          toast(t('handErr')); // v127: antes se confirmaba aunque el servidor lo rechazara
-        }
-      })
-      .catch(() => { setOnline(false); toast(t('handErr')); });
+    /* v176: la mano va por netPost (outbox) — en señal débil se encola y se
+       envía sola al reconectar en vez de perderse con un toast. El servidor
+       es idempotente (levantar dos veces = una; bajar dos veces = una). */
+    const r = await netPost(roomBase() + '/hand', { up }, (s) => {
+      if (s && s.ok) { hands = s.hands || []; renderHands(); renderRoster(); }
+    });
+    if (r.ok) { toast(up ? t('handRaised') : t('handLowered')); setOnline(true); } // v127: solo confirmar lo que el servidor aceptó
+    else if (r.queued) toast(t('actQueued'));
+    else toast(t('handErr'));
   };
 }
 
@@ -2114,10 +2139,13 @@ function paintHandsInRoster() {
       if (isTeacher) {
         chip.style.cursor = 'pointer';
         chip.title = t('handLower') + name;
-        chip.onclick = () => {
-          apiPost(roomBase() + '/hand', { up: false, target: name })
-            .then((s) => { if (s && s.ok) { hands = s.hands || []; renderHands(); renderRoster(); } })
-            .catch(() => toast(t('handLowerErr'))); // v174: clave i18n (antes español hardcodeado)
+        chip.onclick = async () => {
+          /* v176: por netPost (outbox) — en señal débil se encola y reintenta solo */
+          const r = await netPost(roomBase() + '/hand', { up: false, target: name }, (s) => {
+            if (s && s.ok) { hands = s.hands || []; renderHands(); renderRoster(); }
+          });
+          if (r.queued) toast(t('actQueued'));
+          else if (!r.ok) toast(t('handLowerErr')); // v174: clave i18n (antes español hardcodeado)
         };
       }
     }
