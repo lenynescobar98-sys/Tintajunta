@@ -12,7 +12,7 @@
 #immersive { position: fixed; inset: 0; z-index: 100; }
 #immClose { position: absolute; top: 14px; right: 16px; z-index: 101; width: 44px; height: 44px; font-size: 22px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; cursor: pointer; }
 </style>
-<link rel="stylesheet" href="styles.css?v=178" id="mainCss"
+<link rel="stylesheet" href="styles.css?v=179" id="mainCss"
   onerror="(function(l){var n=0;var t=setInterval(function(){n++;l.href='styles.css?retry='+n+'&t='+Date.now();if(n>=3)clearInterval(t);},1500);})(this)">
 <!-- Google AdSense: verificación del sitio + anuncios (solo biblioteca, nunca la sala) -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7762243852397440"
@@ -45,13 +45,6 @@
     <input id="footerRoomCode" type="text" maxlength="12" data-i18n-ph="footRoomCodePh" placeholder="Código de sala" autocomplete="off" autocapitalize="characters" spellcheck="false">
     <button id="footerRoomGo" type="button" class="roomcode-go" data-i18n="footRoomGo">Entrar →</button>
   </div>
-  <!-- Portada: palabra Melo con los colores dorados de la mascota -->
-  <div class="melo-banner">
-    <a href="#secKi" aria-label="Conoce a Melo">
-      <img src="img/melo/melo-original.webp" alt="Melo">
-      <span class="melo-word">Melo</span>
-    </a>
-  </div>
   <div id="searchBar" class="search-bar hidden">
     <input id="searchInput" type="search" data-i18n-ph="searchPh" placeholder="Buscar por título o autor…" autocomplete="off">
   </div>
@@ -72,34 +65,34 @@
     <button data-go="lang" id="langDrawerBtn">🌐 English</button>
   </nav>
   <div id="drawerScrim" class="drawer-scrim hidden" hidden></div>
+  <!-- v179: presentación del proyecto — portada dividida en bloques (titular display, Melo al centro, bloques editoriales) -->
+  <section class="presenta-sec" id="secPresenta">
+    <div class="presenta-hero">
+      <p class="presenta-kicker" data-i18n="presKicker">TINTAJUNTA · LECTURA EN VIVO</p>
+      <h2 class="presenta-display" data-i18n-html="presTitle">UN LIBRO,<br>TODAS LAS TINTAS</h2>
+      <div class="presenta-hero-grid">
+        <p class="presenta-side" data-i18n="presLeadL">Varias personas, el mismo libro, al mismo tiempo — cada quien en su pantalla.</p>
+        <figure class="presenta-visual">
+          <img src="img/melo/melo-original.webp" alt="Melo, la mascota oficial de TintaJunta" loading="lazy">
+          <figcaption data-i18n="presMeloCap">Melo · la mascota oficial</figcaption>
+        </figure>
+        <p class="presenta-side" data-i18n="presLeadR">Cada lector marca con su propio color de tinta y las ideas de todos quedan en el libro, en vivo.</p>
+      </div>
+      <div class="presenta-ctas">
+        <a class="presenta-cta presenta-cta-main" href="#secClassics" data-i18n="presCtaBooks">📚 Explorar la biblioteca</a>
+        <button class="presenta-cta presenta-cta-alt" id="presLiveBtn" type="button" data-i18n="presCtaLive">⚡ Entrar a la sala en vivo</button>
+      </div>
+    </div>
+  </section>
   <div class="join-card lib-card lib-stream">
-    <!-- v68: Seguir leyendo (patrón Goodreads) — lo primero que ve quien vuelve -->
-    <section id="secContinue" class="continue-sec hidden">
-      <h2 class="row-h2" data-i18n="secContinue">📖 Seguir leyendo</h2>
-      <div id="continueRow" class="hrow continue-row"></div>
-    </section>
+    <!-- v179: el Destacado es un bloque dividido más, con rótulo editorial -->
     <div id="heroCarousel" class="hero-carousel hero-big hidden">
+      <p class="hero-kicker" data-i18n="featKicker">⭐ Destacado de portada</p>
       <div id="heroTrack" class="hero-track"></div>
       <div id="heroDots" class="hero-dots"></div>
     </div>
-    <!-- v178: presentación del proyecto — portada dividida en bloques (titular display, Melo al centro, bloques editoriales) -->
-    <section class="presenta-sec" id="secPresenta">
-      <div class="presenta-hero">
-        <p class="presenta-kicker" data-i18n="presKicker">TINTAJUNTA · LECTURA EN VIVO</p>
-        <h2 class="presenta-display" data-i18n-html="presTitle">UN LIBRO,<br>TODAS LAS TINTAS</h2>
-        <div class="presenta-hero-grid">
-          <p class="presenta-side" data-i18n="presLeadL">Varias personas, el mismo libro, al mismo tiempo — cada quien en su pantalla.</p>
-          <figure class="presenta-visual">
-            <img src="img/melo/melo-original.webp" alt="Melo, la mascota oficial de TintaJunta" loading="lazy">
-            <figcaption data-i18n="presMeloCap">Melo · la mascota oficial</figcaption>
-          </figure>
-          <p class="presenta-side" data-i18n="presLeadR">Cada lector marca con su propio color de tinta y las ideas de todos quedan en el libro, en vivo.</p>
-        </div>
-        <div class="presenta-ctas">
-          <a class="presenta-cta presenta-cta-main" href="#secClassics" data-i18n="presCtaBooks">📚 Explorar la biblioteca</a>
-          <button class="presenta-cta presenta-cta-alt" id="presLiveBtn" type="button" data-i18n="presCtaLive">⚡ Entrar a la sala en vivo</button>
-        </div>
-      </div>
+    <!-- v179: bloques editoriales de la presentación, tras el bloque Destacado -->
+    <section class="presenta-blocks-sec">
       <div class="presenta-blocks">
         <article class="presenta-block">
           <h3 class="presenta-block-h" data-i18n="presHowTitle">Cómo funciona</h3>
@@ -140,6 +133,11 @@
           <button class="presenta-block-link presenta-block-btn" id="presPublishBtn" type="button" data-i18n="presCreatorsCta">＋ Publicar mi libro</button>
         </article>
       </div>
+    </section>
+    <!-- v68: Seguir leyendo (patrón Goodreads) — lo primero que ve quien vuelve -->
+    <section id="secContinue" class="continue-sec hidden">
+      <h2 class="row-h2" data-i18n="secContinue">📖 Seguir leyendo</h2>
+      <div id="continueRow" class="hrow continue-row"></div>
     </section>
     <div id="pillsRow" class="pills-row">
       <button class="pill on" data-pill="todos" data-i18n="pillTodos">Todos</button>
@@ -193,6 +191,13 @@
       <p class="row-sub" data-i18n="secAffSub">Lo que usamos y recomendamos para leer mejor. Si compras, nos apoyas sin pagar de más.</p>
       <div id="rowAff" class="hrow"></div>
     </section>
+    <!-- Portada: palabra Melo con los colores dorados de la mascota -->
+    <div class="melo-banner">
+      <a href="#secKi" aria-label="Conoce a Melo">
+        <img src="img/melo/melo-original.webp" alt="Melo">
+        <span class="melo-word">Melo</span>
+      </a>
+    </div>
     <section class="row-sec ki-feature" id="secKi">
       <div class="ki-head">
         <h2 class="row-h2"><span data-i18n="secKi">🦁 Conoce a Melo</span></h2>
@@ -691,7 +696,7 @@
 <div id="toasts" class="toasts"></div>
 
 <!-- v144: Stripe se carga solo cuando se va a pagar (antes bloqueaba el arranque) -->
-<script defer src="i18n.js?v=178"></script>
-<script defer src="app.js?v=178"></script>
+<script defer src="i18n.js?v=179"></script>
+<script defer src="app.js?v=179"></script>
 </body>
 </html>

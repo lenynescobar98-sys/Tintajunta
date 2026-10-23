@@ -960,6 +960,8 @@ I18N.es.presLibCta = 'Ver la biblioteca →';
 I18N.es.presCreatorsT = '✍️ Para creadores';
 I18N.es.presCreatorsD = '¿Escribiste un libro? Publícalo gratis y léelo en vivo con tus lectores, cada uno con su tinta. Solo obras originales, tuyas.';
 I18N.es.presCreatorsCta = '＋ Publicar mi libro';
+/* ---------- v179: rótulo del bloque Destacado ---------- */
+I18N.es.featKicker = '⭐ Destacado de portada';
 /* ---------- inmersiva ---------- */
 I18N.es.immClose = 'Cerrar';
 I18N.es.immCtaDefault = 'Ver';
@@ -1182,6 +1184,8 @@ I18N.en.presLibCta = 'Browse the library →';
 I18N.en.presCreatorsT = '✍️ For creators';
 I18N.en.presCreatorsD = 'Wrote a book? Publish it for free and read it live with your readers, each in their own ink. Original works only — yours.';
 I18N.en.presCreatorsCta = '＋ Publish my book';
+/* ---------- v179: Featured block label ---------- */
+I18N.en.featKicker = '⭐ Featured spotlight';
 I18N.en.immClose = 'Close';
 I18N.en.immCtaDefault = 'View';
 I18N.en.typoTitle = 'Aa &nbsp;Your reading, your way';

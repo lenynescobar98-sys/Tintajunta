@@ -2525,3 +2525,89 @@ body.in-room #boardView {
     grid-template-areas: "how" "mission" "library" "creators";
   }
 }
+
+/* ============ v179: portada COMPLETA al estilo dividido ============
+   La presentación pasa a ser el hero principal (justo tras la barra de
+   la sala) y TODAS las secciones de la portada hablan el mismo lenguaje
+   editorial de v178: bloques separados por líneas finas (--line),
+   espaciado amplio y consistente, títulos serif con subrayado dorado
+   Melo como único acento. Estática: nada se mueve solo. */
+
+/* La presentación vive fuera de la tarjeta, con el mismo ancho y
+   márgenes laterales de la columna principal (.lib-stream). */
+#library > .presenta-sec {
+  width: 100%; max-width: 920px;
+  margin: 0 auto; padding: 36px 14px 26px;
+}
+@media (min-width: 901px) {
+  #library > .presenta-sec { max-width: 1200px; padding-left: 28px; padding-right: 28px; }
+}
+/* Los bloques editoriales quedan como sección propia tras el Destacado */
+.presenta-blocks-sec { margin: 2px 0 44px; }
+.presenta-blocks-sec .presenta-blocks { margin-top: 0; }
+
+/* Barra de la sala: bloque delgado del sistema — borde fino y esquinas
+   suaves en vez de píldora flotante. No se mueve de arriba (ley v166). */
+.room-code-row.room-code-top {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 12px; box-shadow: none;
+  margin: 12px auto 6px; padding: 3px 3px 3px 16px;
+}
+.room-code-row.room-code-top .roomcode-go { border-radius: 9px; }
+
+/* El Destacado como bloque dividido más: rótulo editorial arriba,
+   borde fino y sombra sobria (adiós a la sombra cinematográfica). */
+#library .hero-big {
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 32px rgba(26, 26, 26, .16);
+  margin: 6px 0 40px;
+}
+#library .hero-kicker {
+  margin: 0; padding: 11px 18px;
+  background: var(--paper); color: var(--accent);
+  border-bottom: 1px solid var(--line);
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 12px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase;
+}
+
+/* Ritmo dividido de las filas: línea fina arriba y aire consistente.
+   Las secciones-tarjeta (Ads/Aff/Ki) quedan fuera: ya son bloques. */
+#library .row-sec:not(#secAds):not(#secAff):not(#secKi) {
+  margin: 0 0 44px; padding-top: 26px;
+  border-top: 1px solid var(--line);
+}
+#library .continue-sec {
+  margin: 0 0 40px; padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+/* Títulos de sección en el lenguaje display: subrayado dorado Melo,
+   igual que los encabezados de bloque de la presentación. */
+#library .row-h2 > span:first-child {
+  border-bottom: 2px solid #f0c040; padding-bottom: 5px;
+}
+/* Bloques comerciales como tarjetas del sistema (los slots no se mueven) */
+#library #secAds {
+  border: 1px solid var(--line); border-radius: 14px;
+  padding: 22px 18px 24px; margin: 0 0 44px;
+}
+#library #secAff {
+  background: var(--paper);
+  border: 1px solid var(--line); border-radius: 14px;
+  padding: 22px 18px 24px; margin: 0 0 44px;
+}
+#library #secAff::before { display: none; }
+#library #secKi { border-radius: 14px; margin-bottom: 44px; }
+/* La fila de filtros cierra con la misma línea fina del sistema */
+#library .pills-row { border-bottom: 1px solid var(--line); }
+/* CTAs finales y pie con los divisores del sistema */
+#library .cta-row { border-top: 1px solid var(--line); padding-top: 24px; }
+#library .credits { border-top: 1px solid var(--line); }
+/* El banner de Melo ahora presenta su sección dentro de la columna */
+#library .melo-banner { padding: 4px 16px 22px; }
+/* Saltos de ancla: el header sticky no tapa el inicio de cada bloque */
+#secPresenta, #secDestacados, #secNovedades, #secClassics,
+#secAds, #secAff, #secKi { scroll-margin-top: 92px; }
+@media (max-width: 560px) {
+  #secPresenta, #secDestacados, #secNovedades, #secClassics,
+  #secAds, #secAff, #secKi { scroll-margin-top: 132px; }
+}
