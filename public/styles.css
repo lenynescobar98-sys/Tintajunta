@@ -2611,3 +2611,78 @@ body.in-room #boardView {
   #secPresenta, #secDestacados, #secNovedades, #secClassics,
   #secAds, #secAff, #secKi { scroll-margin-top: 132px; }
 }
+
+/* ============ v180: MOVIMIENTO TOTAL (estilo Framer Motion, nativo) ============
+   Decisión de Alejandro 2026-10-23: "Que se mueva todo, como el video"
+   (reemplaza la regla no-auto-motion de v154). Solo transform/opacity,
+   sin librerías y sin peticiones nuevas. El marcado con lápiz NO se anima:
+   las marcas y el texto del libro quedan fuera de este sistema. */
+
+/* --- Entrada del hero de portada --- */
+@keyframes v180Down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+@keyframes v180Up { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes v180Line { from { opacity: 0; transform: translateY(34px); } to { opacity: 1; transform: none; } }
+@keyframes v180Melo { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes v180Float { from { transform: translateY(0); } to { transform: translateY(-7px); } }
+#imdbBar { animation: v180Down .5s ease both; }
+.room-code-top { animation: v180Down .5s .06s ease both; }
+.presenta-kicker { animation: v180Up .55s .1s cubic-bezier(.22,.8,.32,1) both; }
+.pres-line { display: block; }
+.pres-line-in {
+  display: block;
+  animation: v180Line .85s cubic-bezier(.22,.8,.32,1) both;
+  animation-delay: calc(.16s + var(--i, 0) * .12s);
+}
+.presenta-visual { animation: v180Melo .8s .34s cubic-bezier(.22,.8,.32,1) both; }
+.presenta-visual img { animation: v180Float 6s ease-in-out 1.4s infinite alternate; }
+.presenta-hero-grid .presenta-side { animation: v180Up .6s .5s cubic-bezier(.22,.8,.32,1) both; }
+.presenta-ctas { animation: v180Up .6s .64s cubic-bezier(.22,.8,.32,1) both; }
+
+/* --- Reveal al bajar (IntersectionObserver agrega .rv-in una sola vez) --- */
+.rv {
+  opacity: 0; transform: translateY(18px);
+  transition: opacity .55s ease, transform .55s cubic-bezier(.22,.8,.32,1);
+  transition-delay: var(--rvd, 0ms);
+}
+.rv.rv-in { opacity: 1; transform: none; }
+
+/* --- Micro-interacciones: lift al pasar, ya existía el scale al tocar --- */
+.hero-track { transition: transform .6s cubic-bezier(.22,.8,.32,1); }
+.hero-cta-round { transition: transform .2s ease, box-shadow .2s ease; }
+.book-card { transition: transform .25s ease; }
+.tile-cover { transition: transform .25s ease, box-shadow .25s ease; }
+.aff-card { transition: transform .25s ease, box-shadow .25s ease; }
+.presenta-cta { transition: transform .2s ease, box-shadow .2s ease, background .2s ease; }
+@media (hover:hover) {
+  .tile:hover .tile-cover { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(0,0,0,.22); }
+  .aff-card:hover { transform: translateY(-3px); box-shadow: 0 12px 26px rgba(0,0,0,.16); }
+  .book-card:hover { transform: translateY(-3px); }
+  .hero-cta-round:hover { transform: translateY(-2px) scale(1.02); }
+  .presenta-cta-alt:hover { transform: translateY(-1px); }
+  #library .pill:hover { transform: translateY(-1px); }
+  .roomcode-go:hover { transform: translateY(-1px); }
+}
+
+/* --- Sala: barras, popups y menús entran suaves --- */
+@keyframes v180PopUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes v180Menu { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes v180Pill { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+#toolbar:not(.hidden), #notepop:not(.hidden), #viewNotePop:not(.hidden) { animation: v180PopUp .26s cubic-bezier(.22,.8,.32,1) both; }
+.user-menu:not(.hidden) { animation: v180Menu .22s ease both; }
+.follow-pill:not(.hidden) { animation: v180Pill .3s ease both; }
+
+/* --- Avisos: salida suave (la entrada sigue siendo toastin) --- */
+@keyframes toastout { to { opacity: 0; transform: translateY(6px) scale(.97); } }
+.toast-out { animation: toastout .22s ease both; }
+
+/* --- Si el sistema pide calma, todo el movimiento se apaga --- */
+@media (prefers-reduced-motion: reduce) {
+  #imdbBar, .room-code-top, .presenta-kicker, .pres-line-in, .presenta-visual,
+  .presenta-hero-grid .presenta-side, .presenta-ctas, .presenta-visual img,
+  #toolbar:not(.hidden), #notepop:not(.hidden), #viewNotePop:not(.hidden),
+  .user-menu:not(.hidden), .follow-pill:not(.hidden), .toast-out { animation: none !important; }
+  .rv { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .hero-track { transition: none !important; }
+  .tile:hover .tile-cover, .aff-card:hover, .book-card:hover,
+  .hero-cta-round:hover, .presenta-cta-alt:hover { transform: none !important; }
+}

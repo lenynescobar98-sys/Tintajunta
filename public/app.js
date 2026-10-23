@@ -889,16 +889,29 @@ function renderParaPresence(roster) {
 /* v157: avisos sin spam — el mismo mensaje no se apila: si ya está visible,
    solo se renueva su temporizador. Nunca más de 3 avisos a la vez. */
 const toastTimers = new Map();
+/* v180: la salida también se anima — al vencer el tiempo el aviso se desvanece
+   (.toast-out) y se retira del DOM al terminar; la lógica anti-spam de v157
+   no cambia (mismo mensaje = mismo aviso, nunca más de 3 a la vez). */
+function toastExit(rec, msg) {
+  if (!rec || !rec.el) return;
+  rec.el.classList.add('toast-out');
+  rec.rmTimer = setTimeout(() => {
+    rec.el.remove();
+    if (toastTimers.get(msg) === rec) toastTimers.delete(msg);
+  }, 220);
+}
 function toast(msg) {
   const box = $('toasts');
   if (!box) return;
   const prev = toastTimers.get(msg);
   if (prev) {
     clearTimeout(prev.timer);
+    if (prev.rmTimer) { clearTimeout(prev.rmTimer); prev.rmTimer = null; }
+    prev.el.classList.remove('toast-out');
     prev.el.classList.remove('toast');
     void prev.el.offsetWidth; // re-dispara la animación
     prev.el.classList.add('toast');
-    prev.timer = setTimeout(() => { prev.el.remove(); toastTimers.delete(msg); }, 3200);
+    prev.timer = setTimeout(() => toastExit(prev, msg), 3200);
     return;
   }
   const t = document.createElement('div');
@@ -909,12 +922,13 @@ function toast(msg) {
     const old = box.firstElementChild;
     if (!old) break;
     const rec = toastTimers.get(old.textContent);
-    if (rec) clearTimeout(rec.timer);
+    if (rec) { clearTimeout(rec.timer); if (rec.rmTimer) clearTimeout(rec.rmTimer); }
     toastTimers.delete(old.textContent);
     old.remove();
   }
-  const timer = setTimeout(() => { t.remove(); toastTimers.delete(msg); }, 3200);
-  toastTimers.set(msg, { el: t, timer });
+  const rec = { el: t, timer: null, rmTimer: null };
+  rec.timer = setTimeout(() => toastExit(rec, msg), 3200);
+  toastTimers.set(msg, rec);
 }
 /* v163: quitar un aviso específico (ej. "Abriendo libro…" cuando el libro ya abrió) */
 function dismissToast(msg) {
@@ -922,8 +936,13 @@ function dismissToast(msg) {
     const rec = toastTimers.get(msg);
     if (!rec) return;
     clearTimeout(rec.timer);
+    if (rec.rmTimer) clearTimeout(rec.rmTimer);
     toastTimers.delete(msg);
-    if (rec.el && rec.el.remove) rec.el.remove();
+    if (rec.el && rec.el.remove) {
+      const el = rec.el;
+      el.classList.add('toast-out');
+      setTimeout(() => el.remove(), 220);
+    }
   } catch (e) {}
 }
 
@@ -5140,8 +5159,70 @@ function initWelcome() {
   $('welcomeName').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('welcomeCode').focus(); });
 }
 
+/* --------------------- v180: movimiento total ---------------------
+   Sistema de movimiento nativo (sin librerías): el titular del hero entra
+   por líneas y las secciones/tarjetas de la portada y la biblioteca se
+   revelan al bajar (IntersectionObserver, una sola vez por elemento, con
+   stagger suave por fila). Alcance SOLO portada/biblioteca/escritos: el
+   texto del libro y las marcas de la sala quedan fuera a propósito — el
+   marcado con lápiz sigue instantáneo, sin animación de por medio. */
+const RV_SEL = '.presenta-block, .row-h2, .pills-row, .adsense-slot, #secKi, .cta-row, .credits, ' +
+  '.tile, .book-card, .book-row, .aff-card, .ad-card, .ev-card, .mq-cover';
+let rvIO = null;
+function rvTag(el) {
+  if (!el || el.nodeType !== 1 || el.classList.contains('rv')) return;
+  if (el.classList.contains('tile-enter')) return; // ya entra con su animación de primer pintado
+  if (el.parentElement && el.parentElement.closest('.rv')) return; // sin revelar padre e hijo a la vez
+  el.classList.add('rv');
+  const p = el.parentElement;
+  if (p) {
+    let n = 0;
+    for (const c of p.children) { if (c === el) break; if (c.classList.contains('rv')) n++; }
+    el.style.setProperty('--rvd', Math.min(n, 8) * 45 + 'ms');
+  }
+  if (rvIO) rvIO.observe(el); else el.classList.add('rv-in');
+}
+function initReveal() {
+  const roots = [$('library'), $('writing')].filter(Boolean);
+  if (!roots.length) return;
+  if ('IntersectionObserver' in window) {
+    rvIO = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (en.isIntersecting) { en.target.classList.add('rv-in'); rvIO.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+  }
+  const scan = (node) => {
+    if (!node || node.nodeType !== 1) return;
+    if (node.matches && node.matches(RV_SEL)) rvTag(node);
+    if (node.querySelectorAll) node.querySelectorAll(RV_SEL).forEach(rvTag);
+  };
+  roots.forEach((r) => {
+    scan(r);
+    new MutationObserver((muts) => {
+      muts.forEach((m) => m.addedNodes.forEach(scan));
+    }).observe(r, { childList: true, subtree: true });
+  });
+}
+/* El titular display entra por líneas: envuelve cada línea (separadas por
+   <br> en la clave i18n) en spans con --i para el stagger de CSS. Al cambiar
+   el idioma, applyStaticI18n reemplaza el HTML y el evento 'uilang' lo
+   vuelve a partir. */
+function splitPresLines() {
+  const h = document.querySelector('.presenta-display');
+  if (!h || h.querySelector('.pres-line')) return;
+  const parts = h.innerHTML.split(/<br\s*\/?>/i);
+  h.innerHTML = parts.map((p, i) =>
+    `<span class="pres-line"><span class="pres-line-in" style="--i:${i}">${p}</span></span>`).join('');
+}
+function initMotion() {
+  splitPresLines();
+  window.addEventListener('uilang', () => setTimeout(splitPresLines, 0));
+  initReveal();
+}
+
 /* Cada init aislado: si uno falla, los demás siguen funcionando */
-[['initJoin', initJoin], ['initLibrary', initLibrary], ['initCheckoutReturn', initCheckoutReturn], ['initAds', initAds],
+[['initMotion', initMotion], ['initJoin', initJoin], ['initLibrary', initLibrary], ['initCheckoutReturn', initCheckoutReturn], ['initAds', initAds],
  ['renderAds', renderAds], ['renderAffiliates', renderAffiliates],
  ['initImdbBar', initImdbBar], ['initWriting', initWriting],
  ['initPills', initPills],
