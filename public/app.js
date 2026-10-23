@@ -991,6 +991,22 @@ function showToolbar(range, anchorRect, mode) {
 }
 function hideToolbar() { $('toolbar').classList.add('hidden'); pendingRange = null; }
 function hideNotepop() { $('notepop').classList.add('hidden'); $('noteText').value = ''; $('noteCount').textContent = '0'; }
+/* v177: reabrir el popup de nota con el texto intacto — ante un error DURO del
+   servidor la nota no quedó encolada y el texto se perdería (patrón del chat
+   v154 / pizarra v139). */
+function reopenNotepop(start, end, text) {
+  const words = [];
+  for (let i = start; i <= end; i++) { if (spanByIdx[i]) words.push(spanByIdx[i].textContent); }
+  $('noteQuote').textContent = '“' + words.join(' ').slice(0, 120) + '”';
+  const a = spanByIdx[start] ? spanByIdx[start].getBoundingClientRect() : { left: 20, bottom: 200 };
+  const np = $('notepop');
+  np.style.left = clampPopupX(a.left, 340) + 'px';
+  np.style.top = clampPopupY(a.bottom + 8, 280) + 'px'; // .notepop es position:fixed
+  $('noteText').value = text;
+  $('noteCount').textContent = String(text.length);
+  np.classList.remove('hidden');
+  setTimeout(() => { try { $('noteText').focus(); } catch (e) {} }, 50);
+}
 function hideViewNote() { $('viewNotePop').classList.add('hidden'); }
 /* Muestra una nota al tocar una palabra marcada: autor, color, código y fecha */
 function showViewNote(n, anchorRect) {
@@ -1292,6 +1308,7 @@ function initSelection() {
     const text = $('noteText').value.trim();
     if (!text || !pendingRange) { hideNotepop(); return; }
     const { start, end } = pendingRange;
+    const roomId = myRoom; // v177: no reabrir el popup si cambió de sala/libro mientras volaba el POST
     hideNotepop();
     window.getSelection().removeAllRanges();
     pendingRange = null;
@@ -1306,7 +1323,16 @@ function initSelection() {
       }
     });
     if (r.queued) toast(t('actQueued'));
-    else if (!r.ok) toast(t('noteErr'));
+    else if (!r.ok) {
+      toast(t('noteErr'));
+      // v177: error DURO del servidor (p.ej. 400 bad-range porque el texto del
+      // libro cambió) — la nota NO quedó encolada. Reabrir el popup con el
+      // texto intacto en vez de perderlo.
+      if (myRoom === roomId && document.body.classList.contains('in-room')) {
+        pendingRange = { start, end };
+        reopenNotepop(start, end, text);
+      }
+    }
   };
 }
 
@@ -1376,7 +1402,7 @@ function outboxKindOf(path) {
 function persistOutbox() {
   try {
     localStorage.setItem(OUTBOX_KEY, JSON.stringify(outbox.map((it) => ({
-      path: it.path, body: it.body, room: it.room, kind: it.kind || outboxKindOf(it.path),
+      path: it.path, body: it.body, room: it.room, kind: it.kind || outboxKindOf(it.path), color: it.color || null,
     }))));
   } catch (e) { /* almacenamiento lleno o bloqueado: la cola en memoria sigue viva */ }
 }
@@ -1387,7 +1413,7 @@ function restoreOutbox() {
     for (const it of raw) {
       if (!it || typeof it.path !== 'string' || !it.body || typeof it.body !== 'object') continue;
       if (outbox.length >= OUTBOX_MAX) break;
-      outbox.push({ path: it.path, body: it.body, room: it.room || null, kind: it.kind || outboxKindOf(it.path), apply: null });
+      outbox.push({ path: it.path, body: it.body, room: it.room || null, kind: it.kind || outboxKindOf(it.path), color: it.color || null, apply: null });
     }
     if (outbox.length) clog('outbox: restaurados ' + outbox.length + ' gestos pendientes');
   } catch (e) { /* JSON corrupto: arrancar con cola vacía */ }
@@ -1397,10 +1423,15 @@ function restoreOutbox() {
 function outboxApplyFor(item) {
   switch (item.kind) {
     case 'highlight': return (s) => {
-      if (s.highlight && !highlights.some((h) => h.id === s.highlight.id)) {
-        highlights.push(s.highlight);
-        paintHighlight(s.highlight);
-        showUndoPill(s.highlight.id);
+      if (s.highlight) {
+        // v177: retirar la tinta provisional restaurada tras una recarga — el
+        // apply original (postHighlight) ya no existe en esta sesión
+        clearPendingMark(s.highlight.start, s.highlight.end);
+        if (!highlights.some((h) => h.id === s.highlight.id)) {
+          highlights.push(s.highlight);
+          paintHighlight(s.highlight);
+          showUndoPill(s.highlight.id);
+        }
       }
     };
     case 'note': return (s) => {
@@ -1462,26 +1493,29 @@ function isHttpErr(e) {
 /* netPost(path, body, apply): como apiPost, pero ante fallo de red encola el
    gesto para reintentarlo al reconectar. apply(s) fusiona la respuesta exitosa
    (pintar la marca, mostrar la nota…). Devuelve {ok, queued}. */
-async function netPost(path, body, apply) {
+async function netPost(path, body, apply, extra) {
   const payload = { ...(body || {}), cid: makeCid() };
   try {
     const s = await apiPost(path, payload);
     if (s && s.ok) {
       if (apply) apply(s);
       setOnline(true);
-      return { ok: true, queued: false };
+      return { ok: true, queued: false, cid: payload.cid };
     }
-    return { ok: false, queued: false };
+    return { ok: false, queued: false, cid: payload.cid };
   } catch (e) {
     /* v174: exponer el código HTTP — el /del trata 404 como "ya borrado"
        (éxito), así que los callers necesitan el status. */
     const hm = String((e && e.message) || '').match(/^http (\d+)/);
-    if (hm) return { ok: false, queued: false, status: Number(hm[1]) }; // 4xx/5xx: no reintentar
+    if (hm) return { ok: false, queued: false, status: Number(hm[1]), cid: payload.cid }; // 4xx/5xx: no reintentar
     if (outbox.length >= OUTBOX_MAX) outbox.shift(); // tope de seguridad
-    outbox.push({ path, body: payload, apply, room: myRoom, kind: outboxKindOf(path) });
+    /* v177: `extra` lleva datos solo-locales del gesto (p.ej. el color de la
+       tinta) que NO viajan al servidor pero se necesitan al restaurar la cola
+       tras una recarga. */
+    outbox.push({ path, body: payload, apply, room: myRoom, kind: outboxKindOf(path), color: (extra && extra.color) || null });
     persistOutbox(); // v151: la cola sobrevive a recargas
     setOnline(false);
-    return { ok: false, queued: true };
+    return { ok: false, queued: true, cid: payload.cid };
   }
 }
 /* Vacía la cola en orden tras recuperar la red. Cada gesto se envía a SU sala
@@ -2064,7 +2098,14 @@ function renderReactions() {
   });
 }
 
+let rxLastTap = { key: '', at: 0 }; // v177: anti-doble-toque (mismo patrón v168 del marcado)
 function toggleReaction(start, emoji) {
+  // v177: dos toques rápidos en la insignia alternaban agregar+quitar (cada
+  // POST lleva cid distinto y el servidor alterna en cada uno) — el segundo
+  // toque dentro de 1s se ignora. Era el único gesto sin esta protección.
+  const key = start + ':' + emoji, now = Date.now();
+  if (key === rxLastTap.key && now - rxLastTap.at < 1000) return;
+  rxLastTap = { key, at: now };
   // v145: si falla la red, la reacción se encola y se envía sola al reconectar
   netPost(roomBase() + '/reaction', { start, emoji }, () => { pollState(); })
     .then((r) => {
@@ -2219,6 +2260,27 @@ function clearAllPendingMarks() {
     if (!s.classList.contains('mk')) s.style.background = '';
   });
 }
+/* v177: tras entrar a un libro, repintar las marcas encoladas que sobrevivieron
+   a una recarga (initOutbox las restaura pero nada las pintaba: el usuario las
+   creía perdidas y repetía el gesto). Los trozos que aún no bajaron se pintan
+   solos al cargar (renderMoreParas -> repaintAll -> pendingMarks). También
+   ofrece deshacerlas con la píldora (se oculta sola a los 6s, como siempre). */
+function repaintQueuedMarks() {
+  if (!outbox.length || !spanByIdx.length) return;
+  let n = 0;
+  for (const it of outbox) {
+    if (it.kind !== 'highlight' || it.room !== myRoom) continue;
+    const b = it.body || {};
+    if (typeof b.start !== 'number' || typeof b.end !== 'number') continue;
+    paintPendingMark({ start: b.start, end: b.end }, it.color || 'azul');
+    if (b.cid) {
+      undoStack.push({ q: b.cid, start: b.start, end: b.end });
+      if (undoStack.length > 5) undoStack.shift();
+      n++;
+    }
+  }
+  if (n) renderUndoPill();
+}
 /* Publica un subrayado. v145: si falla la red, el gesto se encola y se reintenta
    solo al reconectar (outbox) — ya no se pierde con solo un toast.
    v175: pinta la marca provisional al instante — se ve aunque el POST tarde. */
@@ -2233,8 +2295,11 @@ async function postHighlight(range) {
     // v175: el servidor confirmó (o devolvió la marca ya existente por dedupe
     // v156) — se retira lo provisional y queda la tinta real
     if (s.highlight) clearPendingMark(s.highlight.start, s.highlight.end);
-  });
-  if (r.queued) toast(t('actQueued')); // lo provisional sigue visible hasta que se envíe al reconectar
+  }, { color: myColor }); // v177: el color viaja solo-local en la cola (no al servidor)
+  if (r.queued) {
+    toast(t('actQueued')); // lo provisional sigue visible hasta que se envíe al reconectar
+    showUndoPill({ q: r.cid, start: range.start, end: range.end }); // v177: se puede cancelar lo encolado
+  }
   else if (!r.ok) { clearPendingMark(range.start, range.end); toast(t('hlSaveErr')); }
   return r.ok;
 }
@@ -2244,7 +2309,9 @@ async function postHighlight(range) {
    nueva. Si el id ya no existe (se borró con otro gesto), se descarta en silencio. */
 let undoPillEl = null, undoPillTimer = null, undoStack = [];
 function showUndoPill(hlId) {
-  undoStack.push(hlId);
+  // v177: la entrada puede ser un id confirmado {id} o una marca aún encolada
+  // {q: cid, start, end} (sin id en el servidor: se cancela de la cola local)
+  undoStack.push(typeof hlId === 'object' ? hlId : { id: hlId });
   if (undoStack.length > 5) undoStack.shift();
   renderUndoPill();
 }
@@ -2256,7 +2323,19 @@ function renderUndoPill() {
   el.className = 'undo-pill';
   el.textContent = undoStack.length > 1 ? t('undoMarkN', { n: undoStack.length }) : t('undoMark');
   el.onclick = async () => {
-    const id = undoStack.pop();
+    const e = undoStack.pop();
+    if (e && e.q) {
+      /* v177: cancelar una marca AÚN ENCOLADA — no existe en el servidor, solo
+         se saca de la cola local y se limpia su tinta provisional. */
+      const ix = outbox.findIndex((it) => it.kind === 'highlight' && it.body && it.body.cid === e.q);
+      if (ix >= 0) { outbox.splice(ix, 1); persistOutbox(); }
+      clearPendingMark(e.start, e.end);
+      if (navigator.vibrate) navigator.vibrate(15);
+      toast(t('markUndone'));
+      renderUndoPill(); // sigue ofreciendo deshacer las anteriores, o se oculta
+      return;
+    }
+    const id = e && e.id;
     /* v174: el borrado va por netPost (outbox) — en señal débil se encola y
        se reintenta solo al reconectar en vez de perderse con un toast de error.
        404 = el id ya se borró con otro gesto: confirmar en silencio. */
@@ -2268,7 +2347,7 @@ function renderUndoPill() {
       toast(r.queued ? t('actQueued') : t('markUndone'));
     } else {
       // error HTTP real (no reintentable): devolver el intento a la pila y avisar
-      undoStack.push(id);
+      undoStack.push({ id });
       toast(t('hlDelErr'));
     }
     renderUndoPill(); // sigue ofreciendo deshacer las anteriores, o se oculta
@@ -2493,6 +2572,7 @@ async function bootBook(meta, push) {
   clog('libro abierto: ' + meta.title + ' (meta+paginado), párrafos=' + bookParaTotal);
   restoreProgress(meta.id);
   renderCreatorStats(meta);
+  repaintQueuedMarks(); // v177: gestos encolados que sobrevivieron a una recarga
 }
 
 /* ---------------- navegación con History API ----------------
