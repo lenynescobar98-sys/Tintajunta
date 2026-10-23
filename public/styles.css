@@ -2416,3 +2416,112 @@ body.in-room #boardView {
   border-radius: 10px; background: #fffdf8; width: 100%; box-sizing: border-box;
 }
 .welcome-join input:focus { outline: 2px solid #c9a227; border-color: #c9a227; }
+
+/* ============ v178: presentación — portada dividida ============
+   Estructura editorial tipo "página de producto premium": titular display
+   enorme, visual central (Melo) y bloques separados por divisiones finas.
+   Estática por ley de la casa: nada se mueve solo; solo hover sutil. */
+.presenta-sec { margin: 10px 0 42px; padding: 30px 4px 4px; }
+.presenta-hero { text-align: center; }
+.presenta-kicker {
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 12px; font-weight: 800; letter-spacing: 3px;
+  color: var(--accent); margin: 0 0 12px; text-transform: uppercase;
+}
+.presenta-display {
+  font-size: clamp(42px, 10.5vw, 100px);
+  font-weight: 900; line-height: .98; letter-spacing: -1px;
+  text-transform: uppercase; color: var(--ink);
+  margin: 0 0 28px;
+}
+.presenta-hero-grid {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  align-items: center; gap: 30px;
+  max-width: 1020px; margin: 0 auto;
+}
+.presenta-side {
+  font-size: 17px; line-height: 1.6; color: var(--ink-soft);
+  margin: 0;
+}
+.presenta-hero-grid .presenta-side:first-child { text-align: right; }
+.presenta-hero-grid .presenta-side:last-child { text-align: left; }
+.presenta-visual { margin: 0; }
+.presenta-visual img {
+  width: clamp(180px, 26vw, 280px); height: auto; aspect-ratio: 1 / 1; display: block;
+  border-radius: 24px; border: 3px solid #f0c040;
+  box-shadow: 0 10px 30px rgba(138, 90, 30, .18);
+}
+.presenta-visual figcaption {
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--ink-soft); margin-top: 12px;
+}
+.presenta-ctas {
+  display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 30px;
+}
+.presenta-cta {
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer;
+  padding: 13px 24px; border-radius: 999px;
+  border: 1.5px solid var(--ink); color: var(--ink); background: transparent;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.presenta-cta-main {
+  background: linear-gradient(180deg, #f7b731, #e89b0c);
+  border-color: #b97a08; color: #1a1a1a;
+}
+.presenta-cta-main:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(138, 90, 30, .25); }
+.presenta-cta-alt:hover { background: var(--paper-deep); }
+.presenta-blocks {
+  display: grid; gap: 18px; margin-top: 36px;
+  grid-template-columns: 1.1fr .9fr;
+  grid-template-areas: "how mission" "how library" "how creators";
+}
+.presenta-block {
+  border: 1px solid var(--line); border-radius: 14px;
+  background: var(--paper); padding: 24px 24px 20px;
+}
+.presenta-blocks .presenta-block:nth-child(1) { grid-area: how; }
+.presenta-blocks .presenta-block:nth-child(2) { grid-area: mission; }
+.presenta-blocks .presenta-block:nth-child(3) { grid-area: library; }
+.presenta-blocks .presenta-block:nth-child(4) { grid-area: creators; }
+.presenta-block-h {
+  font-size: 21px; font-weight: 800; color: var(--ink);
+  margin: 0 0 12px; padding-bottom: 8px;
+  border-bottom: 2px solid #f0c040; display: inline-block;
+}
+.presenta-block-p { font-size: 15.5px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
+.presenta-step { display: flex; gap: 12px; padding: 13px 0 3px; }
+.presenta-step + .presenta-step { border-top: 1px solid var(--line); margin-top: 10px; }
+.presenta-num {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(180deg, #f7b731, #e89b0c);
+  color: #1a1a1a; font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px; font-weight: 900;
+}
+.presenta-step h4 { font-size: 16px; margin: 3px 0 4px; color: var(--ink); }
+.presenta-step p {
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px; line-height: 1.55; color: var(--ink-soft); margin: 0;
+}
+.presenta-block-link {
+  display: inline-block; margin-top: 14px;
+  font-family: -apple-system, 'Segoe UI', sans-serif;
+  font-size: 15px; font-weight: 700; color: var(--accent);
+  text-decoration: none; border-bottom: 2px solid #f0c040; padding-bottom: 2px;
+}
+.presenta-block-btn { background: none; border: none; border-bottom: 2px solid #f0c040; cursor: pointer; }
+.presenta-block-link:hover { color: var(--ink); }
+@media (max-width: 720px) {
+  .presenta-hero-grid { grid-template-columns: 1fr; gap: 18px; }
+  .presenta-visual { order: -1; }
+  .presenta-visual img { margin: 0 auto; }
+  .presenta-hero-grid .presenta-side:first-child,
+  .presenta-hero-grid .presenta-side:last-child { text-align: center; }
+  .presenta-blocks {
+    grid-template-columns: 1fr;
+    grid-template-areas: "how" "mission" "library" "creators";
+  }
+}

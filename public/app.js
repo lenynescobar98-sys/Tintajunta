@@ -4950,6 +4950,10 @@ function initImdbBar() {
     searchDeb = setTimeout(renderRows, 200);
   });
   $('enterBtn').onclick = goLiveRoom;
+  /* v178: CTAs de la sección de presentación — reutilizan los flujos
+     existentes (sala en vivo y Publicar), sin rutas nuevas. */
+  const presLive = $('presLiveBtn'); if (presLive) presLive.onclick = () => goLiveRoom();
+  const presPub = $('presPublishBtn'); if (presPub) presPub.onclick = () => { const pb = $('publishBtn'); if (pb) pb.click(); };
   // Campo discreto "Código de sala" en el footer — única entrada pública a la sala privada
   const frc = $('footerRoomCode'), frg = $('footerRoomGo');
   const footerRoomGo = () => {
