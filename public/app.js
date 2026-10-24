@@ -1116,6 +1116,7 @@ function initSelection() {
   }
   function startMarking() {
     marking = true;
+    markingActive = true; // v181
     touchMode = 'marking';
     clog('marcar INICIADO en palabra ' + touchStartPt.i + (pencilMode ? ' (lápiz instantáneo)' : ' (pulsación larga)'));
     suppressSel = true; // que la selección nativa no interfiera mientras marcamos
@@ -1127,6 +1128,7 @@ function initSelection() {
   }
   function cancelMarking() {
     marking = false;
+    markingActive = false; // v181
     touchMode = null;
     clearTempMark();
     markCur = null;
@@ -1827,6 +1829,10 @@ function initFollow() {
    Regla permanente: cada quien escribe con SU color; el profesor SIEMPRE negro. */
 let roomPara = { idx: 0, ts: 0 };
 let lastParaTs = 0;
+/* v181: espejo a nivel de módulo del gesto táctil de marcado (el flag
+   `marking` vive dentro del closure de initSelection y checkPara no lo ve).
+   checkPara lo consulta para no arrastrar la pantalla en medio de un trazo. */
+let markingActive = false;
 /* v168: el aviso "el profesor movió el párrafo" se limita a 1 cada 6s — el
    profesor puede pasar 20 párrafos seguidos y cada toast era distinto
    ("párrafo 3 de 40", "párrafo 4 de 40"…), así que la deduplicación de
@@ -1892,6 +1898,15 @@ function checkPara(s) {
   const pa = s && s.para;
   if (!pa || !pa.ts) return;
   if (pa.ts <= lastParaTs) return;
+  /* v181: no arrastrar la pantalla en medio de un gesto de marcado ni
+     mientras se escribe (nota, chat, pizarra): el scrollIntoView movería
+     la página bajo el dedo. Se difiere SIN avanzar lastParaTs, así el
+     siguiente poll (2.5s) lo reintenta cuando ya no haya gesto. */
+  const ae = document.activeElement;
+  const typing = ae && ae !== document.body &&
+    (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable) &&
+    ae.offsetParent !== null;
+  if (markingActive || typing) return;
   lastParaTs = pa.ts;
   roomPara = pa;
   renderParaBar();
@@ -2478,6 +2493,7 @@ function joinRoom() {
          pasado. La barra sigue mostrando dónde está el profesor; el toast
          solo salta por movimientos nuevos mientras estás dentro. */
       if (s.para && s.para.ts) { lastParaTs = s.para.ts; roomPara = s.para; }
+      lastStateSig = ''; lastRosterSig = ''; lastFollowSig = ''; // v181: entrar aplica el estado completo, sin herencia del diff anterior
       applyState(s);
       setOnline(true);
       clog('red: dentro de ' + myRoom);    })
@@ -2551,6 +2567,7 @@ async function bootBook(meta, push) {
   clearAllPendingMarks(); // v175: lo provisional es de la sala anterior
   lastParaTs = 0; roomPara = { idx: 0, ts: 0 };
   lastRoster = []; // v174: la presencia no se hereda del libro anterior
+  lastStateSig = ''; lastRosterSig = ''; lastFollowSig = ''; // v181: la firma del diff no se hereda del libro anterior
   myRoom = meta.id; // el id del libro ES su sala de marcas
   currentBook = meta;
   readingType = meta.classic ? 'classic' : 'book';
@@ -2645,6 +2662,7 @@ function exitRoom() {
      entrada a una sala parte de cero y solo los movimientos nuevos avisan */
   lastParaTs = 0; roomPara = { idx: 0, ts: 0 };
   lastRoster = []; // v174: la presencia no se hereda de la sala anterior
+  lastStateSig = ''; lastRosterSig = ''; lastFollowSig = ''; // v181: la firma del diff no se hereda de la sala anterior
   toast(t('exitedRoom'));
   showLibrary(true);
 }
@@ -3717,6 +3735,7 @@ let rowsFirstPaint = true;
 function fillRow(elId, tiles, emptyMsg) {
   const row = document.getElementById(elId);
   if (!row) return;
+  const keepX = row.scrollLeft; // v181: conservar el desplazamiento al filtrar/buscar
   row.innerHTML = '';
   if (!tiles.length) {
     row.innerHTML = `<p class="hrow-empty">${emptyMsg}</p>`;
@@ -3730,6 +3749,7 @@ function fillRow(elId, tiles, emptyMsg) {
     }
     row.appendChild(t);
   });
+  if (keepX) row.scrollLeft = keepX; // v181: la fila no salta a la izquierda en cada re-render
 }
 /* Filas: Destacados / Recomendados (con pills) */
 /* v68 — "Seguir leyendo" (patrón Goodreads): la biblioteca abre con tu lectura
