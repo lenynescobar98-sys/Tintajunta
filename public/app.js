@@ -748,6 +748,15 @@ function paintNoteMarks() {
 function renderNotes() {
   const box = $('notes');
   $('notesCount').textContent = notes.length ? `(${notes.length})` : '';
+  /* v182: misma guarda que renderChat — no borrar una selección en curso
+     (ej. copiar el código de una nota) con el re-render de cada poll. */
+  try {
+    const sel = window.getSelection && window.getSelection();
+    if (sel && !sel.isCollapsed && sel.rangeCount) {
+      const a = sel.anchorNode, f = sel.focusNode;
+      if ((a && (a === box || box.contains(a))) || (f && (f === box || box.contains(f)))) return;
+    }
+  } catch (e) {}
   if (!notes.length) {
     box.innerHTML = '<p class="notes-empty">' + t('notesEmpty') + '</p>';
     return;
@@ -900,9 +909,14 @@ function toastExit(rec, msg) {
     if (toastTimers.get(msg) === rec) toastTimers.delete(msg);
   }, 220);
 }
-function toast(msg) {
+/* v182: opts.link — aviso de enlace (ej. copiar enlace sin portapapeles):
+   se muestra completo y seleccionable (el toast normal trunca con "…" y tiene
+   pointer-events:none, así el enlace no se podía leer ni copiar) y dura más. */
+function toast(msg, opts) {
   const box = $('toasts');
   if (!box) return;
+  const link = !!(opts && opts.link);
+  const dur = link ? 9000 : 3200;
   const prev = toastTimers.get(msg);
   if (prev) {
     clearTimeout(prev.timer);
@@ -911,11 +925,11 @@ function toast(msg) {
     prev.el.classList.remove('toast');
     void prev.el.offsetWidth; // re-dispara la animación
     prev.el.classList.add('toast');
-    prev.timer = setTimeout(() => toastExit(prev, msg), 3200);
+    prev.timer = setTimeout(() => toastExit(prev, msg), prev.dur || dur);
     return;
   }
   const t = document.createElement('div');
-  t.className = 'toast';
+  t.className = link ? 'toast link' : 'toast';
   t.textContent = msg;
   box.appendChild(t);
   while (box.children.length > 3) {
@@ -926,8 +940,8 @@ function toast(msg) {
     toastTimers.delete(old.textContent);
     old.remove();
   }
-  const rec = { el: t, timer: null, rmTimer: null };
-  rec.timer = setTimeout(() => toastExit(rec, msg), 3200);
+  const rec = { el: t, timer: null, rmTimer: null, dur };
+  rec.timer = setTimeout(() => toastExit(rec, msg), dur);
   toastTimers.set(msg, rec);
 }
 /* v163: quitar un aviso específico (ej. "Abriendo libro…" cuando el libro ya abrió) */
@@ -2044,6 +2058,17 @@ function renderChat() {
   if (chatTab === 'chat') chatSeen = chat.length;
   const unread = chat.length - chatSeen;
   $('chatCount').textContent = (chatTab !== 'chat' && unread > 0) ? `(${unread})` : '';
+  /* v182: no borrar una selección de texto en curso — el re-render del poll
+     (cada 2.5s) destruía la selección al copiar un mensaje. Solo se salta el
+     pintado; el badge ya se actualizó arriba y el próximo poll sin selección
+     pinta lo nuevo. Solo aplica con texto realmente seleccionado (no caret). */
+  try {
+    const sel = window.getSelection && window.getSelection();
+    if (sel && !sel.isCollapsed && sel.rangeCount) {
+      const a = sel.anchorNode, f = sel.focusNode;
+      if ((a && (a === box || box.contains(a))) || (f && (f === box || box.contains(f)))) return;
+    }
+  } catch (e) {}
   // v158: no arrastrar al final si el lector está viendo mensajes viejos —
   // cada re-render del poll lo devolvía abajo aunque estuviera leyendo arriba.
   const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
@@ -2448,7 +2473,7 @@ function initNet() {
         await navigator.clipboard.writeText(link);
         toast(t('roomLinkCopied'));
       } catch (e) {
-        toast(t('roomLinkManual') + link); // el lector lo puede dictar o escribir
+        toast(t('roomLinkManual') + link, { link: true }); // v182: completo y seleccionable para copiarlo a mano
       }
       clog('enlace copiado/mostrado: ' + link);
     };

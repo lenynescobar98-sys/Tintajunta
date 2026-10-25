@@ -596,6 +596,9 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   border-radius: 20px; padding: 9px 18px; box-shadow: 0 6px 20px rgba(0,0,0,.3);
   animation: toastin .25s ease; white-space: nowrap; max-width: 92vw; overflow: hidden; text-overflow: ellipsis;
 }
+/* v182: aviso de enlace — completo, con saltos de línea y seleccionable para
+   copiarlo a mano (el contenedor .toasts tiene pointer-events:none). */
+.toast.link { white-space: normal; word-break: break-all; pointer-events: auto; user-select: text; -webkit-user-select: text; }
 @keyframes toastin { from { opacity: 0; transform: translateY(8px); } }
 
 @media (max-width: 920px) {
