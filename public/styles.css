@@ -217,7 +217,7 @@ body {
 .hero-sub { position: relative; color: rgba(255,255,255,.85); font-size: 14px; margin-top: 4px; font-family: -apple-system, 'Segoe UI', sans-serif; }
 .hero-cta { position: relative; align-self: flex-start; margin-top: 12px; }
 .hero-dots { position: absolute; bottom: 12px; right: 14px; display: flex; gap: 6px; }
-.hero-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.4); cursor: pointer; transition: background .3s; }
+.hero-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.4); cursor: pointer; transition: background .3s; border: 0; padding: 0; } /* v183: es <button> (accesible por teclado): neutralizar su estilo por defecto */
 .hero-dot.on { background: #fff; }
 /* Skeleton mientras carga el hero */
 .hero-skeleton { background: linear-gradient(135deg, #f0ede6, #e4e0d4); }

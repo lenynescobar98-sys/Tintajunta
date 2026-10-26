@@ -937,6 +937,7 @@ I18N.es.studentMode = 'Modo estudiante';
 /* ---------- hero ---------- */
 I18N.es.heroCtaRead = 'Leer ahora';
 I18N.es.heroCtaView = 'Ver libro';
+I18N.es.heroDot = 'Ir al slide {n}';
 /* ---------- v178: presentación (portada dividida) ---------- */
 I18N.es.presKicker = 'TINTAJUNTA · LECTURA EN VIVO';
 I18N.es.presTitle = 'UN LIBRO,<br>TODAS LAS TINTAS';
@@ -1161,6 +1162,7 @@ I18N.en.teacherMode = '🎓 Teacher mode: black ink';
 I18N.en.studentMode = 'Student mode';
 I18N.en.heroCtaRead = 'Read now';
 I18N.en.heroCtaView = 'View book';
+I18N.en.heroDot = 'Go to slide {n}';
 /* ---------- v178: presentation (divided homepage) ---------- */
 I18N.en.presKicker = 'TINTAJUNTA · LIVE READING';
 I18N.en.presTitle = 'ONE BOOK,<br>EVERY INK';

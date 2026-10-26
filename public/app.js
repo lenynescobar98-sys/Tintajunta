@@ -1149,6 +1149,7 @@ function initSelection() {
     setTimeout(() => { suppressSel = false; }, 150);
   }
   let noteTimer = null, justLongPressedAt = 0, justMarkedAt = 0;
+  let lastMarkedRange = null; // v183: rango del último arrastre (el guardián de clic solo suprime dentro de él)
   /* v168: anti-doble-toque — dos toques discretos (~300ms) en la misma palabra
      sin marcar publicaban dos subrayados idénticos (el segundo no ve la marca
      del primero porque aún no se pintó). Se recuerda el último toque-marca. */
@@ -1228,6 +1229,7 @@ function initSelection() {
     // Lápiz: al soltar, el subrayado queda guardado de una vez (permanente)
     clog('lápiz: subrayado directo ' + r.start + '-' + r.end);
     justMarkedAt = Date.now(); // evita que el click posterior marque de más
+    lastMarkedRange = { start: r.start, end: r.end }; // v183: el guardián solo suprime dentro del rango
     postHighlight(r);
   });
 
@@ -1238,7 +1240,18 @@ function initSelection() {
   // - Mantener tu subrayado → popup (agregar nota).
   document.addEventListener('click', (e) => {
     if (!pencilMode) return;
-    if (Date.now() - justMarkedAt < 600) return; // recién marcado con arrastre
+    /* v183: el guardián de 600 ms tras arrastrar tragaba TODOS los toques —
+       marcar y tocar otra palabra al instante se perdía y parecía que la
+       pantalla no respondía. El clic residual del propio arrastre cae sobre
+       la palabra final del rango (dentro de lastMarkedRange, donde sin
+       guardián borraría el párrafo recién marcado o re-marcaría); fuera del
+       rango el toque es seguro y sigue su flujo normal. Sin rango guardado
+       se conserva el comportamiento viejo (suprimir todo). */
+    if (Date.now() - justMarkedAt < 600) {
+      if (!lastMarkedRange) return;
+      const tw = e.target.closest && e.target.closest('.w');
+      if (tw && +tw.dataset.i >= lastMarkedRange.start && +tw.dataset.i <= lastMarkedRange.end) return;
+    }
     if (Date.now() - justLongPressedAt < 800) return; // recién abierto con mantener
     if (e.target.closest('#toolbar') || e.target.closest('#notepop') || e.target.closest('#viewNotePop')) return;
     // Si hay un popup abierto, el toque solo lo cierra
@@ -1419,9 +1432,11 @@ function setOnline(on) {
 
 /* v145 — outbox: en señal débil, los POST que fallan POR RED se encolan y se
    reintentan solos al recuperar la conexión (antes el gesto se perdía para
-   siempre con solo un toast). Los errores HTTP (4xx/5xx) nunca se reintentan:
-   son validación, no red. Idempotencia vía `cid`: si el POST original sí llegó
-   al servidor pero se perdió la respuesta, el reintento no duplica. */
+   siempre con solo un toast). Los errores 4xx nunca se reintentan: son
+   validación, no red. v183: un 5xx (típico: túnel muerto con 502/503) TAMBIÉN
+   se encola — la petición pudo no llegar, y el reintento es seguro por la
+   idempotencia vía `cid` de abajo. Idempotencia vía `cid`: si el POST
+   original sí llegó al servidor pero se perdió la respuesta, el reintento no duplica. */
 let outbox = [];
 let flushingOutbox = false;
 const OUTBOX_MAX = 100;
@@ -1542,7 +1557,12 @@ async function netPost(path, body, apply, extra) {
     /* v174: exponer el código HTTP — el /del trata 404 como "ya borrado"
        (éxito), así que los callers necesitan el status. */
     const hm = String((e && e.message) || '').match(/^http (\d+)/);
-    if (hm) return { ok: false, queued: false, status: Number(hm[1]), cid: payload.cid }; // 4xx/5xx: no reintentar
+    /* v183: solo 4xx devuelve sin encolar (validación). Un 5xx cae al camino
+       de encolado de abajo: el gesto pudo no llegar y el servidor idempotenta
+       por cid, así que reintentarlo no duplica (highlight, nota, chat,
+       reacción y pizarra dedupean por cid; /del, mano y boardClear son
+       idempotentes o estados). */
+    if (hm && Number(hm[1]) < 500) return { ok: false, queued: false, status: Number(hm[1]), cid: payload.cid };
     if (outbox.length >= OUTBOX_MAX) outbox.shift(); // tope de seguridad
     /* v177: `extra` lleva datos solo-locales del gesto (p.ej. el color de la
        tinta) que NO viajan al servidor pero se necesitan al restaurar la cola
@@ -1568,7 +1588,15 @@ async function flushOutbox() {
       try {
         s = await apiPost(item.path, item.body);
       } catch (e) {
-        if (isHttpErr(e)) { outbox.shift(); persistOutbox(); continue; } // 4xx: descartar, no reintentar
+        /* v183: un 5xx al vaciar la cola es una ventana de túnel/servidor
+           caído, no un rechazo: break y el gesto queda encolado para el
+           próximo poll (descartarlo perdería un gesto que ya estaba a salvo).
+           Solo 4xx descarta (validación). */
+        if (isHttpErr(e)) {
+          const sm = String(e.message || '').match(/^http (\d+)/);
+          if (sm && Number(sm[1]) >= 500) break;
+          outbox.shift(); persistOutbox(); continue;
+        }
         break; // sigue sin red: el resto queda encolado
       }
       outbox.shift();
@@ -4117,7 +4145,7 @@ function renderHero(featBooks) {
   // si deslizó al slide 2 y una acción re-renderiza, el hero ya no salta al slide 0.
   heroIdx = Math.max(0, Math.min(heroIdx, heroSlides.length - 1));
   track.innerHTML = heroSlides.map((s) => s.html).join('');
-  dots.innerHTML = heroSlides.map((_, i) => `<span class="hero-dot${i === heroIdx ? ' on' : ''}" data-i="${i}"></span>`).join('');
+  dots.innerHTML = heroSlides.map((_, i) => `<button type="button" class="hero-dot${i === heroIdx ? ' on' : ''}" data-i="${i}" aria-label="${t('heroDot', { n: i + 1 })}"></button>`).join('');
   track.querySelectorAll('.hero-cta-round').forEach((btn) => {
     btn.onclick = (e) => { e.stopPropagation(); openBook(btn.dataset.book); };
   });
