@@ -4209,7 +4209,8 @@ function renderAdSenseSlots() {
   // Con Publisher ID: anuncios reales de Google
   if (!adsenseLoaded) {
     adsenseLoaded = true;
-    // v140: el script ya va estático en <head> (verificación AdSense); no duplicar
+    // v184: el script ya NO va estático en <head> (competía con el contenido
+    // en señal débil); se inyecta aquí, al renderizar los anuncios, sin duplicar
     if (!document.querySelector('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')) {
       const sc = document.createElement('script');
       sc.async = true;

@@ -371,6 +371,47 @@ app.use((req, res, next) => {
   };
   next();
 });
+/* v184: minificación en servidor (JS/CSS) — perezosa, con caché por mtime y
+ * fallback a los archivos originales ante cualquier fallo. Así cada versión
+ * viaja más liviana sin cambiar el flujo de edición (?v=N sigue mandando):
+ * se edita app.js/styles.css/i18n.js como siempre y el servidor minifica.
+ * Si terser/clean-css no están instalados, sirve los originales sin error. */
+let _terser = null, _CleanCSS = null;
+try { _terser = require('terser'); } catch (e) { /* sin terser: originales */ }
+try { _CleanCSS = require('clean-css'); } catch (e) { /* sin clean-css: originales */ }
+const _minCache = new Map(); // ruta absoluta -> { mtime, code }
+const _publicRoot = path.join(__dirname, 'public');
+app.use(async (req, res, next) => {
+  try {
+    if (req.method !== 'GET' || req.headers.range) return next();
+    const m = req.path.match(/\.(js|css)$/i);
+    if (!m) return next();
+    const resolved = path.resolve(_publicRoot, '.' + req.path);
+    if (!resolved.startsWith(_publicRoot + path.sep)) return next();
+    if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) return next();
+    const stat = fs.statSync(resolved);
+    const ext = m[1].toLowerCase();
+    const cached = _minCache.get(resolved);
+    const sendMin = (code) => {
+      res.setHeader('Content-Type', ext === 'js' ? 'application/javascript; charset=utf-8' : 'text/css; charset=utf-8');
+      if (req.query && req.query.v && IMMUTABLE_OK.test(req.path)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return res.end(code);
+    };
+    if (cached && cached.mtime === stat.mtimeMs) return sendMin(cached.code);
+    const code = fs.readFileSync(resolved, 'utf8');
+    let min = null;
+    if (ext === 'js' && _terser) {
+      const out = await _terser.minify(code);
+      if (!out.error && out.code) min = out.code;
+    } else if (ext === 'css' && _CleanCSS) {
+      const out = new _CleanCSS({ level: 2 }).minify(code);
+      if (!out.errors.length && out.styles) min = out.styles;
+    }
+    if (!min || min.length >= code.length) return next();
+    _minCache.set(resolved, { mtime: stat.mtimeMs, code: min });
+    return sendMin(min);
+  } catch (e) { return next(); }
+});
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '256kb' }));
 /* Sesiones (login con Google). La sesión identifica al usuario por req.session.user */
