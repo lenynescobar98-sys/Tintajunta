@@ -2485,6 +2485,9 @@ let netInitDone = false;
 function initNet() {
   if (!netInitDone) {
     netInitDone = true;
+    // v185: al recuperar la conexión, vaciar la cola de gestos encolados
+    // aunque ya no se esté en la sala (antes solo se reintentaba en pollState).
+    window.addEventListener('online', () => { try { flushOutbox(); } catch (e) {} });
     setInterval(() => { if (!document.hidden && currentView === 'room') pollState(); }, 2500); // novedades de los demás (pausado si la pestaña está oculta o fuera de la sala)
     // v158: se eliminó el ping de presencia de 15s — el latido de párrafo de
     // 8s ya mantiene la presencia viva; era un POST redundante en señal débil.
@@ -3732,6 +3735,13 @@ function visibleBooks(list) {
     || popularity(b) - popularity(a) || b.createdAt - a.createdAt);
   return l;
 }
+/* v185: la búsqueda también filtra Destacados, Novedades y Clásicos
+   (antes solo filtraba Recomendados y parecía rota). Solo el texto
+   de búsqueda; las pills y el idioma no cambian en esas filas. */
+function queryBooks(list) {
+  const q = libQuery.trim().toLowerCase();
+  return q ? list.filter((b) => (b.title + ' ' + b.author).toLowerCase().includes(q)) : list;
+}
 /* Prioridad de idioma para ordenar: es → en → resto */
 function langPriority(lang) {
   const l = (lang || 'es').toLowerCase();
@@ -3864,7 +3874,7 @@ function interleaveByLang(list) {
 }
 
 function renderRows() {
-  const feat = libBooksCache.filter((b) => b.featured);
+  const feat = queryBooks(libBooksCache.filter((b) => b.featured));
   const secD = document.getElementById('secDestacados');
   if (secD) secD.style.display = feat.length ? '' : 'none';
   fillRow('rowDestacados',
@@ -3876,15 +3886,15 @@ function renderRows() {
     libQuery ? t('noResults') : t('publishFirst'));
   // ✨ Novedades del mes: clásicos agregados en los últimos 30 días, los últimos primero
   const MONTH_MS = 30 * 24 * 3600 * 1000;
-  const nov = libBooksCache.filter((b) => b.classic && (Date.now() - (b.createdAt || 0)) < MONTH_MS)
-    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const nov = queryBooks(libBooksCache.filter((b) => b.classic && (Date.now() - (b.createdAt || 0)) < MONTH_MS)
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)));
   const secN = document.getElementById('secNovedades');
   if (secN) secN.style.display = nov.length ? '' : 'none';
   fillRow('rowNovedades', nov.map((b) => coverTile(b, { badge: '✨ ' + t('newBadge') })), '');
   // 📜 Clásicos gratis: dominio público, sin creador (v101: es → en → resto)
-  const cls = libBooksCache.filter((b) => b.classic)
+  const cls = queryBooks(libBooksCache.filter((b) => b.classic)
     .sort((a, b) => langPriority(a.language) - langPriority(b.language)
-      || popularity(b) - popularity(a) || b.createdAt - a.createdAt);
+      || popularity(b) - popularity(a) || b.createdAt - a.createdAt));
   const secC = document.getElementById('secClassics');
   if (secC) secC.style.display = cls.length ? '' : 'none';
   fillRow('rowClassics', cls.map((b) => coverTile(b, {})), '');
@@ -3980,7 +3990,7 @@ function showImmersiveAd(a, paid) {
     : ((typeof AD_BADGE_LABEL !== 'undefined' && AD_BADGE_LABEL[a.badge]) || a.badge || 'Espacio disponible');
   const mine = paid && a.advertiser === displayName();
   const visual = a.photoUrl
-    ? `<img src="${esc(a.photoUrl)}" alt="${esc(a.name)}" style="width:100%;height:100%;object-fit:cover">`
+    ? `<img src="${esc(a.photoUrl)}" alt="${esc(a.name)}" style="width:100%;height:100%;object-fit:cover" onerror="this.remove()">`
     : `<span>${esc(a.emoji)}</span>`;
   openImmersive({
     visual,
@@ -4017,7 +4027,7 @@ function showImmersiveBestOffer() {
 /* Libro destacado en inmersiva: portada grande, título, autor, precio, Leer */
 function showImmersiveBook(b) {
   const visual = b.coverUrl
-    ? `<img src="${esc(b.coverUrl)}" alt="${t('kpCoverAlt', { title: esc(b.title) })}">`
+    ? `<img src="${esc(b.coverUrl)}" alt="${t('kpCoverAlt', { title: esc(b.title) })}" onerror="this.remove()">`
     : `<div style="width:100%;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:22px;${coverStyle(b.id)}"><div class="cover-title" style="font-size:24px">${esc(b.title)}</div><div class="cover-author">${esc(b.author)}</div></div>`;
   openImmersive({
     visual,
