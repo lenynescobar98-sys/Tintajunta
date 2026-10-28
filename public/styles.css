@@ -1584,6 +1584,9 @@ main.layout article.chapter.read-w-wide #chapterTitle { max-width: none; }
 }
 #secAds .row-sub { color: #6b5f4c; }
 
+/* v187 — anuncio: la publicidad de la página es creada con IA */
+#secAds .ai-notice { font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 12px; line-height: 1.5; color: #6b5f4c; background: #fdf8ef; border: 1px solid #e8dcc0; border-left: 4px solid #8a5a1e; border-radius: 10px; padding: 8px 12px; margin: 0 0 12px; }
+
 /* v77 — CTAs más visibles */
 #library .hero-cta-round {
   background: #8a5a1e;
