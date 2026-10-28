@@ -1698,6 +1698,18 @@ let boardSeenMaxTs = 0; // v87: para animar solo los mensajes nuevos
 function renderBoard() {
   const edit = $('boardEdit'), view = $('boardView'), meta = $('boardMeta'), clear = $('boardClear'), send = $('boardSend');
   if (!edit) return;
+  /* v186: misma guarda que renderChat/renderNotes (v182) — no borrar una
+     selección en curso (ej. copiar el texto de la pizarra) con el re-render
+     de cada poll. Solo se salta el pintado; el próximo poll sin selección
+     pinta lo nuevo (y lo marca como nuevo, v87, sin daño). El input no se
+     toca aquí, así que escribir en la pizarra nunca se vio afectado. */
+  try {
+    const sel = window.getSelection && window.getSelection();
+    if (sel && !sel.isCollapsed && sel.rangeCount && view) {
+      const a = sel.anchorNode, f = sel.focusNode;
+      if ((a && (a === view || view.contains(a))) || (f && (f === view || view.contains(f)))) return;
+    }
+  } catch (e) {}
   // v85: el input es visible para TODOS (no solo el profesor)
   edit.classList.remove('hidden');
   if (send) send.classList.remove('hidden');
@@ -1780,6 +1792,20 @@ function followPos() {
 
 function followScrollTo() {
   if (!iFollow || isTeacher || currentView !== 'room') return;
+  /* v186: mismo guarda que checkPara (v181) — no arrastrar la pantalla
+     en medio de un gesto de marcado, mientras se escribe o con texto
+     seleccionado. Solo se difiere: no se toca iFollow/iUnfollowed ni se
+     entra en la ventana followScrolling, así el próximo poll reintenta. */
+  const ae = document.activeElement;
+  const typing = ae && ae !== document.body &&
+    (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable) &&
+    ae.offsetParent !== null;
+  let selecting = false;
+  try {
+    const sel = window.getSelection && window.getSelection();
+    selecting = !!(sel && !sel.isCollapsed && sel.rangeCount);
+  } catch (e) {}
+  if (markingActive || typing || selecting) return;
   const max = document.documentElement.scrollHeight - window.innerHeight;
   if (max <= 0) return;
   const target = Math.round(follow.pos * max);
@@ -2164,8 +2190,18 @@ function initChat() {
 let reactions = [];
 
 function renderReactions() {
-  document.querySelectorAll('.rx-badge').forEach((b) => b.remove());
-  if (!Array.isArray(reactions) || !reactions.length) return;
+  /* v186: diff en vez de reconstruir — antes cada poll borraba TODAS las
+     insignias y las recreaba, así que un toque que caía sobre una insignia
+     justo en un poll perdía su nodo antes del click y el toggle no corría
+     (sin toast, el usuario ni lo notaba). Ahora los nodos vigentes se
+     conservan y solo se actualizan en su sitio; los que ya no corresponden
+     se quitan. Se mantiene una insignia por palabra (primer grupo, como
+     antes) y cada pasada sigue agregando insignias a párrafos recién
+     pintados (carga por trozos), así que no se pierde ninguna. */
+  if (!Array.isArray(reactions) || !reactions.length) {
+    document.querySelectorAll('.rx-badge').forEach((b) => b.remove());
+    return;
+  }
   const groups = {};
   reactions.forEach((r) => {
     const k = r.start + '|' + r.emoji;
@@ -2173,15 +2209,32 @@ function renderReactions() {
     groups[k].names.push(r.name);
   });
   const me = displayName();
+  const wanted = new Map(); // span -> primer grupo de esa palabra
   Object.values(groups).forEach((g) => {
     const sp = spanByIdx[g.start];
-    if (!sp || sp.querySelector('.rx-badge')) return;
-    const badge = document.createElement('sup');
-    badge.className = 'rx-badge' + (g.names.includes(me) ? ' mine' : '');
+    if (!sp || wanted.has(sp)) return;
+    wanted.set(sp, g);
+  });
+  const kept = new Set();
+  wanted.forEach((g, sp) => {
+    const key = g.start + '|' + g.emoji;
+    let badge = sp.querySelector('.rx-badge');
+    if (!badge) {
+      badge = document.createElement('sup');
+      badge.className = 'rx-badge';
+      sp.appendChild(badge);
+    }
+    // Actualizar en su sitio (el nodo sobrevive; el onclick se reasigna
+    // para que siempre apunte al grupo visible actual).
+    badge.dataset.rx = key;
+    badge.classList.toggle('mine', g.names.includes(me));
     badge.textContent = g.emoji + (g.names.length > 1 ? g.names.length : '');
     badge.title = g.names.join(', ');
     badge.onclick = (e) => { e.stopPropagation(); toggleReaction(g.start, g.emoji); };
-    sp.appendChild(badge);
+    kept.add(badge);
+  });
+  document.querySelectorAll('.rx-badge').forEach((b) => {
+    if (!kept.has(b)) b.remove();
   });
 }
 
