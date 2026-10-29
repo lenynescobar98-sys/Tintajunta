@@ -191,7 +191,7 @@ async function initHeaderAuth() {
   if (!loginBtn || !chip) return;
   loginBtn.onclick = () => { googleLogin(); };
   try {
-    const r = await fetch('/api/auth/me', { cache: 'no-store' });
+    const r = await fetchTimeout('/api/auth/me', 8000, { cache: 'no-store' });
     const d = await r.json();
     headerUser = (d && d.ok && d.user) || null;
     // Compartir el estado de Google con googleLogin()/needLogin()
@@ -202,7 +202,7 @@ async function initHeaderAuth() {
     loginBtn.classList.add('hidden'); loginBtn.hidden = true;
     chip.classList.remove('hidden'); chip.hidden = false;
     const av = $('userAvatar'), nm = $('userName');
-    if (av) { av.src = headerUser.picture || ''; av.alt = headerUser.name || ''; }
+    if (av) { av.src = headerUser.picture || ''; av.alt = headerUser.name || ''; av.onerror = () => { av.style.display = 'none'; }; }
     if (nm) nm.textContent = (headerUser.name || headerUser.email || '').split(' ')[0];
     chip.onclick = (e) => {
       const m = $('userMenu');
@@ -269,7 +269,7 @@ function initJoin() {
     myName = $('nameInput').value.trim().slice(0, 24) || t('joinDefaultName');
     let code = null;
     try {
-      const r = await fetch('/api/room/new');
+      const r = await fetchTimeout('/api/room/new', 8000);
       const d = await r.json();
       code = d && d.code;
     } catch (e) { /* abajo */ }
@@ -2864,7 +2864,7 @@ async function renderAds() {
   if (!row) return;
   // anuncios pagados vigentes desde el servidor
   try {
-    const r = await fetch('/api/ads');
+    const r = await fetchTimeout('/api/ads', 8000);
     const d = await r.json();
     paidAds = (d.ads || []);
   } catch { paidAds = []; }
@@ -4972,7 +4972,7 @@ function googleLogout() {
 }
 async function checkAuth() {
   try {
-    const r = await fetch('/api/auth/me');
+    const r = await fetchTimeout('/api/auth/me', 8000);
     const d = await r.json();
     tjUser = d.user || null;
     tjGoogleEnabled = !!d.googleEnabled;
