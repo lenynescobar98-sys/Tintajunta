@@ -1783,6 +1783,17 @@ let follow = { active: false, pos: 0, ts: 0, name: '' };
 let iFollow = false;          // yo (estudiante) estoy siguiendo ahora
 let iUnfollowed = false;      // yo dejé de seguir manualmente (no re-activar solo)
 let followScrolling = false;  // scroll programático en curso (no cuenta como manual)
+let followScrollTimer = null;
+/* v189: ventana de scroll programático con asentamiento — se rearma con cada
+   evento de scroll y solo libera el flag tras 400ms sin scroll. Así un salto
+   largo con smooth, el scrollIntoView del párrafo de clase o el salto a la
+   posición guardada no se leen como "el estudiante se movió" (el temporizador
+   fijo de 900ms de antes cortaba el seguimiento a mitad de un salto largo). */
+function markProgScroll() {
+  followScrolling = true;
+  if (followScrollTimer) clearTimeout(followScrollTimer);
+  followScrollTimer = setTimeout(() => { followScrolling = false; }, 400);
+}
 let followInitDone = false;
 
 function followPos() {
@@ -1810,10 +1821,9 @@ function followScrollTo() {
   if (max <= 0) return;
   const target = Math.round(follow.pos * max);
   if (Math.abs(window.scrollY - target) < 40) return; // ya estoy ahí
-  followScrolling = true;
+  markProgScroll();
   try { window.scrollTo({ top: target, behavior: 'smooth' }); }
   catch (e) { window.scrollTo(0, target); }
-  setTimeout(() => { followScrolling = false; }, 900);
 }
 
 function renderFollow() {
@@ -1880,12 +1890,15 @@ function initFollow() {
               .catch(() => {});
           }
         }, 500);
-      } else if (iFollow && !followScrolling && currentView === 'room') {
-        // el estudiante se movió por su cuenta → deja de seguir (una sola vez)
-        iFollow = false;
-        iUnfollowed = true; // no re-activar automáticamente
-        toast(t('followLeft'));
-        renderFollow();
+      } else if (iFollow && currentView === 'room') {
+        if (followScrolling) markProgScroll(); // sigue el scroll programático: rearmar la ventana
+        else {
+          // el estudiante se movió por su cuenta → deja de seguir (una sola vez)
+          iFollow = false;
+          iUnfollowed = true; // no re-activar automáticamente
+          toast(t('followLeft'));
+          renderFollow();
+        }
       }
     }, { passive: true });
   }
@@ -1957,6 +1970,7 @@ async function focusPara(idx, smooth) {
   });
   const pEl = document.querySelector('#paras p[data-para="' + idx + '"]');
   if (pEl && !document.body.classList.contains('board-mode-on')) {
+    markProgScroll(); // v189: el scrollIntoView del párrafo no es manual
     try { pEl.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' }); }
     catch (e) { pEl.scrollIntoView(); }
   }
@@ -2703,6 +2717,7 @@ async function bootBook(meta, push) {
   if (!selInitDone) { selInitDone = true; initSelection(); }
   $('library').classList.add('hidden');
   $('join').classList.add('hidden');
+  markProgScroll(); // v189: el salto al inicio al abrir el libro no es manual
   window.scrollTo(0, 0);
   initNet();
   // v162: primer rango de párrafos — con esto el libro ya se lee; el resto
@@ -2745,6 +2760,7 @@ function setViewState(view, push) {
 }
 function hideOverlays() {
   ['library', 'join', 'writing'].forEach((id) => { const el = $(id); if (el) el.classList.add('hidden'); });
+  markProgScroll(); // v189: el salto al inicio al re-entrar no es manual
   window.scrollTo(0, 0);
 }
 /* Volver a entrar a la sala al navegar con atrás/adelante del sistema */
@@ -3745,6 +3761,7 @@ function restoreProgress(bookId) {
            un no-op silencioso y el aviso mentiría — el 'Tardó demasiado' del
            intento ya avisó con honestidad. */
         if (document.documentElement.scrollHeight >= y) {
+          markProgScroll(); // v189: el salto a la posición guardada no es manual
           window.scrollTo(0, y);
           toast(t('continueReading'));
         }
@@ -3875,7 +3892,7 @@ function renderContinueReading() {
   if (!sec || !row) return;
   const items = [];
   try {
-    for (let i = 0; i < localStorage.length && items.length < 6; i++) {
+    for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (!k || !k.startsWith('tj_progress_')) continue;
       const id = k.slice('tj_progress_'.length);
@@ -3887,9 +3904,10 @@ function renderContinueReading() {
     }
   } catch (e) {}
   items.sort((a, b) => (b.meta.ts || 0) - (a.meta.ts || 0));
-  if (!items.length) { sec.classList.add('hidden'); return; }
+  const top = items.slice(0, 6); // v189: ordenar TODOS y luego cortar (antes se cortaba antes de ordenar)
+  if (!top.length) { sec.classList.add('hidden'); return; }
   sec.classList.remove('hidden');
-  row.innerHTML = items.map(({ id, meta }) => `
+  row.innerHTML = top.map(({ id, meta }) => `
     <button class="continue-card" data-book="${esc(id)}">
       <span class="continue-cover">${meta.cover
         ? `<img src="${esc(meta.cover)}" alt="" loading="lazy">`

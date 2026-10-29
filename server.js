@@ -1538,6 +1538,15 @@ app.get('/api/rooms/:room/state', (req, res) => {
   const code = roomOf(req, res); if (!code) return;
   const st = getRoom(code);
   pruneHands(st);
+  // v189: Sígueme fantasma — si el profesor ya no está en el roster de
+  // presencia (expira a los 45s) y su último reporte tiene más de 90s, el
+  // seguimiento no se devuelve activo: nadie debe ser arrastrado por un
+  // profesor ausente. Solo se filtra en la respuesta (como pruneHands).
+  if (st.follow && st.follow.active && st.follow.name &&
+      (Date.now() - (Number(st.follow.ts) || 0)) > 90000 &&
+      !roster(code).some((p) => p.name === st.follow.name)) {
+    st.follow.active = false;
+  }
   // switchTo expira a los 5 minutos (señal transitoria)
   let sw = st.switchTo || null;
   if (sw && (Date.now() - (Number(sw.ts) || 0)) > 5 * 60 * 1000) { sw = null; st.switchTo = null; }
