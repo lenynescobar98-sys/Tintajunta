@@ -1613,6 +1613,10 @@ async function flushOutbox() {
 let lastStateSig = '';
 let lastRosterSig = '';
 let lastFollowSig = '';
+// v190 — firmas por sección: cuando solo cambia el chat, ya no se repinta el
+// libro entero (mismo patrón que v132 hizo con el roster y v156 con follow).
+let lastHlSig = '', lastNotesSig = '', lastBoardSig = '', lastChatSig = '', lastRxSig = '', lastHandsSig = '';
+let secChanged = { hl: true, notes: true, board: true, chat: true, rx: true, hands: true };
 function applyState(s) {
   if (!s || s.ok === false) return;
   // Optimización: si nada cambió desde el último poll, no re-renderizar
@@ -1643,6 +1647,16 @@ function applyState(s) {
     lastStateSig = sig;
     lastFollowSig = fsig;
     lastRosterSig = JSON.stringify(s.roster || []);
+    // v190 — qué sección cambió realmente (se calcula ANTES de reasignar los
+    // arreglos; en el primer poll todo es distinto de '' y se pinta todo).
+    const secSig = (v) => JSON.stringify(v || []);
+    secChanged = {
+      hl: secSig(s.highlights) !== lastHlSig, notes: secSig(s.notes) !== lastNotesSig,
+      board: secSig(s.board) !== lastBoardSig, chat: secSig(s.chat) !== lastChatSig,
+      rx: secSig(s.reactions) !== lastRxSig, hands: secSig(s.hands) !== lastHandsSig,
+    };
+    lastHlSig = secSig(s.highlights); lastNotesSig = secSig(s.notes); lastBoardSig = secSig(s.board);
+    lastChatSig = secSig(s.chat); lastRxSig = secSig(s.reactions); lastHandsSig = secSig(s.hands);
   } catch (e) { /* si falla el diff, renderizar normal */ }
   highlights = s.highlights || [];
   notes = s.notes || [];
@@ -1653,14 +1667,17 @@ function applyState(s) {
   reactions = s.reactions || [];
   const prevHands = new Set(hands.map((h) => h.name));
   hands = s.hands || [];
-  repaintAll();
-  renderNotes();
+  // v190 — solo se repinta lo que cambió: un mensaje de chat ajeno ya no
+  // repinta el libro entero ni reconstruye notas/pizarra (repaintAll cubre
+  // marcas Y puntos de nota, así que va ligado a hl o notes).
+  if (secChanged.hl || secChanged.notes) repaintAll();
+  if (secChanged.notes) renderNotes();
   renderRoster(s.roster || []);
-  renderBoard();
+  if (secChanged.board) renderBoard();
   renderFollow();
-  renderChat();
-  renderReactions();
-  renderHands();
+  if (secChanged.chat) renderChat();
+  if (secChanged.rx) renderReactions();
+  if (secChanged.hands) renderHands();
   renderSwitchBookBtn();
   renderParaBar();
   checkPara(s);
@@ -2559,9 +2576,16 @@ function initNet() {
     // v158: se eliminó el ping de presencia de 15s — el latido de párrafo de
     // 8s ya mantiene la presencia viva; era un POST redundante en señal débil.
     // v68: latido de párrafo visible (cada 8s) para la presencia viva 👁
+    // v190: guardia pingInFlight (patrón pollInFlight de v127) — en señal
+    // débil un ping podía tardar >8s y el siguiente se apilaba encima,
+    // compitiendo con el poll y los gestos por la misma radio. Se mantiene
+    // el intervalo de 8s (no 20s): el ping también lleva la posición de
+    // lectura viva y espaciarlo la haría más lenta.
+    let pingInFlight = false;
     setInterval(() => {
-      if (document.hidden || currentView !== 'room') return;
-      try { apiPost(roomBase() + '/ping', { para: currentParaIdx() }).catch(() => {}); } catch (e) {}
+      if (document.hidden || currentView !== 'room' || pingInFlight) return;
+      pingInFlight = true;
+      try { apiPost(roomBase() + '/ping', { para: currentParaIdx() }).catch(() => {}).finally(() => { pingInFlight = false; }); } catch (e) { pingInFlight = false; }
     }, 8000);
     $('copyRoom').onclick = async () => {
       // v72: comparte el enlace completo (?sala=CODIGO) en vez de solo el código:
@@ -5184,7 +5208,7 @@ async function renderWritings() {
   const box = $('wrList');
   box.innerHTML = '<p class="join-sub">Cargando…</p>';
   try {
-    const r = await fetch('/api/writings');
+    const r = await fetchTimeout('/api/writings', 10000); // v190: antes un cuelgue dejaba "Cargando…" para siempre
     const d = await r.json();
     const list = d.writings || [];
     if (!list.length) { box.innerHTML = '<p class="join-sub">' + t('wrEmpty') + '</p>'; return; }
@@ -5205,7 +5229,7 @@ async function renderWritings() {
 }
 async function openWriting(id) {
   try {
-    const r = await fetch('/api/writings/' + encodeURIComponent(id));
+    const r = await fetchTimeout('/api/writings/' + encodeURIComponent(id), 10000); // v190: idem renderWritings
     const d = await r.json();
     if (!d.ok) throw 0;
     $('readTitle').textContent = d.writing.title;
