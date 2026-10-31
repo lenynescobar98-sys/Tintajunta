@@ -304,14 +304,25 @@ function backfillClassicCovers() {
 backfillClassicCovers();
 
 let saveTimer = null;
+/* v191: escritura atómica de rooms.json — antes writeFileSync directo: un
+   corte (reinicio, caída de la VM) a mitad de escritura dejaba el archivo
+   truncado y loadRooms() perdía TODAS las salas al arrancar (clase de bug
+   de v63). Ahora se escribe a rooms.json.tmp y se renombra: el rename es
+   atómico en el mismo sistema de archivos, así que rooms.json siempre está
+   completo o intacto. Si el rename falla, respaldo a escritura directa. */
 function save() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
     try {
       fs.mkdirSync(DATA_DIR, { recursive: true });
-      fs.writeFileSync(ROOMS_FILE, JSON.stringify(Object.fromEntries(rooms)));
+      const data = JSON.stringify(Object.fromEntries(rooms));
+      const tmp = ROOMS_FILE + '.tmp';
+      fs.writeFileSync(tmp, data);
+      fs.renameSync(tmp, ROOMS_FILE);
     } catch (e) {
-      console.error('[tintajunta] error guardando salas:', e.message);
+      console.error('[tintajunta] error guardando salas (atómico):', e.message);
+      try { fs.writeFileSync(ROOMS_FILE, JSON.stringify(Object.fromEntries(rooms))); }
+      catch (e2) { console.error('[tintajunta] error guardando salas (respaldo):', e2.message); }
     }
   }, 250);
 }

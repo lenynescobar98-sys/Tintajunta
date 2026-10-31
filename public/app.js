@@ -358,6 +358,7 @@ function renderMoreParas(paras, count, skipRepaint) {
   const frag = document.createDocumentFragment();
   const end = Math.min(paraQueue.length, queuePos + (count || CHUNK_NEXT));
   let pi = queuePos, idx = wordBase, added = 0;
+  const rangeFrom = wordBase; // v191: inicio del trozo, para el repintado acotado
   for (; pi < end; pi++) {
     const p = document.createElement('p');
     p.dataset.para = pi; // v68: índice de párrafo para presencia viva y notas
@@ -379,7 +380,11 @@ function renderMoreParas(paras, count, skipRepaint) {
   else paras.appendChild(frag);
   queuePos = pi;
   wordBase = idx;
-  if (!skipRepaint) repaintAll(); // aplica marcas/notas a lo recién pintado
+  /* v191: antes repaintAll() recorría TODAS las palabras del libro por cada
+     trozo (O(libro) al bajar en clásicos largos; ahora solo se pinta el rango
+     nuevo. Los spans del trozo son recién creados (sin estilos previos) y las
+     marcas/notas que cruzan el borde del trozo se detectan por solape. */
+  if (!skipRepaint) repaintRange(rangeFrom, wordBase);
   return added;
 }
 /* v163: caché offline-first en IndexedDB — la conexión se cae a cada rato;
@@ -687,6 +692,30 @@ function repaintAll() {
   paintNoteMarks();
   paintNoteBadges(); // v68
   pendingMarks.forEach(paintPendingVisual); // v175: la marca provisional sobrevive a los re-pintados del poll
+}
+/* v191: repintado acotado a un rango de palabras [from, to) — para trozos
+   recién pintados por renderMoreParas. Los spans nuevos no tienen estilos
+   previos que limpiar; las marcas/notas pendientes que solapan el rango se
+   pintan en el mismo orden que repaintAll (el más reciente gana en cover).
+   Las insignias 💬 se reconstruyen completas: son por párrafo, no por
+   palabra, y su coste no depende del tamaño del libro. */
+function repaintRange(from, to) {
+  for (const h of highlights) if (h.end >= from && h.start < to) paintHighlight(h);
+  const seenNote = new Set(); // como paintNoteMarks: la primera nota gana el span
+  for (const n of notes) {
+    if (n.end < from || n.start >= to) continue; // solapa el rango (cruce de borde incluido)
+    const c = COLORS[n.color] || COLORS.azul;
+    for (let i = Math.max(n.start, from); i <= n.end && i < to; i++) {
+      if (seenNote.has(i)) continue;
+      seenNote.add(i);
+      const s = spanByIdx[i];
+      if (!s) continue;
+      s.classList.add('has-note');
+      s.style.setProperty('--note-c', c);
+    }
+  }
+  paintNoteBadges(); // v68
+  for (const p of pendingMarks) if (p.end >= from && p.start < to) paintPendingVisual(p);
 }
 /* Marca visual en palabras con nota: subrayado punteado del color del autor */
 /* v68 — Insignias 💬 por párrafo (patrón Wattpad): los párrafos con notas muestran
