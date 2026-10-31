@@ -99,6 +99,11 @@ function applyTheme() {
   document.documentElement.dataset.theme = th === 'dark' ? 'dark' : '';
   const b = document.getElementById('themeBtn');
   if (b) { b.textContent = th === 'dark' ? '☀️' : '🌙'; b.title = th === 'dark' ? t('themeLight') : t('themeDark'); }
+  /* v192: el botón del drawer también — antes solo lo actualizaba
+     toggleTheme(), así que cambiar el tema desde el header dejaba la
+     etiqueta del drawer al revés (misma clase de bug que v132). */
+  const tb = document.querySelector('#drawer button[data-go="theme"]');
+  if (tb) tb.textContent = (th === 'dark' ? '☀️' : '🌙') + t('themeLabel');
 }
 applyTheme();
 
@@ -692,6 +697,11 @@ function repaintAll() {
   paintNoteMarks();
   paintNoteBadges(); // v68
   pendingMarks.forEach(paintPendingVisual); // v175: la marca provisional sobrevive a los re-pintados del poll
+  /* v192: las insignias de reacciones también viven aquí — antes solo se
+     pintaban cuando cambiaba la sección rx del poll, así que los párrafos
+     cargados por trozos quedaban sin insignias hasta la próxima reacción.
+     renderReactions es diff (v186): conserva nodos, no reconstruye. */
+  try { renderReactions(); } catch (e) {}
 }
 /* v191: repintado acotado a un rango de palabras [from, to) — para trozos
    recién pintados por renderMoreParas. Los spans nuevos no tienen estilos
@@ -716,6 +726,7 @@ function repaintRange(from, to) {
   }
   paintNoteBadges(); // v68
   for (const p of pendingMarks) if (p.end >= from && p.start < to) paintPendingVisual(p);
+  try { renderReactions(); } catch (e) {} // v192: igual que en repaintAll
 }
 /* Marca visual en palabras con nota: subrayado punteado del color del autor */
 /* v68 — Insignias 💬 por párrafo (patrón Wattpad): los párrafos con notas muestran
@@ -1329,7 +1340,13 @@ function initSelection() {
     if (i === lastTapMark.i && Date.now() - lastTapMark.at < 1200) return;
     // v175: la palabra ya está en camino al servidor (tinta provisional
     // visible) — no publicar de nuevo mientras se confirma
-    if (pendingAt(i)) return;
+    // v192: pero si esa marca ya está ENCOLADA (sin red), tocarla la cancela
+    // (antes no pasaba nada y reaparecía sola al reconectar); si aún vuela
+    // al servidor, se conserva el retorno silencioso.
+    if (pendingAt(i)) {
+      if (cancelQueuedMarksAt(i)) { if (navigator.vibrate) navigator.vibrate(30); toast(t('markErased')); }
+      return;
+    }
     lastTapMark = { i, at: Date.now() };
     postHighlight({ start: i, end: i });
   });
@@ -2451,6 +2468,22 @@ function clearPendingMark(start, end) {
     if (!s.classList.contains('mk') && !pendingAt(i)) s.style.background = '';
   }
 }
+/* v192: cancela mis marcas AÚN ENCOLADAS (sin red) que cubren la palabra i.
+   Solo las que ya están en la cola local; las que aún vuelan al servidor no
+   se tocan (su POST puede confirmar después). Devuelve cuántas canceló. */
+function cancelQueuedMarksAt(i) {
+  const hits = outbox.filter((it) => it.kind === 'highlight' && it.room === myRoom &&
+    it.body && i >= it.body.start && i <= it.body.end);
+  for (const it of hits) {
+    const ix = outbox.indexOf(it);
+    if (ix >= 0) outbox.splice(ix, 1);
+    clearPendingMark(it.body.start, it.body.end);
+    const ui = undoStack.findIndex((e) => e.q && it.body.cid && e.q === it.body.cid);
+    if (ui >= 0) undoStack.splice(ui, 1);
+  }
+  if (hits.length) { persistOutbox(); renderUndoPill(); }
+  return hits.length;
+}
 function clearAllPendingMarks() {
   pendingMarks = [];
   spanByIdx.forEach((s) => {
@@ -2567,7 +2600,15 @@ function hideUndoPill() { undoStack = []; hideUndoPillEl(); }
 async function eraseInRange(range) {
   const mine = highlights.filter((h) =>
     h.name === displayName() && h.start <= range.end && h.end >= range.start);
-  if (!mine.length) return;
+  /* v192: cancelar también mis marcas AÚN ENCOLADAS (sin red): no están en
+     highlights ni en cover, así que el borrador las ignoraba y reaparecían
+     solas al reconectar. */
+  let cancelledPending = 0;
+  for (let i = range.start; i <= range.end; i++) cancelledPending += cancelQueuedMarksAt(i);
+  if (!mine.length) {
+    if (cancelledPending) { if (navigator.vibrate) navigator.vibrate(30); toast(cancelledPending === 1 ? t('markErased') : t('marksErased', { n: cancelledPending })); }
+    return;
+  }
   clog('borrador: borrando ' + mine.length + ' marca(s)');
   const deletedIds = new Set(), queuedIds = new Set();
   // v156: borrados en paralelo — antes en serie, con red caída un párrafo con
@@ -5217,9 +5258,7 @@ function initImdbBar() {
 function toggleTheme() {
   const cur = localStorage.getItem('tj_theme') || 'light';
   localStorage.setItem('tj_theme', cur === 'dark' ? 'light' : 'dark');
-  applyTheme();
-  const tb = document.querySelector('#drawer button[data-go="theme"]');
-  if (tb) tb.textContent = (localStorage.getItem('tj_theme') === 'dark' ? '☀️' : '🌙') + t('themeLabel');
+  applyTheme(); // v192: ya actualiza header + drawer, no duplicar aquí
 }
 
 /* ---------- ✍️ Escribir ---------- */

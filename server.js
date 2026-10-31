@@ -596,10 +596,13 @@ app.get('/api/config', (req, res) => res.json({
   ok: true, minBookPrice: MIN_BOOK_PRICE, minBookPriceLabel: '$' + (MIN_BOOK_PRICE / 100).toFixed(2),
 }));
 app.get('/api/books', (req, res) => {
-  // Solo libros aprobados (los pendientes esperan revisión del admin)
-  const as = String(req.query.as || '');
+  // Solo libros aprobados (los pendientes esperan revisión del admin).
+  // v192: eliminada la excepción `?as=` — el nombre venía del llamador sin
+  // sesión, así que cualquiera listaba los pendientes de cualquier autor y
+  // con sus IDs leía el texto completo en /meta y /paras. El cliente nunca
+  // usaba `as` (publicar solo muestra el aviso "en revisión").
   res.json({ ok: true, books: [...books.values()]
-    .filter((b) => (b.status || 'approved') === 'approved' || b.author === as)
+    .filter((b) => (b.status || 'approved') === 'approved')
     .map((b) => {
     const st = getRoom(b.id);
     const cp = creatorPublic(b.author);
@@ -1207,9 +1210,22 @@ app.post('/api/writings', requireLogin, (req, res) => {
   saveWritings();
   res.json({ ok: true, writing: { id, title, author, createdAt: w.createdAt } });
 });
+/* v192: un libro pendiente solo lo puede leer su autor o el admin, y solo
+   con sesión Google (la misma que ya exige publicar). Sin sesión, 404 — no
+   se confirma ni su existencia. Ningún flujo del cliente lee pendientes
+   (publicar solo avisa "en revisión"; la bandeja del admin lista títulos),
+   así que el cierre no rompe nada. */
+function canReadPending(req, b) {
+  const u = req.session && req.session.user;
+  if (!u) return false;
+  const name = String(u.name || '');
+  return name === b.author || isAdmin(name);
+}
 app.get('/api/books/:id', (req, res) => {
   const b = books.get(String(req.params.id || '').toUpperCase());
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+  if ((b.status || 'approved') === 'pending' && !canReadPending(req, b))
+    return res.status(404).json({ ok: false, error: 'not-found' });
   res.json({ ok: true, book: b });
 });
 /* v162: carga paginada de libros — el libro completo (hasta ~3MB en un solo
@@ -1220,6 +1236,8 @@ app.get('/api/books/:id', (req, res) => {
 app.get('/api/books/:id/meta', (req, res) => {
   const b = books.get(String(req.params.id || '').toUpperCase());
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+  if ((b.status || 'approved') === 'pending' && !canReadPending(req, b))
+    return res.status(404).json({ ok: false, error: 'not-found' }); // v192
   res.json({ ok: true, meta: {
     id: b.id, title: b.title, author: b.author, language: b.language || 'es',
     price: b.price || 0, ageRating: b.ageRating || 'all', classic: !!b.classic,
@@ -1260,6 +1278,8 @@ function contentHash(b) {
 app.get('/api/books/:id/paras', (req, res) => {
   const b = books.get(String(req.params.id || '').toUpperCase());
   if (!b) return res.status(404).json({ ok: false, error: 'not-found' });
+  if ((b.status || 'approved') === 'pending' && !canReadPending(req, b))
+    return res.status(404).json({ ok: false, error: 'not-found' }); // v192
   const ch = (b.chapters || [])[0];
   if (!ch) return res.status(404).json({ ok: false, error: 'no-chapters' });
   const all = ch.paragraphs || [];
