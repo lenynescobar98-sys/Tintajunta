@@ -1196,7 +1196,7 @@ function initSelection() {
   let lastTapMark = { i: -1, at: 0 };
   parasEl.addEventListener('touchstart', (e) => {
     if (!pencilMode) return; // lápiz apagado: solo lectura
-    if (e.touches.length !== 1) { cancelMarking(); return; }
+    if (e.touches.length !== 1) { if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; } cancelMarking(); return; }
     if (!parasEl.dataset.tsLogged) { parasEl.dataset.tsLogged = '1'; clog('touchstart en texto (iOS toca la sala)'); }
     const w = e.target.closest && e.target.closest('.w');
     if (!w) return;
@@ -1239,7 +1239,7 @@ function initSelection() {
       return;
     }
     if (touchMode === 'marking' && marking) {
-      if (e.touches.length !== 1) { cancelMarking(); return; } // segundo dedo: cancelar
+      if (e.touches.length !== 1) { if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; } cancelMarking(); return; } // segundo dedo: cancelar
       e.preventDefault(); // no hacer scroll mientras se marca el pasaje
       const t = e.touches[0];
       const el = document.elementFromPoint(t.clientX, t.clientY);
@@ -2642,6 +2642,13 @@ function initNet() {
     // v185: al recuperar la conexión, vaciar la cola de gestos encolados
     // aunque ya no se esté en la sala (antes solo se reintentaba en pollState).
     window.addEventListener('online', () => { try { flushOutbox(); } catch (e) {} });
+    /* v194: al volver a la app, sincronizar de inmediato en vez de esperar
+       hasta 2.5s + fetch — tras un rato en segundo plano (iOS) las marcas
+       ajenas tardaban en aparecer. pollInFlight (v127) hace seguro el doble
+       disparo si el intervalo cae a la vez. */
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && currentView === 'room') { try { pollState(); } catch (e) {} }
+    });
     setInterval(() => { if (!document.hidden && currentView === 'room') pollState(); }, 2500); // novedades de los demás (pausado si la pestaña está oculta o fuera de la sala)
     // v158: se eliminó el ping de presencia de 15s — el latido de párrafo de
     // 8s ya mantiene la presencia viva; era un POST redundante en señal débil.

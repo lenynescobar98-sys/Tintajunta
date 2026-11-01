@@ -2228,7 +2228,7 @@ body.in-room .samplenote { margin-top: 10px; }
   .room-title { font-size: 15px; }
   .room-live { font-size: 10px; padding: 5px 10px; }
   .room-tools { padding: 3px 6px; gap: 0; }
-  .room-tools .pencil-btn { width: 32px; height: 32px; font-size: 16px; }
+  .room-tools .pencil-btn { width: 40px; height: 40px; font-size: 18px; }
   .tools-sep { margin: 0 4px; }
   .room-head-sub { padding: 6px 10px 8px; }
   .presence .avatar-name { max-width: 64px; }
