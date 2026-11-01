@@ -3048,7 +3048,7 @@ async function showAdModal(existing) {
   // precios del servidor
   let prices = { day: 199, week: 799, month: 1999 };
   try {
-    const r = await fetch('/api/ad-prices');
+    const r = await fetchTimeout('/api/ad-prices', 8000);
     const d = await r.json();
     if (d.ok && d.prices) prices = d.prices;
   } catch { /* valores por defecto */ }
@@ -3998,7 +3998,11 @@ function renderContinueReading() {
     }
   } catch (e) {}
   items.sort((a, b) => (b.meta.ts || 0) - (a.meta.ts || 0));
-  const top = items.slice(0, 6); // v189: ordenar TODOS y luego cortar (antes se cortaba antes de ordenar)
+  /* v193: la búsqueda también filtra "Seguir leyendo" (misma regla que v185
+     para Destacados/Novedades/Clásicos: solo el texto, no pills ni idioma). */
+  const q = libQuery.trim().toLowerCase();
+  const shown = q ? items.filter(({ meta }) => ((meta.title || '') + ' ' + (meta.author || '')).toLowerCase().includes(q)) : items;
+  const top = shown.slice(0, 6); // v189: ordenar TODOS y luego cortar (antes se cortaba antes de ordenar)
   if (!top.length) { sec.classList.add('hidden'); return; }
   sec.classList.remove('hidden');
   row.innerHTML = top.map(({ id, meta }) => `
@@ -4791,7 +4795,7 @@ async function showFeature(b) {
   // precios del servidor
   let prices = { day: 199, week: 799, month: 1999 };
   try {
-    const r = await fetch('/api/feature-prices');
+    const r = await fetchTimeout('/api/feature-prices', 8000);
     const d = await r.json();
     if (d.ok && d.prices) prices = d.prices;
   } catch (e) { /* usar valores por defecto */ }
@@ -5207,7 +5211,7 @@ function initImdbBar() {
     const sb = $('searchBar');
     sb.classList.toggle('hidden');
     if (!sb.classList.contains('hidden')) $('searchInput').focus();
-    else { $('searchInput').value = ''; libQuery = ''; renderRows(); }
+    else { $('searchInput').value = ''; libQuery = ''; renderRows(); renderContinueReading(); }
   };
   $('searchInput').addEventListener('input', (e) => {
     libQuery = e.target.value;
@@ -5215,7 +5219,7 @@ function initImdbBar() {
        tecla; en teléfonos débiles el tecleo se trababa. El render final es
        idéntico. */
     clearTimeout(searchDeb);
-    searchDeb = setTimeout(renderRows, 200);
+    searchDeb = setTimeout(() => { renderRows(); renderContinueReading(); }, 200);
   });
   $('enterBtn').onclick = goLiveRoom;
   /* v178: CTAs de la sección de presentación — reutilizan los flujos
