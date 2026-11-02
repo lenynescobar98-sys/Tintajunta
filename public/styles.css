@@ -516,6 +516,8 @@ body.pencil-on .paras { -webkit-user-select: none; user-select: none; -webkit-to
   letter-spacing: .01em; text-rendering: optimizeLegibility;
 }
 .paras .w { border-radius: 4px; transition: background .25s; cursor: text; }
+/* v195: mantener sobre tu propio subrayado se ve — contorno durante los 500ms */
+.paras .w.holding { outline: 2px solid currentColor; outline-offset: 1px; }
 .paras .w.marking { background: rgba(30,58,95,.28); }
 .paras .w.flash { animation: flash 1.4s ease; }
 @keyframes flash { 0%,60% { outline: 3px solid var(--accent); outline-offset: 2px; } 100% { outline: 3px solid transparent; } }
@@ -1721,6 +1723,8 @@ main.layout article.chapter .paras p {
   box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
 .page-nav-btn:active { transform: translateY(1px); }
+/* v195: botón de reintento del trozo siguiente — va tras el texto, no dentro */
+.chunk-retry { display: block; width: calc(100% - 32px); margin: 18px 16px 4px; }
 .page-nav-btn:disabled { opacity: .35; cursor: default; box-shadow: none; }
 /* v138: el cuadro amarillo del párrafo enfocado se eliminó a petición de Alejandro.
    El seguimiento del profesor (scroll al párrafo) sigue funcionando sin el recuadro. */

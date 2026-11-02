@@ -317,6 +317,7 @@ const PARA_FIRST = 200, PARA_NEXT = 400;
 let bookParaFailAt = 0;
 const BOOKPARA_COOLDOWN = 30000;
 function renderText(paragraphs, chapterTitle, bookLine, sampleNote, images) {
+  hideChunkRetryBtn(); // v195: libro nuevo — sin botón de reintento del anterior
   $('chapterTitle').textContent = chapterTitle;
   $('bookLine').textContent = bookLine || '';
   $('sampleNote').textContent = sampleNote || '';
@@ -572,6 +573,30 @@ async function fetchBookParas(id, from, count) {
   } catch (e) {}
   throw lastErr;
 }
+/* v195: botón visible para reintentar el trozo siguiente cuando la red
+   falló del todo — el toast ya desapareció y el sentinel enfría 30s, así que
+   sin botón el lector se quedaba sin forma de seguir bajando. Solo aparece
+   en la rama de fallo total; el éxito, el cooldown y el observer no cambian. */
+let chunkRetryBtn = null;
+function showChunkRetryBtn() {
+  if (chunkRetryBtn || !currentBook || !currentBook.id) return;
+  const paras = $('paras');
+  if (!paras || !paras.parentElement) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'page-nav-btn chunk-retry';
+  btn.textContent = t('retryChunk');
+  btn.onclick = () => {
+    bookParaFailAt = 0; // v195: reintento inmediato, sin esperar el cooldown
+    hideChunkRetryBtn();
+    paintMoreOrFetch();
+  };
+  paras.after(btn);
+  chunkRetryBtn = btn;
+}
+function hideChunkRetryBtn() {
+  if (chunkRetryBtn) { try { chunkRetryBtn.remove(); } catch (e) {} chunkRetryBtn = null; }
+}
 async function loadMoreBookParas(count) {
   if (!currentBook || !currentBook.id) return 0;
   const from = paraQueue.length;
@@ -600,6 +625,7 @@ async function loadMoreBookParas(count) {
         if (!currentBook || currentBook.id !== id) return 0;
         if (bookParaLoading !== slot) return 0;
         const ps = d.paragraphs || [];
+        if (ps.length > 0) hideChunkRetryBtn(); // v195: el reintento funcionó — quitar el botón
         for (const p of ps) {
           paraQueue.push(p);
           wordCount += String(p).split(/\s+/).length;
@@ -611,6 +637,7 @@ async function loadMoreBookParas(count) {
     if (currentBook && currentBook.id === id && bookParaLoading === slot) {
       bookParaFailAt = Date.now(); // v168: enfriar el sentinel tras el fallo total
       toast(t('bookTimeout'));
+      showChunkRetryBtn(); // v195: dejar un reintento tocable, no solo el toast
     }
     return 0;
   })();
@@ -1189,6 +1216,8 @@ function initSelection() {
     setTimeout(() => { suppressSel = false; }, 150);
   }
   let noteTimer = null, justLongPressedAt = 0, justMarkedAt = 0;
+  let holdEl = null; // v195: palabra bajo el dedo durante el mantener
+  function clearHold() { if (holdEl) { holdEl.classList.remove('holding'); holdEl = null; } }
   let lastMarkedRange = null; // v183: rango del último arrastre (el guardián de clic solo suprime dentro de él)
   /* v168: anti-doble-toque — dos toques discretos (~300ms) en la misma palabra
      sin marcar publicaban dos subrayados idénticos (el segundo no ve la marca
@@ -1196,7 +1225,7 @@ function initSelection() {
   let lastTapMark = { i: -1, at: 0 };
   parasEl.addEventListener('touchstart', (e) => {
     if (!pencilMode) return; // lápiz apagado: solo lectura
-    if (e.touches.length !== 1) { if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; } cancelMarking(); return; }
+    if (e.touches.length !== 1) { if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; } clearHold(); cancelMarking(); return; }
     if (!parasEl.dataset.tsLogged) { parasEl.dataset.tsLogged = '1'; clog('touchstart en texto (iOS toca la sala)'); }
     const w = e.target.closest && e.target.closest('.w');
     if (!w) return;
@@ -1208,8 +1237,10 @@ function initSelection() {
     if (h && h.name === displayName()) {
       const sx = t.clientX, sy = t.clientY;
       touchStartPt.sx = sx; touchStartPt.sy = sy;
+      holdEl = w; w.classList.add('holding'); // v195: se ve que el mantener está en curso
       noteTimer = setTimeout(() => {
         noteTimer = null;
+        clearHold(); // v195: el popup reemplaza la pista visual
         justLongPressedAt = Date.now();
         const rect = w.getBoundingClientRect();
         showToolbar({ start: h.start, end: h.end }, rect, 'highlight');
@@ -1222,7 +1253,7 @@ function initSelection() {
     if (noteTimer) {
       const t = e.touches[0];
       if (Math.hypot(t.clientX - touchStartPt.sx, t.clientY - touchStartPt.sy) > 12) {
-        clearTimeout(noteTimer); noteTimer = null; // era arrastre, no mantener
+        clearTimeout(noteTimer); noteTimer = null; clearHold(); // era arrastre, no mantener
       }
     }
     if (touchMode === 'maybe' && pencilMode) {
@@ -1239,7 +1270,7 @@ function initSelection() {
       return;
     }
     if (touchMode === 'marking' && marking) {
-      if (e.touches.length !== 1) { if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; } cancelMarking(); return; } // segundo dedo: cancelar
+      if (e.touches.length !== 1) { if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; } clearHold(); cancelMarking(); return; } // segundo dedo: cancelar
       e.preventDefault(); // no hacer scroll mientras se marca el pasaje
       const t = e.touches[0];
       const el = document.elementFromPoint(t.clientX, t.clientY);
@@ -1249,10 +1280,12 @@ function initSelection() {
   }, { passive: false });
   document.addEventListener('touchcancel', () => {
     if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; }
+    clearHold();
     cancelMarking();
   });
   document.addEventListener('touchend', (e) => {
     if (noteTimer) { clearTimeout(noteTimer); noteTimer = null; }
+    clearHold();
     if (touchMode === 'notepop') { touchMode = null; touchStartPt = null; return; } // se abrió con mantener
     const wasMarking = marking;
     const r = markCur;
@@ -2883,6 +2916,7 @@ function exitRoom() {
     localStorage.removeItem('tj_lastBook');
   } catch (e) {}
   hideUndoPill(); // la pila de deshacer no sobrevive el cambio de sala
+  hideChunkRetryBtn(); // v195: el botón de reintento tampoco sobrevive el cambio de sala
   clearAllPendingMarks(); // v175: la tinta provisional tampoco sobrevive el cambio de sala
   /* v169: resetear la referencia del párrafo del profesor al salir — cada
      entrada a una sala parte de cero y solo los movimientos nuevos avisan */
@@ -4307,6 +4341,16 @@ function heroSlideAd(a, paid) {
     <div class="hero-desc">Un anunciante paga por estar aquí. Tócalo para verlo en grande.</div>
   </div>`;
 }
+/* v195: con búsqueda activa el hero NO se filtra (renderRows sí) — se oculta
+   para que la portada no muestre destacados que ignoran la consulta. Al
+   limpiar la búsqueda vuelve solo si hay slides; renderHero lo re-sincroniza
+   en cada re-render. */
+function syncHeroSearch() {
+  const car = document.getElementById('heroCarousel');
+  if (!car) return;
+  if (libQuery.trim()) car.classList.add('hidden');
+  else if (heroSlides.length) car.classList.remove('hidden');
+}
 function renderHero(featBooks) {
   const car = document.getElementById('heroCarousel');
   const track = document.getElementById('heroTrack');
@@ -4364,6 +4408,7 @@ function renderHero(featBooks) {
   // la guardia anti-rotación de toques (esto no es una rotación, es un re-render).
   track.style.transform = `translateX(-${heroIdx * 100}%)`;
   paintLevelBadges(car);
+  syncHeroSearch(); // v195: no mostrar el hero sin filtrar durante una búsqueda
 }
 function heroGo(i) {
   const track = document.getElementById('heroTrack');
@@ -5218,7 +5263,7 @@ function initImdbBar() {
     const sb = $('searchBar');
     sb.classList.toggle('hidden');
     if (!sb.classList.contains('hidden')) $('searchInput').focus();
-    else { $('searchInput').value = ''; libQuery = ''; renderRows(); renderContinueReading(); }
+    else { $('searchInput').value = ''; libQuery = ''; renderRows(); renderContinueReading(); syncHeroSearch(); }
   };
   $('searchInput').addEventListener('input', (e) => {
     libQuery = e.target.value;
@@ -5226,7 +5271,7 @@ function initImdbBar() {
        tecla; en teléfonos débiles el tecleo se trababa. El render final es
        idéntico. */
     clearTimeout(searchDeb);
-    searchDeb = setTimeout(() => { renderRows(); renderContinueReading(); }, 200);
+    searchDeb = setTimeout(() => { renderRows(); renderContinueReading(); syncHeroSearch(); }, 200);
   });
   $('enterBtn').onclick = goLiveRoom;
   /* v178: CTAs de la sección de presentación — reutilizan los flujos
